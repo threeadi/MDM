@@ -1,0 +1,1031 @@
+<Window x:Class="Mdm.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:Mdm.ViewModels"
+        xmlns:controls="clr-namespace:Mdm.Controls"
+        xmlns:services="clr-namespace:Mdm.Services"
+        mc:Ignorable="d"
+        Title="IDM Turbo Desktop - Modern Download Manager (.NET 10 Native)" 
+        Icon="pack://application:,,,/Mdm;component/Assets/app.ico"
+        Height="720" Width="1160"
+        MinHeight="560" MinWidth="860"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource CanvasBrush}">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Mdm;component/Styles/AppTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Background="{StaticResource CanvasBrush}">
+        <Grid.RowDefinitions>
+            <!-- 0: Tier 1 Titlebar & Quick Search -->
+            <RowDefinition Height="40"/>
+            <!-- 1: Tier 2 Operational Toolbar -->
+            <RowDefinition Height="44"/>
+            <!-- 2: Top Separator -->
+            <RowDefinition Height="1"/>
+            <!-- 3: Main Workspace (Sidebar + Views) -->
+            <RowDefinition Height="*"/>
+            <!-- 4: Bottom Separator -->
+            <RowDefinition Height="1"/>
+            <!-- 5: Telemetry Footer -->
+            <RowDefinition Height="28"/>
+        </Grid.RowDefinitions>
+
+        <!-- ========================================================= -->
+        <!-- TIER 1: WINDOW HEADER, LOGO & LIVE TELEMETRY BADGE       -->
+        <!-- ========================================================= -->
+        <Border Grid.Row="0" Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="14,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Brand / Logo -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="28" Height="28" Background="#1D2A3D" CornerRadius="8" Margin="0,0,8,0" Padding="3">
+                        <Image Source="pack://application:,,,/Mdm;component/Assets/app.png" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    </Border>
+                    <TextBlock Text="IDM Turbo Desktop" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <Border Background="#252A33" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                        <TextBlock Text="v1.0.0-PRO" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentSecondaryCyanBrush}" FontFamily="{StaticResource AppFontMono}"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Center Quick Search -->
+                <Grid Grid.Column="1" HorizontalAlignment="Center" Width="360" VerticalAlignment="Center">
+                    <TextBox Style="{StaticResource FlatTextBox}" 
+                             Height="26"
+                             Padding="28,3,8,3"
+                             Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                             VerticalContentAlignment="Center"/>
+                    <controls:LucideIcon Kind="search" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False"/>
+                </Grid>
+
+                <!-- Right Spacer / Header Actions -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- ========================================================= -->
+        <!-- TIER 2: IDM OPERATIONAL ACTIONS TOOLBAR                  -->
+        <!-- ========================================================= -->
+        <Border Grid.Row="1" Background="#1B2028" Padding="12,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Action Buttons Group -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- + Tambah URL Button -->
+                    <Button Style="{StaticResource PrimaryBlueButton}" Height="30" Margin="0,0,6,0" Click="AddDownload_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="plus" Width="13" Height="13" StrokeThickness="2.5" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{services:Loc toolbar.addUrl}" FontSize="12" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Border Width="1" Height="18" Background="{StaticResource BorderBrush}" Margin="4,0,8,0" VerticalAlignment="Center"/>
+
+                    <!-- Mulai Semua -->
+                    <Button Style="{StaticResource FlatActionButton}" Height="30" Margin="0,0,6,0" Command="{Binding ResumeAllCommand}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="play" Width="12" Height="12" Foreground="#4EDEA3" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{services:Loc toolbar.resumeAll}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Jeda Semua -->
+                    <Button Style="{StaticResource FlatActionButton}" Height="30" Margin="0,0,6,0" Command="{Binding PauseAllCommand}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="pause" Width="12" Height="12" Foreground="#FFB4AB" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{services:Loc toolbar.pauseAll}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Bersihkan Selesai -->
+                    <Button Style="{StaticResource FlatActionButton}" Height="30" Margin="0,0,6,0" Command="{Binding ClearCompletedCommand}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="check-check" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{services:Loc toolbar.clearCompleted}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Border Width="1" Height="18" Background="{StaticResource BorderBrush}" Margin="4,0,8,0" VerticalAlignment="Center"/>
+
+                    <!-- Workspace View Toggles -->
+                    <RadioButton GroupName="ViewToggle" IsChecked="{Binding IsDownloadsView, Mode=OneWay}" Command="{Binding SwitchToDownloadsCommand}" Style="{StaticResource CategoryRadioStyle}" Margin="0,0,4,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="list-filter" Width="13" Height="13" Foreground="{StaticResource TextHighlightBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{services:Loc toolbar.queue}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton GroupName="ViewToggle" IsChecked="{Binding IsTelegramView, Mode=OneWay}" Command="{Binding SwitchToTelegramCommand}" Style="{StaticResource CategoryRadioStyle}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="send" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{services:Loc toolbar.telegramGrabber}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+
+                <!-- Right Settings Button -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource FlatActionButton}" Height="30" Click="Settings_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="settings" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{services:Loc toolbar.settings}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 2. Separator -->
+        <Border Grid.Row="2" Background="{StaticResource BorderBrush}"/>
+
+        <!-- ========================================================= -->
+        <!-- 3. MAIN WORKSPACE (Sidebar + Views)                      -->
+        <!-- ========================================================= -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <!-- Category Sidebar -->
+                <ColumnDefinition Width="205"/>
+                <!-- Vertical Divider -->
+                <ColumnDefinition Width="1"/>
+                <!-- Main Workspace Viewport -->
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ================= SIDEBAR ================= -->
+            <Border Grid.Column="0" Background="#14171E" Padding="10,8">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Status Section -->
+                        <TextBlock Text="{services:Loc sidebar.downloadStatus}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="8,4,0,6"/>
+
+                        <!-- Semua Unduhan -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="all" IsChecked="{Binding IsAllSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="list-filter" Width="14" Height="14" Foreground="#ADC6FF" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.statusAll}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Background="#252A33" CornerRadius="8" Padding="6,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding AllCount}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="10" FontWeight="SemiBold" FontFamily="{StaticResource AppFontMono}"/>
+                                </Border>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Sedang Berjalan -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="downloading" IsChecked="{Binding IsDownloadingSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="circle-arrow-down" Width="14" Height="14" Foreground="#4CD7F6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.statusDownloading}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Background="#162920" CornerRadius="8" Padding="6,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding ActiveCount}" Foreground="{StaticResource AccentCyanBrush}" FontSize="10" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}"/>
+                                </Border>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Selesai -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="completed" IsChecked="{Binding IsCompletedSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="circle-check-big" Width="14" Height="14" Foreground="#4EDEA3" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.statusCompleted}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Background="#162920" CornerRadius="8" Padding="6,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding CompletedCount}" Foreground="{StaticResource AccentEmeraldBrush}" FontSize="10" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}"/>
+                                </Border>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Dijeda -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="paused" IsChecked="{Binding IsPausedSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="circle-pause" Width="14" Height="14" Foreground="#8C909F" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.statusPaused}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Background="#252A33" CornerRadius="8" Padding="6,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding PausedCount}" Foreground="{StaticResource AccentAmberBrush}" FontSize="10" FontWeight="SemiBold" FontFamily="{StaticResource AppFontMono}"/>
+                                </Border>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Gagal -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="failed" IsChecked="{Binding IsFailedSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="circle-alert" Width="14" Height="14" Foreground="#FF5252" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.statusFailed}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Border Background="#29161A" CornerRadius="8" Padding="6,1" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding FailedCount}" Foreground="{StaticResource AccentRoseBrush}" FontSize="10" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}"/>
+                                </Border>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Divider -->
+                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="4,10,4,10"/>
+
+                        <!-- File Type Categories -->
+                        <TextBlock Text="{services:Loc sidebar.fileCategories}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="8,0,0,6"/>
+
+                        <!-- Program -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="program" IsChecked="{Binding IsProgramSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="cpu" Width="14" Height="14" Foreground="#4CD7F6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.catPrograms}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding ProgramCount}" Foreground="{StaticResource TextMutedBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="{StaticResource AppFontMono}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Dokumen -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="dokumen" IsChecked="{Binding IsDokumenSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="file-text" Width="14" Height="14" Foreground="#ADC6FF" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.catDocuments}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding DokumenCount}" Foreground="{StaticResource TextMutedBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="{StaticResource AppFontMono}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Video -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="video" IsChecked="{Binding IsVideoSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="video" Width="14" Height="14" Foreground="#4EDEA3" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.catVideo}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding VideoCount}" Foreground="{StaticResource TextMutedBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="{StaticResource AppFontMono}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Musik -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="musik" IsChecked="{Binding IsMusikSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="music" Width="14" Height="14" Foreground="#F59E0B" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.catAudio}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding MusikCount}" Foreground="{StaticResource TextMutedBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="{StaticResource AppFontMono}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Kompresi -->
+                        <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="kompresi" IsChecked="{Binding IsKompresiSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="archive" Width="14" Height="14" Foreground="#C084FC" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc sidebar.catCompressed}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding KompresiCount}" Foreground="{StaticResource TextMutedBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="{StaticResource AppFontMono}"/>
+                            </Grid>
+                        </RadioButton>
+
+                        <!-- Divider -->
+                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="4,10,4,10"/>
+
+                        <!-- Telegram Vault (1:1 with my-own-idm Sidebar.svelte) -->
+                        <StackPanel Margin="0,0,0,10">
+                            <!-- Section Title -->
+                            <StackPanel Orientation="Horizontal" Margin="4,0,0,6">
+                                <controls:LucideIcon Kind="send" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{services:Loc telegram.vaultTitle}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}"/>
+                            </StackPanel>
+
+                            <!-- Channel Items List -->
+                            <ItemsControl ItemsSource="{Binding TelegramChannels}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="Transparent" CornerRadius="6" Margin="0,1" Padding="6,4">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#252A33"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <!-- Clickable Channel Button -->
+                                                <Button Grid.Column="0" Background="Transparent" BorderThickness="0" Padding="0" HorizontalContentAlignment="Left" Cursor="Hand"
+                                                        Command="{Binding DataContext.SelectTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <controls:LucideIcon Kind="{Binding ChatIconKind}" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="{Binding FormattedTitle}" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="110"/>
+                                                            </StackPanel>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+
+                                                <!-- Right: Badge & Delete -->
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Border Background="#252A33" CornerRadius="4" Padding="5,1" Margin="0,0,4,0">
+                                                        <TextBlock Text="{Binding UnreadCount}" FontSize="9" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextMutedBrush}"/>
+                                                    </Border>
+                                                    <Button Style="{StaticResource FlatActionButton}" Width="18" Height="18" Padding="0" Cursor="Hand" ToolTip="Hapus dari Vault"
+                                                            Command="{Binding DataContext.DeleteTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+                                                        <controls:LucideIcon Kind="x" Width="10" Height="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Add Channel Button -->
+                            <Button Style="{StaticResource FlatActionButton}" Height="28" Margin="0,6,0,0" Padding="8,0"
+                                    BorderBrush="#4D4CD7F6" Foreground="{StaticResource AccentCyanBrush}"
+                                    Command="{Binding AddTelegramChannelCommand}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="plus" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc telegram.addChannel}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Vertical Separator -->
+            <Border Grid.Column="1" Background="{StaticResource BorderBrush}"/>
+
+            <!-- ================= RIGHT WORKSPACE ================= -->
+            <Grid Grid.Column="2" Background="{StaticResource CanvasBrush}" Margin="12,10,12,6">
+                <!-- ========================================================= -->
+                <!-- VIEWPORT: ANTREAN UNDUHAN TABLE (When IsDownloadsView)    -->
+                <!-- ========================================================= -->
+                <Grid Visibility="{Binding IsDownloadsView, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Table Header & Filter Bar -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{services:Loc table.queueTitle}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,8,0"/>
+                            <Border Background="#252A33" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding SelectedCountText}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- The 60 FPS Virtualized DataGrid with Sorting and Multi-Select -->
+                    <DataGrid Grid.Row="1" 
+                              x:Name="DownloadsDataGrid"
+                              ItemsSource="{Binding FilteredTasks}"
+                              SelectedItem="{Binding SelectedTask}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserResizeRows="False"
+                              CanUserSortColumns="True"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#1A1E28"
+                              Background="{StaticResource SurfaceLowBrush}"
+                              BorderThickness="1"
+                              BorderBrush="{StaticResource BorderBrush}"
+                              RowHeight="42"
+                              SelectionMode="Extended"
+                              SelectionUnit="FullRow"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              SelectionChanged="DataGrid_SelectionChanged"
+                              PreviewKeyDown="DataGrid_PreviewKeyDown"
+                              MouseDoubleClick="DataGrid_MouseDoubleClick">
+
+                        <DataGrid.Resources>
+                            <!-- Header Style with Stitch Kinetic Telemetry Sort Arrows -->
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#181B22"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Padding" Value="10,6"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridColumnHeader">
+                                            <Border x:Name="HeaderBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                                    <Path x:Name="SortArrow" Grid.Column="1" Margin="6,0,2,0" VerticalAlignment="Center" Fill="{StaticResource AccentCyanBrush}" Visibility="Collapsed"/>
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="HeaderBorder" Property="Background" Value="#252A33"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="SortDirection" Value="Ascending">
+                                                    <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                                    <Setter TargetName="SortArrow" Property="Data" Value="M 0 4 L 4 0 L 8 4 Z"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentCyanBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="SortDirection" Value="Descending">
+                                                    <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                                    <Setter TargetName="SortArrow" Property="Data" Value="M 0 0 L 4 4 L 8 0 Z"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource AccentCyanBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+
+                            <!-- Row Style -->
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Background" Value="{StaticResource SurfaceLowBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource SurfaceHoverBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource SurfaceSelectedBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+
+                            <!-- Cell Style -->
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8,0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.Resources>
+
+                        <!-- Context Menu -->
+                        <DataGrid.ContextMenu>
+                            <ContextMenu Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}">
+                                <MenuItem Header="{services:Loc table.contextOpenFile}" Command="{Binding OpenFileCommand}" Foreground="{StaticResource TextPrimaryBrush}">
+                                    <MenuItem.Icon>
+                                        <controls:LucideIcon Kind="external-link" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{services:Loc table.contextOpenFolder}" Command="{Binding OpenFolderCommand}" Foreground="{StaticResource TextPrimaryBrush}">
+                                    <MenuItem.Icon>
+                                        <controls:LucideIcon Kind="folder-open" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator Background="{StaticResource BorderBrush}"/>
+                                <MenuItem Header="{services:Loc table.contextResume}" Command="{Binding ResumeCommand}" Foreground="{StaticResource AccentCyanBrush}">
+                                    <MenuItem.Icon>
+                                        <controls:LucideIcon Kind="play" Width="12" Height="12" Foreground="#4EDEA3"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{services:Loc table.contextPause}" Command="{Binding PauseCommand}" Foreground="{StaticResource AccentAmberBrush}">
+                                    <MenuItem.Icon>
+                                        <controls:LucideIcon Kind="pause" Width="12" Height="12" Foreground="#FFB4AB"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{services:Loc table.contextRefresh}" Click="ContextMenu_RefreshLink_Click" Foreground="{StaticResource AccentCyanBrush}">
+                                    <MenuItem.Icon>
+                                        <controls:LucideIcon Kind="refresh-cw" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator Background="{StaticResource BorderBrush}"/>
+                                <MenuItem Header="{services:Loc table.contextProperties}" Click="ContextMenu_Properties_Click" Foreground="{StaticResource TextSecondaryBrush}">
+                                    <MenuItem.Icon>
+                                        <controls:LucideIcon Kind="hash" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator Background="{StaticResource BorderBrush}"/>
+                                <MenuItem Header="Pilih Semua (Ctrl+A)" Click="ContextMenu_SelectAll_Click" Foreground="{StaticResource TextPrimaryBrush}">
+                                    <MenuItem.Icon>
+                                        <controls:LucideIcon Kind="check-check" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator Background="{StaticResource BorderBrush}"/>
+                                <MenuItem Header="{services:Loc common.delete}" Command="{Binding DeleteCommand}" Foreground="{StaticResource AccentRoseBrush}">
+                                    <MenuItem.Icon>
+                                        <controls:LucideIcon Kind="trash-2" Width="12" Height="12" Foreground="{StaticResource AccentRoseBrush}"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+
+                        <DataGrid.Columns>
+                            <!-- Filename with Category Icon Badge -->
+                            <DataGridTemplateColumn Header="{services:Loc table.colName}" Width="2*" MinWidth="260" SortMemberPath="Filename" CanUserSort="True" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <DockPanel VerticalAlignment="Center">
+                                            <Border DockPanel.Dock="Left" Width="24" Height="24" Background="#1D2432" CornerRadius="6" Margin="0,0,8,0">
+                                                <controls:LucideIcon Kind="{Binding LucideCategoryIcon}" Width="13" Height="13" Foreground="{Binding LucideCategoryColor}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <Border DockPanel.Dock="Right" Visibility="{Binding IsTelegram, Converter={StaticResource BoolToVis}}" Background="#264CD7F6" BorderBrush="#664CD7F6" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <controls:LucideIcon Kind="send" Width="9" Height="9" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding TelegramBadgeText}" FontSize="9" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <TextBlock Text="{Binding Filename}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            
+                            <!-- Size -->
+                            <DataGridTemplateColumn Header="{services:Loc table.colSize}" Width="100" SortMemberPath="TotalBytes" CanUserSort="True" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SizeFormatted}" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource AppFontMono}" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Progress Bar + Percent -->
+                            <DataGridTemplateColumn Header="{services:Loc table.colProgress}" Width="190" SortMemberPath="Progress" CanUserSort="True" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="48"/>
+                                            </Grid.ColumnDefinitions>
+                                             <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Style="{StaticResource SharpProgressBar}" Foreground="{Binding StatusBrush}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding ProgressText}" Foreground="{StaticResource TextMutedBrush}" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="{StaticResource AppFontMono}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Speed -->
+                            <DataGridTemplateColumn Header="{services:Loc table.colSpeed}" Width="110" SortMemberPath="SpeedBps" CanUserSort="True" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SpeedFormatted}" Foreground="{StaticResource AccentCyanBrush}" FontWeight="SemiBold" FontFamily="{StaticResource AppFontMono}" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- ETA -->
+                            <DataGridTemplateColumn Header="{services:Loc table.colEta}" Width="90" SortMemberPath="EtaSeconds" CanUserSort="True" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding EtaFormatted}" Foreground="{StaticResource TextMutedBrush}" FontFamily="{StaticResource AppFontMono}" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Status Badge -->
+                            <DataGridTemplateColumn Header="{services:Loc table.colStatus}" Width="130" SortMemberPath="Status" CanUserSort="True" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding StatusBgBrush}" BorderBrush="{Binding StatusBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusBrush}" FontSize="10" FontWeight="Bold"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <!-- ========================================================= -->
+                <!-- VIEWPORT: IN-PLACE TELEGRAM WORKSPACE (When IsTelegramView)-->
+                <!-- ========================================================= -->
+                <Grid Visibility="{Binding IsTelegramView, Converter={StaticResource BoolToVis}}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="0,0,0,16">
+                            
+                            <!-- 1. TOP HEADER BANNER & ACCOUNT STATUS -->
+                            <Border Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Title & Auth Badge -->
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Border Width="40" Height="40" Background="#264CD7F6" CornerRadius="12" Margin="0,0,12,0">
+                                                <controls:LucideIcon Kind="send" Width="20" Height="20" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{services:Loc telegram.title}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <!-- Connected Badge -->
+                                                    <Border Visibility="{Binding TelegramAuthStatus.IsAuthenticated, Converter={StaticResource BoolToVis}}" Background="#2610B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <Ellipse Width="6" Height="6" Fill="{StaticResource AccentEmeraldBrush}" Margin="0,0,5,0"/>
+                                                            <TextBlock Text="{services:Loc telegram.connected}" FontSize="10" FontWeight="SemiBold" FontFamily="{StaticResource AppFontMono}" Foreground="#4EDEA3"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <!-- Not Connected Badge -->
+                                                    <Border Visibility="{Binding TelegramAuthStatus.IsNotAuthenticated, Converter={StaticResource BoolToVis}}" Background="#26F59E0B" BorderBrush="#4DF59E0B" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <Ellipse Width="6" Height="6" Fill="{StaticResource AccentAmberBrush}" Margin="0,0,5,0"/>
+                                                            <TextBlock Text="{services:Loc telegram.notLoggedIn}" FontSize="10" FontWeight="SemiBold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentAmberBrush}"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock Text="{services:Loc telegram.subtitle}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <!-- Active Account Box & Sesi Button -->
+                                        <Border Grid.Column="1" Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12,6" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <controls:LucideIcon Kind="shield-check" Width="16" Height="16" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                                    <TextBlock Text="{services:Loc telegram.activeAccount}" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                                    <TextBlock Text="{Binding TelegramAccountDisplay}" FontSize="11" FontWeight="SemiBold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentCyanBrush}"/>
+                                                </StackPanel>
+                                                <Border Width="1" Background="{StaticResource BorderBrush}" Margin="0,2,10,2"/>
+                                                <Button Style="{StaticResource FlatActionButton}" Click="TelegramGrabber_Click" Padding="8,4" VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <controls:LucideIcon Kind="user-check" Width="13" Height="13" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{services:Loc telegram.manageAccounts}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Search & Target Folder Row -->
+                                    <Grid Margin="0,0,0,14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="380"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Channel / Chat Input -->
+                                        <Grid Grid.Column="0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Background="#090E16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10,0">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <controls:LucideIcon Kind="user" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                    <TextBox Grid.Column="1" Text="{Binding TelegramChatInput, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" BorderThickness="0" FontSize="12" FontFamily="{StaticResource AppFontMono}" VerticalContentAlignment="Center" Height="36">
+                                                        <TextBox.InputBindings>
+                                                            <KeyBinding Key="Return" Command="{Binding ScanTelegramCommand}"/>
+                                                        </TextBox.InputBindings>
+                                                    </TextBox>
+                                                </Grid>
+                                            </Border>
+                                            <Button Grid.Column="1" Command="{Binding ScanTelegramCommand}" Style="{StaticResource PrimaryCyanButton}" Height="38" Margin="8,0,0,0" Padding="16,0">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <controls:LucideIcon Kind="search" Width="14" Height="14" Foreground="#090E16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{services:Loc telegram.btnScanMedia}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+
+                                        <!-- Target Save Directory Card -->
+                                        <Border Grid.Column="2" Background="#252A33" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12,6">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
+                                                        <TextBlock Text="{services:Loc telegram.targetSaveDir}" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                                        <TextBlock Text="{Binding EffectiveTelegramTargetDir}" FontSize="11" FontFamily="{StaticResource AppFontMono}" Foreground="#ADC6FF" TextTrimming="CharacterEllipsis" ToolTip="{Binding EffectiveTelegramTargetDir}"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Command="{Binding ChangeTelegramDirCommand}" Style="{StaticResource SecondaryGlassButton}" Padding="8,4" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <controls:LucideIcon Kind="folder-open" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{services:Loc telegram.changeFolder}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+                                                <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,4,0,4"/>
+                                                <CheckBox IsChecked="{Binding TelegramUseSubfolder}" VerticalAlignment="Center">
+                                                    <TextBlock Text="{services:Loc telegram.createSubfolder}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                </CheckBox>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Filter Pills & Anti-Flood Bar -->
+                                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Media Filter Chips -->
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="{services:Loc telegram.filterType}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                
+                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="all" Tag="{Binding IsTgFilterAll}" Content="{services:Loc telegram.filterAll}" Margin="0,0,5,0"/>
+                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="video" Tag="{Binding IsTgFilterVideo}" Content="{services:Loc telegram.filterVideo}" Margin="0,0,5,0"/>
+                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="gif" Tag="{Binding IsTgFilterGif}" Content="{services:Loc telegram.filterGif}" Margin="0,0,5,0"/>
+                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="photo" Tag="{Binding IsTgFilterPhoto}" Content="{services:Loc telegram.filterPhoto}" Margin="0,0,5,0"/>
+                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="document" Tag="{Binding IsTgFilterDoc}" Content="{services:Loc telegram.filterDoc}" Margin="0,0,5,0"/>
+                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="audio" Tag="{Binding IsTgFilterAudio}" Content="{services:Loc telegram.filterAudio}"/>
+                                            </StackPanel>
+
+                                            <!-- Anti-Flood Indicator -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <controls:LucideIcon Kind="shield" Width="13" Height="13" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{services:Loc telegram.antiFloodActive}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                <TextBlock Text="•" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                <TextBlock Text="{services:Loc telegram.antiFloodMetrics}" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 2. QUEUE HEADER & ACTIONS -->
+                            <Grid Margin="4,0,4,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Title & Counts -->
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{services:Loc telegram.queueTitle}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <Border Background="#252A33" CornerRadius="6" Padding="6,2" VerticalAlignment="Center" Margin="0,0,6,0">
+                                        <TextBlock FontSize="10" FontWeight="SemiBold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentCyanBrush}">
+                                            <Run Text="{Binding DisplayedTelegramMediaCount, Mode=OneWay}"/>
+                                            <Run Text=" / "/>
+                                            <Run Text="{Binding TelegramMediaCount, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </Border>
+                                    <Border Visibility="{Binding HasCompletedTelegramItems, Converter={StaticResource BoolToVis}}" Background="#2610B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+                                        <TextBlock FontSize="10" FontWeight="SemiBold" FontFamily="{StaticResource AppFontMono}" Foreground="#4EDEA3">
+                                            <Run Text="{Binding TelegramCompletedCount, Mode=OneWay}"/>
+                                            <Run Text=" "/>
+                                            <Run Text="{services:Loc telegram.downloadedBadge}"/>
+                                        </TextBlock>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Right Filter Tabs & Download Button -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="3" Margin="0,0,8,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Style="{StaticResource StatusTabButton}" Command="{Binding SetTelegramStatusFilterCommand}" CommandParameter="all" Tag="{Binding IsTgStatusAll}" Margin="0,0,3,0">
+                                                <TextBlock>
+                                                    <Run Text="{services:Loc telegram.filterStatusAll}"/>
+                                                    <Run Text=" ("/><Run Text="{Binding TelegramMediaCount, Mode=OneWay}"/><Run Text=")"/>
+                                                </TextBlock>
+                                            </Button>
+                                            <Button Style="{StaticResource StatusTabButton}" Command="{Binding SetTelegramStatusFilterCommand}" CommandParameter="uncompleted" Tag="{Binding IsTgStatusUncompleted}" Margin="0,0,3,0">
+                                                <TextBlock>
+                                                    <Run Text="{services:Loc telegram.filterNotDownloaded}"/>
+                                                    <Run Text=" ("/><Run Text="{Binding TelegramUncompletedCount, Mode=OneWay}"/><Run Text=")"/>
+                                                </TextBlock>
+                                            </Button>
+                                            <Button Style="{StaticResource StatusTabButton}" Command="{Binding SetTelegramStatusFilterCommand}" CommandParameter="completed" Tag="{Binding IsTgStatusCompleted}">
+                                                <TextBlock>
+                                                    <Run Text="{services:Loc telegram.filterDownloaded}"/>
+                                                    <Run Text=" ("/><Run Text="{Binding TelegramCompletedCount, Mode=OneWay}"/><Run Text=")"/>
+                                                </TextBlock>
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Pilih Semua Button -->
+                                    <Button Command="{Binding ToggleSelectAllTelegramCommand}" Style="{StaticResource SecondaryGlassButton}" Height="30" Padding="10,0" Margin="0,0,8,0">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="check-square" Width="13" Height="13" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{services:Loc telegram.selectAll}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Unduh Berkas Terpilih Button -->
+                                    <Button Command="{Binding DownloadSelectedTelegramCommand}" Style="{StaticResource PrimaryEmeraldButton}" Height="30" Padding="14,0">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="download" Width="13" Height="13" Foreground="#FFFFFF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding TelegramDownloadButtonText}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 3. MEDIA CARDS STREAM LIST -->
+                            <ItemsControl ItemsSource="{Binding DisplayedTelegramMedia}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Select CheckBox -->
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+
+                                                <!-- Media Icon Container -->
+                                                <Border Grid.Column="1" Width="38" Height="38" Background="{Binding LucideMediaTypeBg}" CornerRadius="10" Margin="0,0,12,0" VerticalAlignment="Center">
+                                                    <controls:LucideIcon Kind="{Binding LucideMediaTypeIcon}" Width="18" Height="18" Foreground="{Binding LucideMediaTypeColor}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- Middle File Details -->
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,12,0">
+                                                    <!-- Top Line: Filename & Badges -->
+                                                    <WrapPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Filename}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,8,2" VerticalAlignment="Center"/>
+                                                        
+                                                        <!-- Completed Badge -->
+                                                        <Border Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" Background="#2610B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="0,0,6,2" VerticalAlignment="Center">
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <controls:LucideIcon Kind="circle-check-big" Width="10" Height="10" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,4,0"/>
+                                                                <TextBlock Text="{services:Loc telegram.downloadedBadge}" FontSize="9" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="#4EDEA3"/>
+                                                            </StackPanel>
+                                                        </Border>
+
+                                                        <!-- Downloading Badge -->
+                                                        <Border Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVis}}" Background="#264CD7F6" BorderBrush="#4D4CD7F6" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="0,0,6,2" VerticalAlignment="Center">
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <controls:LucideIcon Kind="activity" Width="10" Height="10" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,4,0"/>
+                                                                <TextBlock Text="{Binding ProgressPercentText}" FontSize="9" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentCyanBrush}"/>
+                                                            </StackPanel>
+                                                        </Border>
+
+                                                        <!-- Sender / Chat Title Badge -->
+                                                        <Border Background="#1F4D8EFF" BorderBrush="#334D8EFF" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="0,0,6,2" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding ChatTitle}" FontSize="9" FontFamily="{StaticResource AppFontMono}" Foreground="#4CD7F6"/>
+                                                        </Border>
+
+                                                        <!-- Resolution Badge -->
+                                                        <Border Background="#252A33" CornerRadius="4" Padding="5,1" Margin="0,0,6,2" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Resolution}" FontSize="9" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextMutedBrush}"/>
+                                                        </Border>
+                                                    </WrapPanel>
+
+                                                    <!-- Bottom Line: File Size, Sender, Msg ID, Date -->
+                                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                        <TextBlock Text="{Binding SizeFormatted}" FontSize="11" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,12,0"/>
+                                                        <TextBlock Text="{Binding SenderName}" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="#ADC6FF" Margin="0,0,12,0"/>
+                                                        <TextBlock Text="Msg ID: #" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextMutedBrush}"/>
+                                                        <TextBlock Text="{Binding MessageId}" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,12,0"/>
+                                                        <TextBlock Text="{Binding DateFormatted}" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextMutedBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <!-- Right Action Buttons -->
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <!-- Open File (If Completed) -->
+                                                    <Button Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" Command="{Binding DataContext.OpenFileTelegramCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryGlassButton}" Height="30" Padding="10,0" Margin="0,0,6,0">
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <controls:LucideIcon Kind="folder-open" Width="12" Height="12" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{services:Loc telegram.openFile}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentEmeraldBrush}" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+
+                                                    <!-- Redownload (If Completed) -->
+                                                    <Button Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" Command="{Binding DataContext.DownloadSingleTelegramItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryGlassButton}" Width="30" Height="30" Padding="0">
+                                                        <controls:LucideIcon Kind="refresh-cw" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Button>
+
+                                                    <!-- Monitor (If Downloading) -->
+                                                    <Button Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVis}}" Command="{Binding DataContext.SwitchToDownloadsCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource SecondaryGlassButton}" Height="30" Padding="10,0">
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <controls:LucideIcon Kind="activity" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{services:Loc telegram.monitor}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+
+                                                    <!-- Single Download Button (If Ready) -->
+                                                    <Button Visibility="{Binding IsReady, Converter={StaticResource BoolToVis}}" Command="{Binding DataContext.DownloadSingleTelegramItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryGlassButton}" Height="30" Padding="12,0">
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <controls:LucideIcon Kind="download" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{services:Loc telegram.singleDownload}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- 4. EMPTY MEDIA STATE (When Count == 0) -->
+                            <Border Visibility="{Binding HasNoTelegramMedia, Converter={StaticResource BoolToVis}}" Background="#14171E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="32" Margin="0,8,0,12">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border Width="56" Height="56" Background="#1D2A3D" CornerRadius="16" Margin="0,0,0,14" HorizontalAlignment="Center">
+                                        <controls:LucideIcon Kind="send" Width="26" Height="26" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="{services:Loc telegram.emptyMedia}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" MaxWidth="480"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 5. LOAD MORE (PAGINATION) BUTTON -->
+                            <Button Visibility="{Binding HasTelegramMedia, Converter={StaticResource BoolToVis}}" Command="{Binding ScanTelegramCommand}" CommandParameter="loadMore" Style="{StaticResource SecondaryGlassButton}" Height="34" Padding="20,0" HorizontalAlignment="Center" Margin="0,12,0,16">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="chevron-down" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc telegram.loadMore}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 6. BACK TO DOWNLOADS BUTTON -->
+                            <Button Command="{Binding SwitchToDownloadsCommand}" Style="{StaticResource FlatActionButton}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="arrow-down" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc telegram.backToQueue}" FontSize="11" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- 4. Bottom Separator -->
+        <Border Grid.Row="4" Background="{StaticResource BorderBrush}"/>
+
+        <!-- ========================================================= -->
+        <!-- 5. BOTTOM STATUS TELEMETRY BAR                           -->
+        <!-- ========================================================= -->
+        <Border Grid.Row="5" Background="#14171E" Padding="14,2">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <controls:LucideIcon Kind="circle-arrow-down" Width="11" Height="11" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ActiveCountText}" Foreground="{StaticResource AccentCyanBrush}" FontSize="11" Margin="0,0,16,0" VerticalAlignment="Center" FontFamily="{StaticResource AppFontMono}"/>
+
+                    <controls:LucideIcon Kind="circle-check-big" Width="11" Height="11" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding CompletedCountText}" Foreground="{StaticResource AccentEmeraldBrush}" FontSize="11" Margin="0,0,16,0" VerticalAlignment="Center" FontFamily="{StaticResource AppFontMono}"/>
+
+                    <controls:LucideIcon Kind="hard-drive" Width="11" Height="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding TotalVolumeText}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" FontFamily="{StaticResource AppFontMono}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <controls:LucideIcon Kind="zap" Width="11" Height="11" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{services:Loc statusbar.globalSpeed}" Foreground="{StaticResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding GlobalSpeedText}" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="11" FontFamily="{StaticResource AppFontMono}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

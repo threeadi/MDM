@@ -1,0 +1,137 @@
+<Window x:Class="Mdm.Views.PropertiesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Properti &amp; Checksum - MDM"
+        Icon="pack://application:,,,/Mdm;component/Assets/app.ico"
+        Width="600" Height="540"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource CanvasBrush}">
+
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource SurfaceLowBrush}" CornerRadius="8" Margin="12" Padding="16">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header Info -->
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding Filename}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding SizeFormatted, StringFormat='Ukuran: {0}'}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <Border Grid.Column="1" Background="{Binding StatusBgBrush}" BorderBrush="{Binding StatusBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusBrush}" FontSize="11" FontWeight="Bold"/>
+                </Border>
+            </Grid>
+
+            <!-- Main Tab / Sections -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- General Details Card -->
+                    <Border Background="#14171E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Lokasi Simpan:" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,3"/>
+                            <TextBlock Grid.Column="1" Text="{Binding FilePath}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,3"/>
+
+                            <TextBlock Grid.Row="1" Text="URL Unduhan:" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,3"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Task.Url, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource FlatTextBox}" Height="24" FontSize="11" Margin="0,2"/>
+
+                            <TextBlock Grid.Row="2" Text="Halaman Asal:" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,3"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Task.Referer, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource FlatTextBox}" Height="24" FontSize="11" Margin="0,2"/>
+
+                            <TextBlock Grid.Row="3" Text="Koneksi Multi-Thread:" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,3"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Task.Connections, StringFormat='{}{0} Threads (Range Resume OK)'}" Foreground="{StaticResource AccentCyanBrush}" FontWeight="SemiBold" FontSize="11" Margin="0,3"/>
+
+                            <TextBlock Grid.Row="4" Text="Waktu Dibuat:" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,3"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Task.CreatedAt}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,3"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Checksum Integrity Section -->
+                    <Border Background="#14171E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="VERIFIKASI INTEGRITAS BERKAS (CHECKSUM)" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Content="Hitung Semua Hash" Style="{StaticResource PrimaryCyanButton}" Padding="10,3" Click="CalculateAll_Click"/>
+                            </Grid>
+
+                            <!-- MD5 -->
+                            <TextBlock Text="MD5:" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,2"/>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="65"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="Md5TextBox" Text="Klik 'Hitung Semua Hash' untuk memeriksa..." IsReadOnly="True" Style="{StaticResource FlatTextBox}" Height="26" FontSize="11"/>
+                                <Button Grid.Column="1" Content="Salin" Style="{StaticResource FlatActionButton}" Height="26" Margin="6,0,0,0" Click="CopyMd5_Click"/>
+                            </Grid>
+
+                            <!-- SHA-1 -->
+                            <TextBlock Text="SHA-1:" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,2"/>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="65"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="Sha1TextBox" Text="Klik 'Hitung Semua Hash' untuk memeriksa..." IsReadOnly="True" Style="{StaticResource FlatTextBox}" Height="26" FontSize="11"/>
+                                <Button Grid.Column="1" Content="Salin" Style="{StaticResource FlatActionButton}" Height="26" Margin="6,0,0,0" Click="CopySha1_Click"/>
+                            </Grid>
+
+                            <!-- SHA-256 -->
+                            <TextBlock Text="SHA-256:" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,2"/>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="65"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="Sha256TextBox" Text="Klik 'Hitung Semua Hash' untuk memeriksa..." IsReadOnly="True" Style="{StaticResource FlatTextBox}" Height="26" FontSize="11"/>
+                                <Button Grid.Column="1" Content="Salin" Style="{StaticResource FlatActionButton}" Height="26" Margin="6,0,0,0" Click="CopySha256_Click"/>
+                            </Grid>
+
+                            <!-- Match Check -->
+                            <TextBlock Text="Bandingkan dengan hash resmi (tempel di bawah):" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,2"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="CompareTextBox" Style="{StaticResource FlatTextBox}" Height="26" FontSize="11" TextChanged="CompareTextBox_TextChanged"/>
+                                <TextBlock x:Name="CompareResultText" Grid.Column="1" Text="" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                <Button Content="Buka Berkas" Style="{StaticResource PrimaryCyanButton}" Width="100" Margin="0,0,8,0" Click="OpenFile_Click"/>
+                <Button Content="Buka Folder" Style="{StaticResource FlatActionButton}" Width="90" Margin="0,0,8,0" Click="OpenFolder_Click"/>
+                <Button Content="Tutup" Style="{StaticResource FlatActionButton}" Width="75" Click="Close_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

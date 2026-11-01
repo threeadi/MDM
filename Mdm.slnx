@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../MDM.Tests/Mdm.Tests.csproj" />
+  <Project Path="Mdm.csproj" />
+</Solution>

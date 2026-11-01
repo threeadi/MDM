@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="26 28 182 112" width="728" height="448">
+  <defs>
+    <mask id="gap" maskUnits="userSpaceOnUse" x="0" y="0" width="240" height="200">
+      <rect width="240" height="200" fill="#fff"/>
+      <g fill="#000" stroke="#000" stroke-width="9" stroke-linejoin="round">
+        <circle cx="62" cy="104" r="26"/>
+        <circle cx="100" cy="74" r="38"/>
+        <circle cx="136" cy="100" r="30"/>
+        <rect x="62" y="96" width="74" height="34"/>
+      </g>
+    </mask>
+    <mask id="icon" maskUnits="userSpaceOnUse" x="0" y="0" width="240" height="200">
+      <rect width="240" height="200" fill="#fff"/>
+      <g fill="none" stroke="#000">
+        <polyline points="78,66 100,88 122,66" stroke-width="10" stroke-linejoin="miter" stroke-miterlimit="10"/>
+        <polyline points="78,88 100,110 122,88" stroke-width="10" stroke-linejoin="miter" stroke-miterlimit="10"/>
+      </g>
+    </mask>
+  </defs>
+  <g fill="#BFDBFE" mask="url(#gap)">
+    <circle cx="162" cy="106" r="24"/>
+    <circle cx="184" cy="112" r="18"/>
+    <rect x="162" y="106" width="22" height="24"/>
+  </g>
+  <g fill="#3B82F6" mask="url(#icon)">
+    <circle cx="62" cy="104" r="26"/>
+    <circle cx="100" cy="74" r="38"/>
+    <circle cx="136" cy="100" r="30"/>
+    <rect x="62" y="96" width="74" height="34"/>
+  </g>
+</svg>

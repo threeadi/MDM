@@ -1,0 +1,60 @@
+<Window x:Class="Mdm.Views.TelegramAuthDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Login Telegram MTProto - MDM"
+        Icon="pack://application:,,,/Mdm;component/Assets/app.ico"
+        Width="480" Height="440"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource CanvasBrush}">
+
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource SurfaceLowBrush}" CornerRadius="8" Margin="12" Padding="16">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,14">
+                <TextBlock Text="Login Akun Telegram" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                <TextBlock Text="Hubungkan sesi Telegram MTProto resmi untuk mengunduh media dari channel, grup, dan obrolan pribadi tanpa batas bot." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <!-- Form -->
+            <StackPanel Grid.Row="1">
+                <!-- Phone Number -->
+                <TextBlock Text="Nomor Telepon Telegram (dengan kode negara, contoh: +628123456789):" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="PhoneTextBox" Text="+62" Style="{StaticResource FlatTextBox}"/>
+                    <Button Grid.Column="1" x:Name="SendOtpBtn" Content="Kirim OTP" Style="{StaticResource PrimaryCyanButton}" Height="28" Margin="6,0,0,0" Padding="12,4" Click="SendOtp_Click"/>
+                </Grid>
+
+                <!-- OTP Code -->
+                <TextBlock Text="Kode Verifikasi (OTP dari aplikasi Telegram):" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+                <TextBox x:Name="OtpTextBox" Style="{StaticResource FlatTextBox}" Margin="0,0,0,10"/>
+
+                <!-- 2FA Password -->
+                <TextBlock Text="Password Verifikasi Dua Langkah / 2FA (jika aktif):" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+                <PasswordBox x:Name="PasswordBox" Height="28" Background="#171C24" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="#2E3340" Padding="6,4" Margin="0,0,0,10"/>
+
+                <!-- Status / Error Notification -->
+                <Border x:Name="StatusBadge" Background="#1D2432" BorderBrush="#2F3B52" BorderThickness="1" CornerRadius="4" Padding="8,6" Margin="0,0,0,6" Visibility="Collapsed">
+                    <TextBlock x:Name="StatusText" Text="" FontSize="11" Foreground="{StaticResource AccentCyanBrush}" TextWrapping="Wrap"/>
+                </Border>
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button Content="Batal" Style="{StaticResource FlatActionButton}" Width="80" Margin="0,0,8,0" Click="Cancel_Click"/>
+                <Button x:Name="LoginBtn" Content="Masuk Akun" Style="{StaticResource PrimaryEmeraldButton}" Width="120" Click="Login_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
+

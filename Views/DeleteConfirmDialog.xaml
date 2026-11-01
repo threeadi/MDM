@@ -1,0 +1,172 @@
+<Window x:Class="Mdm.Views.DeleteConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Mdm.Controls"
+        xmlns:services="clr-namespace:Mdm.Services"
+        Title="{services:Loc deleteConfirm.title}"
+        Icon="pack://application:,,,/Mdm;component/Assets/app.ico"
+        Width="460" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        KeyDown="Window_KeyDown">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Mdm;component/Styles/AppTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <!-- Acrylic Obsidian Glass Shell Container (1:1 with my-own-idm Stitch Kinetic Telemetry) -->
+    <Border Background="{StaticResource SurfaceLowBrush}" 
+            BorderBrush="{StaticResource BorderBrush}" 
+            BorderThickness="1" 
+            CornerRadius="12" 
+            Margin="6"
+            ClipToBounds="True">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- 0: Frameless Title Bar -->
+                <RowDefinition Height="36"/>
+                <!-- 1: Body Content -->
+                <RowDefinition Height="Auto"/>
+                <!-- 2: Footer Action Buttons -->
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Rose Red Glow Accent Line -->
+            <Border Grid.Row="0" Height="2" Background="{StaticResource AccentRoseBrush}" VerticalAlignment="Top"/>
+
+            <!-- 0: Frameless Title Bar (Drag Region) -->
+            <Border Grid.Row="0" Background="#1E232B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid Margin="12,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: Trash Icon + Title -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <controls:LucideIcon Kind="trash-2" Width="14" Height="14" Foreground="{StaticResource AccentRoseBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{services:Loc deleteConfirm.title}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Right: Close Button -->
+                    <Button Grid.Column="1" Width="26" Height="22" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Cancel_Click" ToolTip="{services:Loc common.cancel}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
+                                    <controls:LucideIcon x:Name="ic" Kind="x" Width="11" Height="11" Foreground="#8C909F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#30353E"/>
+                                        <Setter TargetName="ic" Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- 1: Body Content -->
+            <StackPanel Grid.Row="1" Margin="16,14">
+                <!-- Header Prompt -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Width="38" Height="38" Background="#29161A" BorderBrush="#4DFF5252" BorderThickness="1" CornerRadius="8" Margin="0,0,12,0">
+                        <controls:LucideIcon Kind="trash-2" Width="18" Height="18" Foreground="{StaticResource AccentRoseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock x:Name="PromptTitleText" Text="Hapus berkas ini dari antrean unduhan?" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock x:Name="PromptSubtitleText" Text="Tugas unduhan ini akan dihapus dari daftar MDM Turbo Desktop." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Target File Info Card -->
+                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Width="32" Height="32" Background="#1D2432" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,10,0">
+                                <controls:LucideIcon x:Name="CategoryIcon" Kind="file-text" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="FilenameText" Text="filename.zip" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                    <TextBlock x:Name="SizeSummaryText" Text="178.6 MB" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="&#x2022;" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="5,0" VerticalAlignment="Center"/>
+                                    <Border x:Name="StatusBadgeBorder" Background="#2610B981" BorderBrush="#8010B981" BorderThickness="1" CornerRadius="4" Padding="5,1">
+                                        <TextBlock x:Name="StatusBadgeText" Text="Selesai" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentEmeraldBrush}"/>
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- File Path on Disk -->
+                        <Border x:Name="PathContainer" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,8,0,0" Padding="0,6,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <controls:LucideIcon Kind="hard-drive" Width="11" Height="11" Foreground="{StaticResource AccentSecondaryCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="FilePathText" Text="C:\Downloads\file.zip" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Warning If Actively Downloading -->
+                <Border x:Name="ActiveDownloadWarning" Background="#241B12" BorderBrush="#80F59E0B" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10" Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <controls:LucideIcon Kind="alert-triangle" Width="14" Height="14" Foreground="{StaticResource AccentAmberBrush}" Margin="0,0,8,0" VerticalAlignment="Top"/>
+                        <TextBlock Grid.Column="1" Text="{services:Loc deleteConfirm.warningActive}" FontSize="10" Foreground="#FBBF24" TextWrapping="Wrap"/>
+                    </Grid>
+                </Border>
+
+                <!-- Checkbox: Also Delete Physical File From Disk -->
+                <Border Background="#171C24" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <CheckBox x:Name="DeleteFromDiskCheckBox" Style="{StaticResource DarkCheckBox}" VerticalAlignment="Center">
+                        <StackPanel Margin="6,0,0,0">
+                            <TextBlock Text="{services:Loc deleteConfirm.deleteDisk}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{services:Loc deleteConfirm.deleteDiskDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </CheckBox>
+                </Border>
+            </StackPanel>
+
+            <!-- 2: Footer Action Buttons -->
+            <Border Grid.Row="2" Background="#11161F" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="16,8">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="{services:Loc common.cancel}" Style="{StaticResource FlatActionButton}" Width="80" Height="30" Margin="0,0,8,0" Click="Cancel_Click"/>
+                    <Button Style="{StaticResource PrimaryRoseButton}" Height="30" Padding="14,0" Click="Confirm_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="trash-2" Width="12" Height="12" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{services:Loc deleteConfirm.deleteBtn}" FontSize="11" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

@@ -1,0 +1,266 @@
+<Window x:Class="Mdm.Views.TelegramWorkspaceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Mdm.Controls"
+        Title="Telegram Media Grabber Pro - MDM"
+        Icon="pack://application:,,,/Mdm;component/Assets/app.ico"
+        Width="960" Height="640"
+        MinWidth="780" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource CanvasBrush}">
+
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource SurfaceLowBrush}" CornerRadius="8" Margin="12" Padding="14">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- 0: Header Banner & Account -->
+                <RowDefinition Height="Auto"/>
+                <!-- 1: Channel Search & Target Directory -->
+                <RowDefinition Height="Auto"/>
+                <!-- 2: Filter Tabs -->
+                <RowDefinition Height="Auto"/>
+                <!-- 3: Media DataGrid -->
+                <RowDefinition Height="*"/>
+                <!-- 4: Bottom Action Bar -->
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 0. Header Banner & Account Bar -->
+            <Border Grid.Row="0" Background="#14171E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="36" Height="36" Background="#1D2A3D" CornerRadius="8" Margin="0,0,12,0">
+                            <controls:LucideIcon Kind="send" Width="18" Height="18" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Telegram Media Grabber Pro" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,8,0"/>
+                                <Border x:Name="AuthBadge" Background="#162920" BorderBrush="{StaticResource AccentEmeraldBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                    <TextBlock x:Name="AuthBadgeText" Text="MTProto Connected" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentEmeraldBrush}"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="Sesi MTProto Desktop terhubung dengan engine download multi-thread MDM" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Account Controls -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,12,0" HorizontalAlignment="Right">
+                            <TextBlock Text="AKUN AKTIF" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock x:Name="AccountNameText" Text="Belum Ada Akun" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}"/>
+                        </StackPanel>
+                        <Button x:Name="AuthActionBtn" Content="Login Akun" Style="{StaticResource FlatActionButton}" Padding="10,4" Click="AuthAction_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 1. Channel Search & Target Directory -->
+            <Grid Grid.Row="1" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="340"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Search Input & Scan Button -->
+                <Grid Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="ChatInputTextBox" Style="{StaticResource FlatTextBox}" Height="32" VerticalContentAlignment="Center" KeyDown="ChatInput_KeyDown"/>
+                    <Button Grid.Column="1" x:Name="ScanBtn" Style="{StaticResource PrimaryCyanButton}" Height="32" Margin="6,0,0,0" Padding="14,0" Click="Scan_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="search" Width="13" Height="13" Foreground="#090E16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ScanBtnText" Text="Pindai Media Chat" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Target Directory Card -->
+                <Border Grid.Column="2" Background="#14171E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="DIREKTORI PENYIMPANAN:" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                            <TextBlock x:Name="TargetDirText" Text="C:\Downloads\Telegram" FontSize="10" Foreground="{StaticResource AccentCyanBrush}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+
+                        <Button Grid.Row="0" Grid.Column="1" Content="Ubah" Style="{StaticResource FlatActionButton}" Height="22" Padding="8,2" FontSize="10" Click="ChangeDir_Click"/>
+
+                        <CheckBox Grid.Row="1" Grid.ColumnSpan="2" x:Name="SubfolderCheckBox" Content="Buat subfolder per channel/kontak" Foreground="{StaticResource TextSecondaryBrush}" FontSize="10" IsChecked="True" Margin="0,4,0,0" Checked="Subfolder_Changed" Unchecked="Subfolder_Changed"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- 2. Media Filter Chips -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+                <RadioButton Content="Semua" GroupName="MediaFilters" IsChecked="True" Style="{StaticResource CategoryRadioStyle}" Margin="0,0,4,0" Click="Filter_Click" Tag="all"/>
+                <RadioButton GroupName="MediaFilters" Style="{StaticResource CategoryRadioStyle}" Margin="0,0,4,0" Click="Filter_Click" Tag="video">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <controls:LucideIcon Kind="video" Width="12" Height="12" Foreground="#4EDEA3" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Video" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton GroupName="MediaFilters" Style="{StaticResource CategoryRadioStyle}" Margin="0,0,4,0" Click="Filter_Click" Tag="document">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <controls:LucideIcon Kind="file-text" Width="12" Height="12" Foreground="#ADC6FF" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Dokumen" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton GroupName="MediaFilters" Style="{StaticResource CategoryRadioStyle}" Margin="0,0,4,0" Click="Filter_Click" Tag="audio">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <controls:LucideIcon Kind="music" Width="12" Height="12" Foreground="#F59E0B" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Musik" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton GroupName="MediaFilters" Style="{StaticResource CategoryRadioStyle}" Margin="0,0,4,0" Click="Filter_Click" Tag="photo">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <controls:LucideIcon Kind="archive" Width="12" Height="12" Foreground="#C084FC" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Foto" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </RadioButton>
+            </StackPanel>
+
+            <!-- 3. Media DataGrid -->
+            <DataGrid Grid.Row="3" 
+                      x:Name="MediaGrid"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserResizeRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#1A1E28"
+                      Background="{StaticResource CanvasBrush}"
+                      BorderThickness="1"
+                      BorderBrush="{StaticResource BorderBrush}"
+                      RowHeight="36"
+                      SelectionMode="Extended"
+                      SelectionUnit="FullRow"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      Margin="0,0,0,10">
+
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#181B22"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                        <Setter Property="FontSize" Value="11"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Padding" Value="10,6"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                    </Style>
+
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="{StaticResource CanvasBrush}"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SurfaceHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SurfaceSelectedBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="8,0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="DataGridCell">
+                                    <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DataGrid.Resources>
+
+                <DataGrid.Columns>
+                    <!-- Checkbox Column -->
+                    <DataGridTemplateColumn Width="40">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Media Type -->
+                    <DataGridTemplateColumn Header="Tipe" Width="105" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="{Binding LucideMediaTypeIcon}" Width="12" Height="12" Foreground="{Binding LucideMediaTypeColor}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding MediaIconText}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Filename -->
+                    <DataGridTextColumn Header="Nama Berkas" Binding="{Binding Filename}" Width="2*" IsReadOnly="True"/>
+
+                    <!-- Size -->
+                    <DataGridTemplateColumn Header="Ukuran" Width="100" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding SizeFormatted}" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource AppFontMono}" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Date -->
+                    <DataGridTemplateColumn Header="Tanggal" Width="130" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DateFormatted}" Foreground="{StaticResource TextMutedBrush}" FontFamily="{StaticResource AppFontMono}" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Status -->
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110" IsReadOnly="True"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- 4. Bottom Action Bar -->
+            <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Pilih Semua" Style="{StaticResource FlatActionButton}" Padding="10,4" Margin="0,0,6,0" Click="SelectAll_Click"/>
+                    <Button Content="Hapus Pilihan" Style="{StaticResource FlatActionButton}" Padding="10,4" Margin="0,0,14,0" Click="DeselectAll_Click"/>
+                    <TextBlock x:Name="SelectedSummaryText" Text="0 dari 0 berkas terpilih" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="DownloadSelectedBtn" Content="Unduh Berkas Terpilih" Style="{StaticResource PrimaryCyanButton}" Height="32" Padding="16,0" Margin="0,0,8,0" Click="DownloadSelected_Click"/>
+                    <Button Content="Tutup" Style="{StaticResource FlatActionButton}" Width="75" Height="32" Click="Close_Click"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
+

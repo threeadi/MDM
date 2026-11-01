@@ -1,0 +1,39 @@
+<Window x:Class="Mdm.Views.DuplicateDownloadDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Berkas Sudah Ada - MDM"
+        Icon="pack://application:,,,/Mdm;component/Assets/app.ico"
+        Width="500" Height="260"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource CanvasBrush}">
+
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource SurfaceLowBrush}" CornerRadius="8" Margin="12" Padding="16">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title -->
+            <TextBlock Text="Berkas Sudah Ada" FontSize="15" FontWeight="Bold" Foreground="{StaticResource AccentAmberBrush}" Margin="0,0,0,8"/>
+
+            <!-- Message Body -->
+            <StackPanel Grid.Row="1">
+                <TextBlock x:Name="MessageText" Text="Berkas dengan nama tersebut sudah ada di folder tujuan:" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                <TextBlock x:Name="FilePathText" Text="C:\Downloads\file.zip" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                <TextBlock Text="Pilih tindakan yang ingin Anda lakukan:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+            </StackPanel>
+
+            <!-- Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button Content="Batal" Style="{StaticResource FlatActionButton}" Width="75" Margin="0,0,6,0" Click="Cancel_Click"/>
+                <Button Content="Buka Berkas" Style="{StaticResource FlatActionButton}" Width="95" Margin="0,0,6,0" Click="OpenExisting_Click"/>
+                <Button Content="Timpa" Style="{StaticResource FlatActionButton}" Width="75" Margin="0,0,6,0" Click="Overwrite_Click"/>
+                <Button Content="Ganti Nama Otomatis" Style="{StaticResource PrimaryCyanButton}" Width="150" Click="AutoRename_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
+

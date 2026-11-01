@@ -1,0 +1,58 @@
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio cache & user files
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+*.dbmdl
+
+## Roslyn analyzer and WPF temporary files
+*.wpftmp*
+*wpftmp.csproj*
+*wpftmp.assets.cache
+*.g.resources
+*.baml
+GeneratedInternalTypeHelper.g.cs
+
+## Test results & Code Coverage
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.visualstudio.g.cs
+TestResults/
+coverage/
+*.lcov
+
+## Crash reports and diagnostics
+*.log
+*.crash
+*.dmp
+
+## Local Databases & temporary files
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.part
+*.tmp
+
+## OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+

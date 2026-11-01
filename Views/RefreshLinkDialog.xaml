@@ -1,0 +1,94 @@
+<Window x:Class="Mdm.Views.RefreshLinkDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Mdm.Controls"
+        Title="Perbarui Tautan Unduhan - MDM"
+        Icon="pack://application:,,,/Mdm;component/Assets/app.ico"
+        Width="560" Height="460"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource CanvasBrush}">
+
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource SurfaceLowBrush}" CornerRadius="8" Margin="12" Padding="16">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title & Description -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,14">
+                <TextBlock Text="Perbarui Tautan Unduhan" 
+                           FontSize="16" FontWeight="Bold" 
+                           Foreground="{StaticResource TextPrimaryBrush}" 
+                           Margin="0,0,0,4"/>
+                <TextBlock Text="Tautan unduhan telah kedaluwarsa atau server menolak izin. Dapatkan tautan baru dari browser tanpa kehilangan data yang sudah terunduh." 
+                           FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" 
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <!-- Content Area -->
+            <StackPanel Grid.Row="1">
+                <!-- File Info Card -->
+                <Border Background="#14171E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Nama Berkas:" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,2"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Filename}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,2"/>
+
+                        <TextBlock Grid.Row="1" Text="Terunduh:" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,2"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DownloadedFormatted}" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="11" Margin="0,2"/>
+
+                        <TextBlock Grid.Row="2" Text="Tautan Lama:" Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="0,2"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Task.Url}" Foreground="{StaticResource TextMutedBrush}" FontSize="10" TextTrimming="CharacterEllipsis" Margin="0,2"/>
+                    </Grid>
+                </Border>
+
+                <!-- Open in Browser Section -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Langkah 1: Buka kembali halaman web unduhan:" 
+                               FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" 
+                               VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Style="{StaticResource FlatActionButton}" Padding="10,4" Click="OpenBrowser_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="external-link" Width="12" Height="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Buka di Browser" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- New URL Input -->
+                <TextBlock Text="Langkah 2: Tempel tautan baru (atau biarkan ekstensi browser menangkapnya):" 
+                           FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" 
+                           Margin="0,0,0,4"/>
+                <TextBox x:Name="NewUrlTextBox" Style="{StaticResource FlatTextBox}" Margin="0,0,0,6" TextChanged="NewUrlTextBox_TextChanged"/>
+
+                <!-- Probe Validation Status -->
+                <Border x:Name="ProbeBadge" Background="#1D2432" BorderBrush="#2F3B52" BorderThickness="1" CornerRadius="4" Padding="8,6" Margin="0,0,0,8" Visibility="Collapsed">
+                    <TextBlock x:Name="ProbeStatusText" Text="Memvalidasi tautan baru..." FontSize="11" Foreground="{StaticResource AccentCyanBrush}" TextWrapping="Wrap"/>
+                </Border>
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button Content="Batal" Style="{StaticResource FlatActionButton}" Width="80" Margin="0,0,8,0" Click="Cancel_Click"/>
+                <Button x:Name="ApplyButton" Content="Perbarui &amp; Lanjutkan" Style="{StaticResource PrimaryCyanButton}" Width="160" Click="Apply_Click" IsEnabled="False"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
+
