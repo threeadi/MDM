@@ -414,7 +414,7 @@ public partial class SettingsDialog : Window
 
     private void UpdateTelegramSessionStatus()
     {
-        string sessionPath = Path.Combine(
+        string sessionPath = _telegramService?.SessionPath ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "MDM",
             "telegram",
@@ -739,7 +739,7 @@ public partial class SettingsDialog : Window
                 }
                 else
                 {
-                    string sessionPath = Path.Combine(
+                    string sessionPath = _telegramService?.SessionPath ?? Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                         "MDM",
                         "telegram",

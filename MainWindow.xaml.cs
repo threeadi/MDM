@@ -107,14 +107,18 @@ public partial class MainWindow : Window
             };
 
             // Restore Telegram auth session if session file exists
+            var vm = ViewModel;
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await ViewModel.Engine.TelegramService.CheckAndRestoreAuthAsync();
-                    Dispatcher.Invoke(() => ViewModel.UpdateTelegramCounts());
+                    await vm.Engine.TelegramService.CheckAndRestoreAuthAsync();
+                    Dispatcher.Invoke(() => vm.UpdateTelegramCounts());
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Logger.Warn($"Gagal restore Telegram session di MainWindow: {ex.Message}");
+                }
             });
         };
 

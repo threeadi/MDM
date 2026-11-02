@@ -879,14 +879,14 @@
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                     <TextBlock Text="{services:Loc telegram.title}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                                     <!-- Connected Badge -->
-                                                    <Border Visibility="{Binding TelegramAuthStatus.IsAuthenticated, Converter={StaticResource BoolToVis}}" Background="#2610B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                                    <Border Visibility="{Binding IsTelegramAuthenticated, Converter={StaticResource BoolToVis}}" Background="#2610B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                             <Ellipse Width="6" Height="6" Fill="{StaticResource AccentEmeraldBrush}" Margin="0,0,5,0"/>
                                                             <TextBlock Text="{services:Loc telegram.connected}" FontSize="10" FontWeight="SemiBold" Foreground="#4EDEA3"/>
                                                         </StackPanel>
                                                     </Border>
                                                     <!-- Not Connected Badge -->
-                                                    <Border Visibility="{Binding TelegramAuthStatus.IsNotAuthenticated, Converter={StaticResource BoolToVis}}" Background="#26F59E0B" BorderBrush="#4DF59E0B" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+                                                    <Border Visibility="{Binding IsTelegramNotAuthenticated, Converter={StaticResource BoolToVis}}" Background="#26F59E0B" BorderBrush="#4DF59E0B" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                             <Ellipse Width="6" Height="6" Fill="{StaticResource AccentAmberBrush}" Margin="0,0,5,0"/>
                                                             <TextBlock Text="{services:Loc telegram.notLoggedIn}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentAmberBrush}"/>

@@ -49,6 +49,10 @@ public class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(IsVideoSelected));
                 OnPropertyChanged(nameof(IsMusikSelected));
                 OnPropertyChanged(nameof(IsProgramSelected));
+                if (value == "telegram")
+                {
+                    UpdateTelegramCounts();
+                }
             }
         }
     }
@@ -104,6 +108,10 @@ public class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(IsVideoSelected));
                 OnPropertyChanged(nameof(IsMusikSelected));
                 OnPropertyChanged(nameof(IsProgramSelected));
+                if (value == "telegram")
+                {
+                    UpdateTelegramCounts();
+                }
             }
         }
     }
@@ -323,14 +331,35 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     public TelegramAuthStatus TelegramAuthStatus => _engine?.TelegramService?.AuthStatus ?? new TelegramAuthStatus();
+    public bool IsTelegramAuthenticated => TelegramAuthStatus.IsAuthenticated;
+    public bool IsTelegramNotAuthenticated => !TelegramAuthStatus.IsAuthenticated;
     public bool HasTelegramMedia => DisplayedTelegramMedia.Count > 0;
     public bool HasNoTelegramMedia => DisplayedTelegramMedia.Count == 0;
     public int TelegramMediaCount => TelegramMediaItems.Count;
     public int DisplayedTelegramMediaCount => DisplayedTelegramMedia.Count;
 
-    public string TelegramAccountDisplay => TelegramAuthStatus.IsAuthenticated
-        ? (!string.IsNullOrEmpty(TelegramAuthStatus.DisplayName) ? TelegramAuthStatus.DisplayName : (!string.IsNullOrEmpty(TelegramAuthStatus.Username) ? $"@{TelegramAuthStatus.Username.TrimStart('@')}" : (TelegramAuthStatus.PhoneNumber ?? "User")))
-        : I18n.Tr("telegram.noAccount", "Belum Ada Akun");
+    public string TelegramAccountDisplay
+    {
+        get
+        {
+            if (!TelegramAuthStatus.IsAuthenticated)
+                return I18n.Tr("telegram.noAccount", "Belum Ada Akun");
+
+            string disp = TelegramAuthStatus.DisplayName ?? "";
+            string user = TelegramAuthStatus.Username ?? "";
+            string phone = TelegramAuthStatus.PhoneNumber ?? "";
+
+            if (!string.IsNullOrWhiteSpace(disp) && !string.IsNullOrWhiteSpace(user))
+                return $"{disp} (@{user.TrimStart('@')})";
+            if (!string.IsNullOrWhiteSpace(disp))
+                return disp;
+            if (!string.IsNullOrWhiteSpace(user))
+                return $"@{user.TrimStart('@')}";
+            if (!string.IsNullOrWhiteSpace(phone))
+                return phone;
+            return "User";
+        }
+    }
 
     public int TelegramSelectedCount => TelegramMediaItems.Count(m => m.IsSelected);
     public int TelegramCompletedCount => TelegramMediaItems.Count(m => m.IsCompleted);
@@ -431,6 +460,27 @@ public class MainViewModel : INotifyPropertyChanged
         _engine = new DownloadEngine(_database);
         _ipcServer = new IpcServer();
 
+        // Listen for Telegram auth changes
+        _engine.TelegramService.OnAuthStatusChanged += _ =>
+        {
+            try
+            {
+                Application.Current?.Dispatcher.Invoke(() => UpdateTelegramCounts());
+            }
+            catch { }
+        };
+
+        // Restore Telegram session in background
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _engine.TelegramService.CheckAndRestoreAuthAsync();
+                Application.Current?.Dispatcher.Invoke(() => UpdateTelegramCounts());
+            }
+            catch { }
+        });
+
         // Apply saved rate limits
         if (_database.GetSetting("global_limit_enabled") == "1" &&
             long.TryParse(_database.GetSetting("global_limit_kbps"), out long kbps))
@@ -448,7 +498,23 @@ public class MainViewModel : INotifyPropertyChanged
         });
 
         SwitchToDownloadsCommand = new RelayCommand(() => ActiveView = "downloads");
-        SwitchToTelegramCommand = new RelayCommand(() => ActiveView = "telegram");
+        SwitchToTelegramCommand = new RelayCommand(() =>
+        {
+            ActiveView = "telegram";
+            UpdateTelegramCounts();
+            if (!_engine.TelegramService.AuthStatus.IsAuthenticated && File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MDM", "telegram", "mdm_telegram.session")))
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _engine.TelegramService.CheckAndRestoreAuthAsync();
+                        Application.Current?.Dispatcher.Invoke(() => UpdateTelegramCounts());
+                    }
+                    catch { }
+                });
+            }
+        });
 
         PauseCommand = new RelayCommand(param =>
         {
@@ -763,6 +829,7 @@ public class MainViewModel : INotifyPropertyChanged
             }
         });
 
+        UpdateTelegramCounts();
         _ = FetchTelegramDialogsAsync();
     }
 
@@ -1144,6 +1211,8 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(TelegramSelectedSummaryText));
         OnPropertyChanged(nameof(TelegramDownloadButtonText));
         OnPropertyChanged(nameof(TelegramAuthStatus));
+        OnPropertyChanged(nameof(IsTelegramAuthenticated));
+        OnPropertyChanged(nameof(IsTelegramNotAuthenticated));
         OnPropertyChanged(nameof(HasTelegramMedia));
         OnPropertyChanged(nameof(HasNoTelegramMedia));
         OnPropertyChanged(nameof(TelegramMediaCount));

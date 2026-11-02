@@ -14,21 +14,28 @@ public class TelegramService
     private readonly string _sessionPath;
     private readonly Database _database;
 
+    public string SessionDir => _sessionDir;
+    public string SessionPath => _sessionPath;
+
     private WTelegram.Client? _client;
     private string? _currentPhoneNumber;
     private string? _currentOtpCode;
     private string? _currentPassword;
 
+    public event Action<TelegramAuthStatus>? OnAuthStatusChanged;
+
     public TelegramAuthStatus AuthStatus { get; private set; } = new();
 
-    public TelegramService(Database database)
+    public TelegramService(Database database, string? customSessionDir = null)
     {
         _database = database;
-        _sessionDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "MDM",
-            "telegram"
-        );
+        _sessionDir = !string.IsNullOrWhiteSpace(customSessionDir)
+            ? customSessionDir
+            : Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "MDM",
+                "telegram"
+            );
 
         if (!Directory.Exists(_sessionDir))
         {
@@ -36,6 +43,24 @@ public class TelegramService
         }
 
         _sessionPath = Path.Combine(_sessionDir, "mdm_telegram.session");
+
+        // Immediately populate cached auth status if session exists
+        if (File.Exists(_sessionPath))
+        {
+            string? dispName = _database.GetSetting("tg_display_name");
+            string? phone = _database.GetSetting("tg_phone_number");
+            string? user = _database.GetSetting("tg_username");
+            string? uidStr = _database.GetSetting("tg_user_id");
+
+            AuthStatus = new TelegramAuthStatus
+            {
+                IsAuthenticated = true,
+                PhoneNumber = phone,
+                Username = user,
+                DisplayName = !string.IsNullOrWhiteSpace(dispName) ? dispName : (!string.IsNullOrWhiteSpace(user) ? $"@{user.TrimStart('@')}" : (phone ?? "User")),
+                UserId = long.TryParse(uidStr, out var uid) ? uid : null
+            };
+        }
     }
 
     private string? Config(string what)
@@ -59,6 +84,7 @@ public class TelegramService
             if (!File.Exists(_sessionPath))
             {
                 AuthStatus = new TelegramAuthStatus { IsAuthenticated = false };
+                OnAuthStatusChanged?.Invoke(AuthStatus);
                 return AuthStatus;
             }
 
@@ -75,6 +101,12 @@ public class TelegramService
                     Username = user.username,
                     DisplayName = $"{user.first_name} {user.last_name}".Trim()
                 };
+
+                _database.SetSetting("tg_user_id", user.id.ToString());
+                if (!string.IsNullOrEmpty(user.phone)) _database.SetSetting("tg_phone_number", user.phone);
+                if (!string.IsNullOrEmpty(user.username)) _database.SetSetting("tg_username", user.username);
+                if (!string.IsNullOrEmpty(AuthStatus.DisplayName)) _database.SetSetting("tg_display_name", AuthStatus.DisplayName);
+
                 Logger.Info($"Telegram session dipulihkan untuk akun: {AuthStatus.DisplayName} (@{AuthStatus.Username})");
             }
             else
@@ -85,9 +117,38 @@ public class TelegramService
         catch (Exception ex)
         {
             Logger.Warn($"Gagal memulihkan session Telegram: {ex.Message}");
-            AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = ex.Message };
+
+            // Only revoke auth if Telegram explicitly said the session is invalid / revoked
+            bool isRevoked = ex.Message.Contains("AUTH_KEY_UNREGISTERED", StringComparison.OrdinalIgnoreCase) ||
+                             ex.Message.Contains("SESSION_REVOKED", StringComparison.OrdinalIgnoreCase) ||
+                             ex.Message.Contains("USER_DEACTIVATED", StringComparison.OrdinalIgnoreCase);
+
+            if (isRevoked)
+            {
+                AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = ex.Message };
+            }
+            else
+            {
+                // Temporary network error, socket exception, file access contention, or offline:
+                // Keep the cached authenticated status so the user remains logged in
+                string? dispName = _database.GetSetting("tg_display_name");
+                string? phone = _database.GetSetting("tg_phone_number");
+                string? user = _database.GetSetting("tg_username");
+                string? uidStr = _database.GetSetting("tg_user_id");
+
+                AuthStatus = new TelegramAuthStatus
+                {
+                    IsAuthenticated = File.Exists(_sessionPath),
+                    PhoneNumber = phone,
+                    Username = user,
+                    DisplayName = !string.IsNullOrWhiteSpace(dispName) ? dispName : (!string.IsNullOrWhiteSpace(user) ? $"@{user.TrimStart('@')}" : (phone ?? "User")),
+                    UserId = long.TryParse(uidStr, out var uid) ? uid : null,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
+        OnAuthStatusChanged?.Invoke(AuthStatus);
         return AuthStatus;
     }
 
@@ -218,9 +279,18 @@ public class TelegramService
                     Username = user?.username,
                     DisplayName = $"{user?.first_name} {user?.last_name}".Trim()
                 };
+
+                if (user != null)
+                {
+                    _database.SetSetting("tg_user_id", user.id.ToString());
+                    if (!string.IsNullOrEmpty(user.username)) _database.SetSetting("tg_username", user.username);
+                    if (!string.IsNullOrEmpty(AuthStatus.DisplayName)) _database.SetSetting("tg_display_name", AuthStatus.DisplayName);
+                }
+
                 Logger.Info($"Login Telegram sukses: {AuthStatus.DisplayName}");
             }
 
+            OnAuthStatusChanged?.Invoke(AuthStatus);
             return AuthStatus;
         }
         catch (RpcException rpcEx)
@@ -276,6 +346,14 @@ public class TelegramService
                     Username = user?.username,
                     DisplayName = $"{user?.first_name} {user?.last_name}".Trim()
                 };
+
+                if (user != null)
+                {
+                    _database.SetSetting("tg_user_id", user.id.ToString());
+                    if (!string.IsNullOrEmpty(user.username)) _database.SetSetting("tg_username", user.username);
+                    if (!string.IsNullOrEmpty(AuthStatus.DisplayName)) _database.SetSetting("tg_display_name", AuthStatus.DisplayName);
+                }
+
                 Logger.Info($"Verifikasi 2FA Telegram sukses: {AuthStatus.DisplayName}");
             }
             else
@@ -283,6 +361,7 @@ public class TelegramService
                 AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = "PASSWORD_HASH_INVALID" };
             }
 
+            OnAuthStatusChanged?.Invoke(AuthStatus);
             return AuthStatus;
         }
         catch (RpcException rpcEx)
@@ -295,12 +374,14 @@ public class TelegramService
             }
             Logger.Error($"Gagal verifikasi password 2FA Telegram | RpcException: {msg} (Code: {rpcEx.Code}, X: {waitSec})", rpcEx);
             AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = msg };
+            OnAuthStatusChanged?.Invoke(AuthStatus);
             return AuthStatus;
         }
         catch (Exception ex)
         {
             Logger.Error("Gagal verifikasi password 2FA Telegram", ex);
             AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = ex.Message };
+            OnAuthStatusChanged?.Invoke(AuthStatus);
             return AuthStatus;
         }
     }
@@ -321,11 +402,15 @@ public class TelegramService
             }
 
             _database.SetSetting("tg_phone_number", "");
+            _database.SetSetting("tg_user_id", "");
+            _database.SetSetting("tg_username", "");
+            _database.SetSetting("tg_display_name", "");
             _currentPhoneNumber = null;
             _currentOtpCode = null;
             _currentPassword = null;
 
             AuthStatus = new TelegramAuthStatus { IsAuthenticated = false };
+            OnAuthStatusChanged?.Invoke(AuthStatus);
             Logger.Info("Akun Telegram telah logout.");
         }
         catch (Exception ex)
