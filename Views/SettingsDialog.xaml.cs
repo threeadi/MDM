@@ -45,6 +45,11 @@ public partial class SettingsDialog : Window
                 SubTabTgLogin.IsChecked = true;
                 TgSubTab_Checked(this, new RoutedEventArgs());
             }
+            else
+            {
+                SubTabTgAccounts.IsChecked = true;
+                TgSubTab_Checked(this, new RoutedEventArgs());
+            }
         }
     }
 
@@ -160,9 +165,16 @@ public partial class SettingsDialog : Window
         string defaultTgDir = Path.Combine(defaultDir, "Telegram");
         TelegramDirTextBox.Text = _database.GetSetting("telegram_download_dir", defaultTgDir) ?? defaultTgDir;
         TelegramSubfolderCheckBox.IsChecked = _database.GetSetting("telegram_subfolder", "1") == "1";
-        TgApiIdTextBox.Text = _database.GetSetting("tg_api_id", "2040") ?? "2040";
-        TgApiHashTextBox.Text = _database.GetSetting("tg_api_hash", "b18441a1ff607e10a989891a5462e627") ?? "b18441a1ff607e10a989891a5462e627";
 
+        string savedApiId = _database.GetSetting("tg_api_id", "") ?? "";
+        if (savedApiId == "2040") savedApiId = "";
+        TgApiIdTextBox.Text = savedApiId;
+
+        string savedApiHash = _database.GetSetting("tg_api_hash", "") ?? "";
+        if (savedApiHash == "b18441a1ff607e10a989891a5462e627") savedApiHash = "";
+        TgApiHashTextBox.Text = savedApiHash;
+
+        ResetAndClearTelegramLoginForm();
         UpdateTelegramSessionStatus();
 
         // --- 7. PROXY & SOCKS ---
@@ -384,6 +396,22 @@ public partial class SettingsDialog : Window
 
     #region Telegram Authentication & Management
 
+    private void ResetAndClearTelegramLoginForm()
+    {
+        TgPhoneTextBox.Text = "+62";
+        TgOtpTextBox.Text = string.Empty;
+        TgPasswordBox.Password = string.Empty;
+        TgPasswordVisibleTextBox.Text = string.Empty;
+        TgPasswordVisibleTextBox.Visibility = Visibility.Collapsed;
+        TgPasswordBox.Visibility = Visibility.Visible;
+        TgEyeIcon.Kind = "eye";
+
+        TgOtpBlock.Visibility = Visibility.Collapsed;
+        TgPasswordBlock.Visibility = Visibility.Collapsed;
+        TgErrorBorder.Visibility = Visibility.Collapsed;
+        TgErrorText.Text = string.Empty;
+    }
+
     private void UpdateTelegramSessionStatus()
     {
         string sessionPath = Path.Combine(
@@ -401,9 +429,10 @@ public partial class SettingsDialog : Window
             TelegramStatusBadgeText.Text = I18n.Instance["telegram.connected"];
             TelegramStatusBadgeText.Foreground = (Brush)FindResource("AccentEmeraldBrush");
 
+            string userDisplay = "";
             if (_telegramService?.AuthStatus.IsAuthenticated == true && !string.IsNullOrEmpty(_telegramService.AuthStatus.DisplayName))
             {
-                string userDisplay = !string.IsNullOrEmpty(_telegramService.AuthStatus.Username) ? $"@{_telegramService.AuthStatus.Username}" : _telegramService.AuthStatus.PhoneNumber ?? "";
+                userDisplay = !string.IsNullOrEmpty(_telegramService.AuthStatus.Username) ? $"@{_telegramService.AuthStatus.Username}" : _telegramService.AuthStatus.PhoneNumber ?? "";
                 TgAccountNameText.Text = $"{_telegramService.AuthStatus.DisplayName} ({userDisplay})".Trim();
             }
             else
@@ -412,6 +441,13 @@ public partial class SettingsDialog : Window
             }
             ActiveAccountCard.Visibility = Visibility.Visible;
             TgNoAccountCard.Visibility = Visibility.Collapsed;
+
+            // Show informative banner on login tab that an account is active
+            TgActiveNoticeBorder.Visibility = Visibility.Visible;
+            string accName = !string.IsNullOrEmpty(userDisplay) ? $"{_telegramService?.AuthStatus.DisplayName} ({userDisplay})" : TgAccountNameText.Text;
+            TgAlreadyLoggedInText.Text = I18n.Instance.CurrentLanguage == "en"
+                ? $"Account '{accName}' is active. Logging in with a new number will replace this active session."
+                : $"Akun '{accName}' sedang aktif. Login dengan nomor baru akan menggantikan sesi akun ini.";
         }
         else
         {
@@ -421,6 +457,7 @@ public partial class SettingsDialog : Window
             TelegramStatusBadgeText.Foreground = (Brush)FindResource("AccentAmberBrush");
             ActiveAccountCard.Visibility = Visibility.Collapsed;
             TgNoAccountCard.Visibility = Visibility.Visible;
+            TgActiveNoticeBorder.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -446,7 +483,9 @@ public partial class SettingsDialog : Window
         {
             if (_telegramService != null)
             {
-                var st = await _telegramService.RequestOtpAsync(phone, TgApiIdTextBox.Text.Trim(), TgApiHashTextBox.Text.Trim());
+                string? customApiId = string.IsNullOrWhiteSpace(TgApiIdTextBox.Text) ? null : TgApiIdTextBox.Text.Trim();
+                string? customApiHash = string.IsNullOrWhiteSpace(TgApiHashTextBox.Text) ? null : TgApiHashTextBox.Text.Trim();
+                var st = await _telegramService.RequestOtpAsync(phone, customApiId, customApiHash);
                 if (!string.IsNullOrEmpty(st.ErrorMessage))
                 {
                     string err = st.ErrorMessage;
@@ -522,6 +561,7 @@ public partial class SettingsDialog : Window
                 else if (st.IsAuthenticated)
                 {
                     UpdateTelegramSessionStatus();
+                    ResetAndClearTelegramLoginForm();
                     SubTabTgAccounts.IsChecked = true;
                     TgSubTab_Checked(this, new RoutedEventArgs());
                 }
@@ -632,6 +672,7 @@ public partial class SettingsDialog : Window
                 if (st.IsAuthenticated)
                 {
                     UpdateTelegramSessionStatus();
+                    ResetAndClearTelegramLoginForm();
                     SubTabTgAccounts.IsChecked = true;
                     TgSubTab_Checked(this, new RoutedEventArgs());
                 }
@@ -693,6 +734,7 @@ public partial class SettingsDialog : Window
                     }
                 }
                 UpdateTelegramSessionStatus();
+                ResetAndClearTelegramLoginForm();
             }
             catch (Exception ex)
             {
@@ -854,8 +896,11 @@ public partial class SettingsDialog : Window
         // 6. TELEGRAM
         _database.SetSetting("telegram_download_dir", TelegramDirTextBox.Text.Trim());
         _database.SetSetting("telegram_subfolder", TelegramSubfolderCheckBox.IsChecked == true ? "1" : "0");
-        _database.SetSetting("tg_api_id", TgApiIdTextBox.Text.Trim());
-        _database.SetSetting("tg_api_hash", TgApiHashTextBox.Text.Trim());
+        string customId = TgApiIdTextBox.Text.Trim();
+        _database.SetSetting("tg_api_id", customId == "2040" ? "" : customId);
+
+        string customHash = TgApiHashTextBox.Text.Trim();
+        _database.SetSetting("tg_api_hash", customHash == "b18441a1ff607e10a989891a5462e627" ? "" : customHash);
 
         // 7. PROXY
         _database.SetSetting("proxy_enabled", ProxyEnabledCheckBox.IsChecked == true ? "1" : "0");

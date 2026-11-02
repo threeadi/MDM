@@ -708,6 +708,21 @@
 
                                 <!-- Sub-Tab Panel 2: Login Nomor Telepon -->
                                 <StackPanel x:Name="PanelTgLoginOtp" Visibility="Collapsed">
+                                    <!-- Info notice when an account is already active -->
+                                    <Border x:Name="TgActiveNoticeBorder" Background="#142334" BorderBrush="#3B82F6" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,12" Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <controls:LucideIcon Kind="info" Width="16" Height="16" Foreground="{StaticResource AccentCyanBrush}" Margin="0,1,10,0" VerticalAlignment="Top"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{services:Loc settings.tgAlreadyLoggedInTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                <TextBlock x:Name="TgAlreadyLoggedInText" Text="{services:Loc settings.tgAlreadyLoggedInDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
                                     <TextBlock Text="{services:Loc settings.tgApiLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                     <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
@@ -715,8 +730,36 @@
                                             <ColumnDefinition Width="10"/>
                                             <ColumnDefinition Width="2*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="TgApiIdTextBox" Text="2040" Style="{StaticResource FlatTextBox}"/>
-                                        <TextBox Grid.Column="2" x:Name="TgApiHashTextBox" Text="b18441a1ff607e10a989891a5462e627" Style="{StaticResource FlatTextBox}"/>
+                                        <Grid Grid.Column="0">
+                                            <TextBox x:Name="TgApiIdTextBox" Style="{StaticResource FlatTextBox}"/>
+                                            <TextBlock Text="{services:Loc settings.tgApiIdPlaceholder}" Foreground="{StaticResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Text, ElementName=TgApiIdTextBox}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                        <Grid Grid.Column="2">
+                                            <TextBox x:Name="TgApiHashTextBox" Style="{StaticResource FlatTextBox}"/>
+                                            <TextBlock Text="{services:Loc settings.tgApiHashPlaceholder}" Foreground="{StaticResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Text, ElementName=TgApiHashTextBox}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
                                     </Grid>
 
                                     <TextBlock Text="{services:Loc settings.tgPhoneLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>

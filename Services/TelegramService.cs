@@ -42,8 +42,8 @@ public class TelegramService
     {
         return what switch
         {
-            "api_id" => _database.GetSetting("tg_api_id") ?? DefaultApiId,
-            "api_hash" => _database.GetSetting("tg_api_hash") ?? DefaultApiHash,
+            "api_id" => !string.IsNullOrWhiteSpace(_database.GetSetting("tg_api_id")) ? _database.GetSetting("tg_api_id") : DefaultApiId,
+            "api_hash" => !string.IsNullOrWhiteSpace(_database.GetSetting("tg_api_hash")) ? _database.GetSetting("tg_api_hash") : DefaultApiHash,
             "phone_number" => _currentPhoneNumber ?? _database.GetSetting("tg_phone_number"),
             "verification_code" => _currentOtpCode,
             "password" => _currentPassword,
@@ -206,6 +206,10 @@ public class TelegramService
                     _database.SetSetting("tg_phone_number", phone);
                 }
 
+                _currentOtpCode = null;
+                _currentPassword = null;
+                _currentPhoneNumber = null;
+
                 AuthStatus = new TelegramAuthStatus
                 {
                     IsAuthenticated = true,
@@ -259,6 +263,10 @@ public class TelegramService
                 {
                     _database.SetSetting("tg_phone_number", phone);
                 }
+
+                _currentOtpCode = null;
+                _currentPassword = null;
+                _currentPhoneNumber = null;
 
                 AuthStatus = new TelegramAuthStatus
                 {
