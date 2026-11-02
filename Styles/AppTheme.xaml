@@ -604,7 +604,7 @@
         </Setter>
     </Style>
 
-    <!-- Sharp Modern ProgressBar Style (Clean Flat Stitch Aesthetic) -->
+    <!-- Sharp Modern ProgressBar Style with Shimmer Animation (Clean Flat Stitch Aesthetic) -->
     <Style x:Key="SharpProgressBar" TargetType="ProgressBar">
         <Setter Property="Background" Value="#1B1F28"/>
         <Setter Property="Foreground" Value="#10B981"/>
@@ -623,9 +623,51 @@
                             <Border x:Name="PART_Indicator" 
                                     Background="{TemplateBinding Foreground}" 
                                     HorizontalAlignment="Left"
-                                    CornerRadius="2"/>
+                                    CornerRadius="2"
+                                    ClipToBounds="True">
+                                <Border x:Name="ShimmerOverlay" 
+                                        HorizontalAlignment="Stretch" 
+                                        VerticalAlignment="Stretch"
+                                        Visibility="Collapsed">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <LinearGradientBrush.RelativeTransform>
+                                                <TranslateTransform X="-1.5"/>
+                                            </LinearGradientBrush.RelativeTransform>
+                                            <GradientStop Color="#00FFFFFF" Offset="0.0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="0.2"/>
+                                            <GradientStop Color="#40FFFFFF" Offset="0.45"/>
+                                            <GradientStop Color="#90FFFFFF" Offset="0.5"/>
+                                            <GradientStop Color="#40FFFFFF" Offset="0.55"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="0.8"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1.0"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                            </Border>
                         </Grid>
                     </Border>
+                    <ControlTemplate.Triggers>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetName="ShimmerOverlay"
+                                                     Storyboard.TargetProperty="(Border.Background).(LinearGradientBrush.RelativeTransform).(TranslateTransform.X)"
+                                                     From="-1.5" To="1.5"
+                                                     Duration="0:0:2.2"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <DataTrigger Binding="{Binding IsDownloading}" Value="True">
+                            <Setter TargetName="ShimmerOverlay" Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                        <Trigger Property="Tag" Value="True">
+                            <Setter TargetName="ShimmerOverlay" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsIndeterminate" Value="True">
+                            <Setter TargetName="ShimmerOverlay" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

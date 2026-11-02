@@ -405,8 +405,8 @@
                                 <TextBlock Text="{services:Loc transfer.totalProgress}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}"/>
                                 <TextBlock Text="{Binding ProgressText}" FontSize="11" FontWeight="Medium" Foreground="White" HorizontalAlignment="Right"/>
                             </Grid>
-                            <!-- Flat Emerald Progress Bar (NO GLOW) -->
-                            <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Style="{StaticResource SharpProgressBar}" Height="10" Margin="0,0,0,10"/>
+                            <!-- Flat Progress Bar with Dynamic Shimmer Animation -->
+                            <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Style="{StaticResource SharpProgressBar}" Foreground="{Binding StatusBrush}" Tag="{Binding IsDownloading}" Height="10" Margin="0,0,0,10"/>
 
                             <!-- Quick Action Buttons Bar (Stitch Clean Actions) -->
                             <Grid Margin="0,0,0,10">

@@ -619,7 +619,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="48"/>
                                             </Grid.ColumnDefinitions>
-                                             <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Style="{StaticResource SharpProgressBar}" Foreground="{Binding StatusBrush}" Height="6"/>
+                                             <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Style="{StaticResource SharpProgressBar}" Foreground="{Binding StatusBrush}" Tag="{Binding IsDownloading}" Height="6"/>
                                             <TextBlock Grid.Column="1" Text="{Binding ProgressText}" Foreground="{StaticResource TextMutedBrush}" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                         </Grid>
                                     </DataTemplate>
