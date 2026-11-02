@@ -326,4 +326,26 @@ public partial class MainWindow : Window
     {
         DownloadsDataGrid?.SelectAll();
     }
+
+    private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (sender is ScrollViewer scv)
+        {
+            scv.ScrollToVerticalOffset(scv.VerticalOffset - (e.Delta / 3.0));
+            e.Handled = true;
+        }
+    }
+
+    private void TelegramMediaScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        // Infinite scroll: auto-paginate when user scrolls down near the bottom
+        double scrollableHeight = e.ExtentHeight - e.ViewportHeight;
+        if (e.VerticalChange > 0 && scrollableHeight > 0 && e.VerticalOffset >= scrollableHeight - 80)
+        {
+            if (DataContext is MainViewModel vm && !vm.TelegramIsScanning && vm.HasTelegramMedia && vm.HasMoreTelegramMedia)
+            {
+                vm.ScanTelegramCommand.Execute("loadMore");
+            }
+        }
+    }
 }

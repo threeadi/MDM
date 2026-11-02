@@ -289,6 +289,13 @@ public class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _telegramIsScanning, value);
     }
 
+    private bool _hasMoreTelegramMedia = true;
+    public bool HasMoreTelegramMedia
+    {
+        get => _hasMoreTelegramMedia;
+        set => SetField(ref _hasMoreTelegramMedia, value);
+    }
+
     private string _telegramTargetDir = string.Empty;
     public string TelegramTargetDir
     {
@@ -1078,15 +1085,38 @@ public class MainViewModel : INotifyPropertyChanged
             UpdateTelegramCounts();
             return;
         }
+
+        if (TelegramIsScanning) return;
         TelegramIsScanning = true;
 
         try
         {
-            if (!loadMore) TelegramMediaItems.Clear();
-            var items = await _engine.TelegramService.ScanChatMediaAsync(TelegramChatInput, TelegramMediaFilter);
+            int offsetId = 0;
+            if (!loadMore)
+            {
+                TelegramMediaItems.Clear();
+                HasMoreTelegramMedia = true;
+            }
+            else
+            {
+                offsetId = TelegramMediaItems.Count > 0 ? TelegramMediaItems.Min(m => m.MessageId) : 0;
+            }
+
+            var items = await _engine.TelegramService.ScanChatMediaAsync(TelegramChatInput, TelegramMediaFilter, limit: 100, offsetId: offsetId);
+
+            if (items.Count == 0)
+            {
+                HasMoreTelegramMedia = false;
+            }
 
             foreach (var item in items)
             {
+                // Prevent duplicate items
+                if (TelegramMediaItems.Any(existing => existing.MessageId == item.MessageId && existing.ChatId == item.ChatId))
+                {
+                    continue;
+                }
+
                 // Sync with existing download task status
                 var existing = _allTasks.FirstOrDefault(t => t.Url == item.TgUrl || t.Url.EndsWith($"/msg/{item.MessageId}"));
                 if (existing != null)

@@ -474,7 +474,7 @@ public class TelegramService
         return list;
     }
 
-    public async Task<List<TelegramMediaItem>> ScanChatMediaAsync(string chatQuery, string mediaFilter = "all", int limit = 100)
+    public async Task<List<TelegramMediaItem>> ScanChatMediaAsync(string chatQuery, string mediaFilter = "all", int limit = 100, int offsetId = 0)
     {
         var results = new List<TelegramMediaItem>();
         string clean = chatQuery.Trim().Replace("https://t.me/", "").Replace("t.me/", "").TrimStart('@');
@@ -620,16 +620,16 @@ public class TelegramService
             {
                 try
                 {
-                    messagesResult = await _client.Messages_Search(peer, q: "", filter: serverFilter, limit: limit);
+                    messagesResult = await _client.Messages_Search(peer, q: "", filter: serverFilter, offset_id: offsetId, limit: limit);
                 }
                 catch
                 {
-                    messagesResult = await _client.Messages_GetHistory(peer, limit: limit);
+                    messagesResult = await _client.Messages_GetHistory(peer, offset_id: offsetId, limit: limit);
                 }
             }
             else
             {
-                messagesResult = await _client.Messages_GetHistory(peer, limit: limit);
+                messagesResult = await _client.Messages_GetHistory(peer, offset_id: offsetId, limit: limit);
             }
 
             foreach (var msgBase in messagesResult.Messages)

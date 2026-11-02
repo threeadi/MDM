@@ -845,7 +845,7 @@
                             </Border>
 
                             <!-- Row 2: Scrollable Channels List -->
-                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                                 <StackPanel>
                                     <TextBlock Text="Tidak ada saluran yang cocok" FontSize="11" Foreground="#64748B" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,20,0,0" 
                                                Visibility="{Binding HasNoFilteredTelegramChannels, Converter={StaticResource BoolToVis}}"/>
@@ -1134,7 +1134,12 @@
                                 </Border>
 
                                 <!-- Table Rows ScrollViewer -->
-                                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ScrollViewer x:Name="TelegramMediaScrollViewer" 
+                                              Grid.Row="2" 
+                                              VerticalScrollBarVisibility="Auto" 
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              ScrollChanged="TelegramMediaScrollViewer_ScrollChanged"
+                                              PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                                     <StackPanel>
                                         <!-- Empty Media State -->
                                         <Border Visibility="{Binding HasNoTelegramMedia, Converter={StaticResource BoolToVis}}" Padding="32,48">
@@ -1237,6 +1242,62 @@
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
+
+                                        <!-- Pagination Strip (Scroll Down / Load More) -->
+                                        <Border Visibility="{Binding HasTelegramMedia, Converter={StaticResource BoolToVis}}" 
+                                                Padding="16,14" HorizontalAlignment="Center">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <!-- Scanning Indicator -->
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" 
+                                                            Visibility="{Binding TelegramIsScanning, Converter={StaticResource BoolToVis}}" 
+                                                            Margin="0,4,0,4">
+                                                    <controls:LucideIcon Kind="refresh-cw" Width="14" Height="14" Foreground="#60A5FA" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Memindai media selanjutnya dari Telegram..." FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                                </StackPanel>
+
+                                                <!-- Load More Button (When Not Scanning and HasMoreTelegramMedia) -->
+                                                <Button Command="{Binding ScanTelegramCommand}" 
+                                                        CommandParameter="loadMore" 
+                                                        Padding="18,6" Cursor="Hand">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryGlassButton}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding TelegramIsScanning}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding HasMoreTelegramMedia}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <controls:LucideIcon Kind="chevron-down" Width="14" Height="14" Foreground="#60A5FA" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Muat Lebih Banyak Media (Halaman Berikutnya)" FontSize="11.5" FontWeight="Medium" Foreground="#CBD5E1" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <!-- End of Media Notice -->
+                                                <TextBlock Text="Semua media dalam obrolan/kanal ini telah dimuat" 
+                                                           FontSize="11" FontStyle="Italic" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,6,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding HasMoreTelegramMedia}" Value="False"/>
+                                                                        <Condition Binding="{Binding TelegramIsScanning}" Value="False"/>
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </MultiDataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
                                 </ScrollViewer>
                             </Grid>
