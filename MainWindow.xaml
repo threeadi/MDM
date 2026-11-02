@@ -12,7 +12,16 @@
         Height="720" Width="1160"
         MinHeight="560" MinWidth="860"
         WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
         Background="{StaticResource CanvasBrush}">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40"
+                      ResizeBorderThickness="6"
+                      GlassFrameThickness="0"
+                      CornerRadius="0"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
 
     <Window.DataContext>
         <vm:MainViewModel/>
@@ -63,7 +72,7 @@
         <!-- ========================================================= -->
         <!-- TIER 1: WINDOW HEADER, LOGO & LIVE TELEMETRY BADGE       -->
         <!-- ========================================================= -->
-        <Border Grid.Row="0" Background="#11141A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="14,0">
+        <Border Grid.Row="0" Background="#11141A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="14,0,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -81,7 +90,7 @@
                 </StackPanel>
 
                 <!-- Center Quick Search (Clean Dark Matte) -->
-                <Grid Grid.Column="1" HorizontalAlignment="Center" Width="380" VerticalAlignment="Center">
+                <Grid Grid.Column="1" HorizontalAlignment="Center" Width="380" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
                     <TextBox Style="{StaticResource FlatTextBox}" 
                              Height="28"
                              Padding="28,4,8,4"
@@ -107,8 +116,24 @@
                     </TextBlock>
                 </Grid>
 
-                <!-- Right Spacer / Header Actions -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"/>
+                <!-- Right Window Caption Controls (Minimize, Maximize/Restore, Close) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Stretch" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{StaticResource WindowCaptionButtonStyle}" 
+                            Click="TitleBar_Minimize_Click" 
+                            ToolTip="Kecilkan (Minimize)">
+                        <controls:LucideIcon Kind="minus" Width="12" Height="12" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                    <Button Style="{StaticResource WindowCaptionButtonStyle}" 
+                            Click="TitleBar_Maximize_Click" 
+                            ToolTip="Perbesar / Pulihkan (Maximize / Restore)">
+                        <controls:LucideIcon x:Name="MaximizeIcon" Kind="square" Width="11" Height="11" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                    <Button Style="{StaticResource WindowCloseCaptionButtonStyle}" 
+                            Click="TitleBar_Close_Click" 
+                            ToolTip="Tutup (Close)">
+                        <controls:LucideIcon Kind="x" Width="12" Height="12" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 

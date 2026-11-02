@@ -722,5 +722,8 @@ public class LucideIcon : Control
         Geometries["program"] = Geometries["cpu"];
         Geometries["dokumen"] = Geometries["file-text"];
         Geometries["kompresi"] = Geometries["archive"];
+        Geometries["minimize"] = Geometries["minus"];
+        Geometries["maximize"] = Geometries["square"];
+        Geometries["close"] = Geometries["x"];
     }
 }

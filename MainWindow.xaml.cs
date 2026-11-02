@@ -28,6 +28,14 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        StateChanged += (_, _) =>
+        {
+            if (MaximizeIcon != null)
+            {
+                MaximizeIcon.Kind = WindowState == WindowState.Maximized ? "copy" : "square";
+            }
+        };
+
         Loaded += (_, _) =>
         {
             // Enable native Windows 11 / 10 Dark Mode titlebar
@@ -136,6 +144,21 @@ public partial class MainWindow : Window
         {
             _trayService?.Dispose();
         }
+    }
+
+    private void TitleBar_Minimize_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void TitleBar_Maximize_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    }
+
+    private void TitleBar_Close_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
     }
 
     private void AddDownload_Click(object sender, RoutedEventArgs e)
