@@ -55,7 +55,10 @@ public class Database
                 error_message TEXT,
                 referer TEXT,
                 speed_limit_bps INTEGER,
-                segments_json TEXT
+                segments_json TEXT,
+                category TEXT,
+                source TEXT,
+                telegram_channel_title TEXT
             );
 
             CREATE TABLE IF NOT EXISTS settings (
@@ -75,6 +78,22 @@ public class Database
             DELETE FROM telegram_channels WHERE title LIKE '%Cinema%' OR title LIKE '%Master Audio%' OR title LIKE '%OpenSource Software%';
         ";
         cmd.ExecuteNonQuery();
+
+        // Safe migrations for existing databases
+        string[] columnsToAdd = ["category TEXT", "source TEXT", "telegram_channel_title TEXT"];
+        foreach (var col in columnsToAdd)
+        {
+            try
+            {
+                using var alterCmd = conn.CreateCommand();
+                alterCmd.CommandText = $"ALTER TABLE downloads ADD COLUMN {col};";
+                alterCmd.ExecuteNonQuery();
+            }
+            catch
+            {
+                // Column already exists, safe to ignore
+            }
+        }
     }
 
     public List<DownloadTask> LoadAllTasks()
@@ -84,7 +103,7 @@ public class Database
         conn.Open();
 
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json FROM downloads ORDER BY created_at DESC";
+        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title FROM downloads ORDER BY created_at DESC";
 
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -124,6 +143,34 @@ public class Database
                 catch { }
             }
 
+            // Category, Source, TelegramChannelTitle
+            if (reader.FieldCount > 16 && !reader.IsDBNull(16))
+            {
+                var cat = reader.GetString(16);
+                if (!string.IsNullOrWhiteSpace(cat) && !cat.Equals("Umum", StringComparison.OrdinalIgnoreCase))
+                {
+                    task.Category = cat;
+                }
+                else
+                {
+                    task.Category = CategoryHelper.DetectCategory(task.Filename);
+                }
+            }
+            else
+            {
+                task.Category = CategoryHelper.DetectCategory(task.Filename);
+            }
+
+            if (reader.FieldCount > 17 && !reader.IsDBNull(17))
+            {
+                task.Source = reader.GetString(17);
+            }
+
+            if (reader.FieldCount > 18 && !reader.IsDBNull(18))
+            {
+                task.TelegramChannelTitle = reader.GetString(18);
+            }
+
             list.Add(task);
         }
 
@@ -137,8 +184,8 @@ public class Database
 
         using var cmd = conn.CreateCommand();
         cmd.CommandText = @"
-            INSERT INTO downloads (id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json)
-            VALUES (@id, @url, @filename, @save_dir, @file_path, @total_bytes, @downloaded_bytes, @status, @connections, @supports_range, @created_at, @completed_at, @error_message, @referer, @speed_limit_bps, @segments_json)
+            INSERT INTO downloads (id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title)
+            VALUES (@id, @url, @filename, @save_dir, @file_path, @total_bytes, @downloaded_bytes, @status, @connections, @supports_range, @created_at, @completed_at, @error_message, @referer, @speed_limit_bps, @segments_json, @category, @source, @telegram_channel_title)
             ON CONFLICT(id) DO UPDATE SET
                 url = excluded.url,
                 filename = excluded.filename,
@@ -153,7 +200,10 @@ public class Database
                 error_message = excluded.error_message,
                 referer = excluded.referer,
                 speed_limit_bps = excluded.speed_limit_bps,
-                segments_json = excluded.segments_json;
+                segments_json = excluded.segments_json,
+                category = excluded.category,
+                source = excluded.source,
+                telegram_channel_title = excluded.telegram_channel_title;
         ";
 
         cmd.Parameters.AddWithValue("@id", task.Id);
@@ -172,6 +222,9 @@ public class Database
         cmd.Parameters.AddWithValue("@referer", (object?)task.Referer ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@speed_limit_bps", (object?)task.SpeedLimitBps ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@segments_json", JsonSerializer.Serialize(task.Segments));
+        cmd.Parameters.AddWithValue("@category", (object?)task.Category ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@source", (object?)task.Source ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@telegram_channel_title", (object?)task.TelegramChannelTitle ?? DBNull.Value);
 
         cmd.ExecuteNonQuery();
     }
@@ -182,7 +235,7 @@ public class Database
         conn.Open();
 
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json FROM downloads WHERE id = @id";
+        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title FROM downloads WHERE id = @id";
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -215,6 +268,33 @@ public class Database
                 task.Segments = JsonSerializer.Deserialize<List<DownloadSegment>>(json) ?? [];
             }
             catch { }
+        }
+
+        if (reader.FieldCount > 16 && !reader.IsDBNull(16))
+        {
+            var cat = reader.GetString(16);
+            if (!string.IsNullOrWhiteSpace(cat) && !cat.Equals("Umum", StringComparison.OrdinalIgnoreCase))
+            {
+                task.Category = cat;
+            }
+            else
+            {
+                task.Category = CategoryHelper.DetectCategory(task.Filename);
+            }
+        }
+        else
+        {
+            task.Category = CategoryHelper.DetectCategory(task.Filename);
+        }
+
+        if (reader.FieldCount > 17 && !reader.IsDBNull(17))
+        {
+            task.Source = reader.GetString(17);
+        }
+
+        if (reader.FieldCount > 18 && !reader.IsDBNull(18))
+        {
+            task.TelegramChannelTitle = reader.GetString(18);
         }
 
         return task;

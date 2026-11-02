@@ -140,11 +140,30 @@ public class MainViewModel : INotifyPropertyChanged
     public string CompletedCountText => string.Format(I18n.Tr("statusbar.completed", "Selesai: {0} berkas"), CompletedCount);
     public string TotalVolumeText => string.Format(I18n.Tr("statusbar.downloadedData", "Data Terunduh: {0}"), TotalVolumeFormatted);
 
-    public int KompresiCount => _allTasks.Count(t => string.Equals(t.Category, "Kompresi", StringComparison.OrdinalIgnoreCase));
-    public int DokumenCount => _allTasks.Count(t => string.Equals(t.Category, "Dokumen", StringComparison.OrdinalIgnoreCase));
-    public int VideoCount => _allTasks.Count(t => string.Equals(t.Category, "Video", StringComparison.OrdinalIgnoreCase));
-    public int MusikCount => _allTasks.Count(t => string.Equals(t.Category, "Musik", StringComparison.OrdinalIgnoreCase));
-    public int ProgramCount => _allTasks.Count(t => string.Equals(t.Category, "Program", StringComparison.OrdinalIgnoreCase));
+    public int KompresiCount => _allTasks.Count(t => 
+        string.Equals(t.Category, "Kompresi", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(t.Category, "Compressed", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(t.Category, "Arsip", StringComparison.OrdinalIgnoreCase));
+
+    public int DokumenCount => _allTasks.Count(t => 
+        string.Equals(t.Category, "Dokumen", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(t.Category, "Document", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(t.Category, "Documents", StringComparison.OrdinalIgnoreCase));
+
+    public int VideoCount => _allTasks.Count(t => 
+        string.Equals(t.Category, "Video", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(t.Category, "Videos", StringComparison.OrdinalIgnoreCase));
+
+    public int MusikCount => _allTasks.Count(t => 
+        string.Equals(t.Category, "Musik", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(t.Category, "Music", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(t.Category, "Audio", StringComparison.OrdinalIgnoreCase));
+
+    public int ProgramCount => _allTasks.Count(t => 
+        string.Equals(t.Category, "Program", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(t.Category, "Aplikasi", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(t.Category, "Programs", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(t.Category, "Applications", StringComparison.OrdinalIgnoreCase));
 
     public ICommand SelectCategoryCommand { get; }
     public ICommand PauseCommand { get; }
@@ -823,17 +842,32 @@ public class MainViewModel : INotifyPropertyChanged
         }
 
         // Category filter
-        return _activeCategory switch
+        return _activeCategory.ToLowerInvariant() switch
         {
             "downloading" => item.Status == DownloadStatus.Downloading,
             "completed" => item.Status == DownloadStatus.Completed,
             "paused" => item.Status == DownloadStatus.Paused,
             "failed" => item.Status == DownloadStatus.Failed,
-            "kompresi" => string.Equals(item.Category, "Kompresi", StringComparison.OrdinalIgnoreCase),
-            "dokumen" => string.Equals(item.Category, "Dokumen", StringComparison.OrdinalIgnoreCase),
-            "video" => string.Equals(item.Category, "Video", StringComparison.OrdinalIgnoreCase),
-            "musik" => string.Equals(item.Category, "Musik", StringComparison.OrdinalIgnoreCase),
-            "program" => string.Equals(item.Category, "Program", StringComparison.OrdinalIgnoreCase),
+            "kompresi" or "compressed" => 
+                string.Equals(item.Category, "Kompresi", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(item.Category, "Compressed", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(item.Category, "Arsip", StringComparison.OrdinalIgnoreCase),
+            "dokumen" or "documents" => 
+                string.Equals(item.Category, "Dokumen", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(item.Category, "Document", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(item.Category, "Documents", StringComparison.OrdinalIgnoreCase),
+            "video" or "videos" => 
+                string.Equals(item.Category, "Video", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(item.Category, "Videos", StringComparison.OrdinalIgnoreCase),
+            "musik" or "music" or "audio" => 
+                string.Equals(item.Category, "Musik", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(item.Category, "Music", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(item.Category, "Audio", StringComparison.OrdinalIgnoreCase),
+            "program" or "aplikasi" => 
+                string.Equals(item.Category, "Program", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(item.Category, "Aplikasi", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(item.Category, "Programs", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(item.Category, "Applications", StringComparison.OrdinalIgnoreCase),
             _ => true
         };
     }

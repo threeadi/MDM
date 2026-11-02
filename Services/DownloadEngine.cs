@@ -31,14 +31,19 @@ public static class CategoryHelper
 {
     public static string DetectCategory(string filename)
     {
+        if (string.IsNullOrWhiteSpace(filename)) return "Umum";
+        int q = filename.IndexOf('?');
+        if (q >= 0) filename = filename[..q];
+        int hash = filename.IndexOf('#');
+        if (hash >= 0) filename = filename[..hash];
         string ext = Path.GetExtension(filename).ToLowerInvariant();
         return ext switch
         {
-            ".zip" or ".rar" or ".7z" or ".tar" or ".gz" or ".bz2" or ".xz" or ".iso" or ".dmg" => "Kompresi",
-            ".pdf" or ".doc" or ".docx" or ".xls" or ".xlsx" or ".ppt" or ".pptx" or ".txt" or ".csv" => "Dokumen",
-            ".mp4" or ".mkv" or ".webm" or ".avi" or ".mov" or ".flv" or ".wmv" or ".m4v" => "Video",
-            ".mp3" or ".wav" or ".flac" or ".aac" or ".ogg" or ".m4a" or ".wma" => "Musik",
-            ".exe" or ".msi" or ".apk" or ".appx" or ".deb" or ".rpm" => "Program",
+            ".zip" or ".rar" or ".7z" or ".tar" or ".gz" or ".bz2" or ".xz" or ".tgz" or ".zst" or ".cab" or ".iso" or ".img" or ".vmdk" => "Kompresi",
+            ".pdf" or ".doc" or ".docx" or ".xls" or ".xlsx" or ".ppt" or ".pptx" or ".txt" or ".csv" or ".rtf" or ".epub" or ".md" or ".odt" or ".ods" or ".odp" or ".json" or ".xml" or ".html" or ".htm" or ".log" => "Dokumen",
+            ".mp4" or ".mkv" or ".webm" or ".avi" or ".mov" or ".flv" or ".wmv" or ".m4v" or ".ts" or ".3gp" or ".vob" or ".mpg" or ".mpeg" => "Video",
+            ".mp3" or ".wav" or ".flac" or ".aac" or ".ogg" or ".m4a" or ".wma" or ".opus" or ".alac" or ".aiff" or ".mid" or ".midi" => "Musik",
+            ".exe" or ".msi" or ".apk" or ".appx" or ".deb" or ".rpm" or ".bat" or ".cmd" or ".ps1" or ".jar" or ".dmg" or ".pkg" => "Program",
             _ => "Umum"
         };
     }

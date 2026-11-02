@@ -12,7 +12,21 @@ public class DownloadTask
     public DownloadStatus Status { get; set; } = DownloadStatus.Downloading;
     public int Connections { get; set; } = 8;
     public bool SupportsRange { get; set; } = true;
-    public string Category { get; set; } = "Umum";
+    
+    private string _category = "Umum";
+    public string Category
+    {
+        get
+        {
+            if ((string.IsNullOrWhiteSpace(_category) || _category.Equals("Umum", StringComparison.OrdinalIgnoreCase)) && !string.IsNullOrWhiteSpace(Filename))
+            {
+                return Services.CategoryHelper.DetectCategory(Filename);
+            }
+            return _category;
+        }
+        set => _category = value;
+    }
+
     public string CreatedAt { get; set; } = DateTime.Now.ToString("o");
     public string? CompletedAt { get; set; }
     public string? ErrorMessage { get; set; }

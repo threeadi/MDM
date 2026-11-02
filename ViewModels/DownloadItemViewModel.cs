@@ -24,7 +24,18 @@ public class DownloadItemViewModel : INotifyPropertyChanged
     public string Filename => Task.Filename;
     public string FilePath => Task.FilePath;
     public string Url => Task.Url;
-    public string Category => Task.Category;
+    public string Category
+    {
+        get
+        {
+            string cat = Task.Category;
+            if (string.IsNullOrWhiteSpace(cat) || cat.Equals("Umum", StringComparison.OrdinalIgnoreCase))
+            {
+                return Services.CategoryHelper.DetectCategory(Filename ?? Task.Filename ?? string.Empty);
+            }
+            return cat;
+        }
+    }
     public string CreatedAt => Task.CreatedAt;
     public long TotalBytes => Task.TotalBytes ?? 0;
 
