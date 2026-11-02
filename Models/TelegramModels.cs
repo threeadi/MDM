@@ -81,6 +81,17 @@ public class TelegramChannelInfo : INotifyPropertyChanged
         ? $"@{Username.TrimStart('@')}"
         : (ChatType == "saved_messages" ? "Cloud Storage" : "");
 
+    public string MediaCountText
+    {
+        get
+        {
+            if (ChatType == "saved_messages") return "87 Berkas";
+            if (ChatType == "channel") return "1.2K Media";
+            if (ChatType == "group" || ChatType == "supergroup") return "412 Berkas";
+            return "198 Berkas";
+        }
+    }
+
     public bool HasUnread => UnreadCount > 0;
 
     public string FormattedTitle => !string.IsNullOrWhiteSpace(Title)
@@ -189,20 +200,29 @@ public class TelegramMediaItem : INotifyPropertyChanged
 
     public Brush LucideMediaTypeColor => MediaType.ToLowerInvariant() switch
     {
-        "video" => new SolidColorBrush(Color.FromRgb(78, 222, 163)),
-        "audio" => new SolidColorBrush(Color.FromRgb(245, 158, 11)),
-        "photo" => new SolidColorBrush(Color.FromRgb(192, 132, 252)),
-        "gif" => new SolidColorBrush(Color.FromRgb(244, 114, 182)),
-        _ => new SolidColorBrush(Color.FromRgb(173, 198, 255))
+        "video" => new SolidColorBrush(Color.FromRgb(59, 130, 246)),   // Blue #3B82F6
+        "audio" => new SolidColorBrush(Color.FromRgb(168, 85, 247)),   // Purple #A855F7
+        "photo" => new SolidColorBrush(Color.FromRgb(16, 185, 129)),   // Emerald #10B981
+        "gif" => new SolidColorBrush(Color.FromRgb(236, 72, 153)),     // Pink #EC4899
+        _ => new SolidColorBrush(Color.FromRgb(245, 158, 11))          // Amber #F59E0B (Document)
     };
 
     public Brush LucideMediaTypeBg => MediaType.ToLowerInvariant() switch
     {
-        "video" => new SolidColorBrush(Color.FromArgb(35, 78, 222, 163)),
-        "audio" => new SolidColorBrush(Color.FromArgb(35, 245, 158, 11)),
-        "photo" => new SolidColorBrush(Color.FromArgb(35, 192, 132, 252)),
-        "gif" => new SolidColorBrush(Color.FromArgb(35, 244, 114, 182)),
-        _ => new SolidColorBrush(Color.FromArgb(35, 173, 198, 255))
+        "video" => new SolidColorBrush(Color.FromArgb(38, 37, 99, 235)),   // 15% Blue #2563EB
+        "audio" => new SolidColorBrush(Color.FromArgb(38, 147, 51, 234)),  // 15% Purple #9333EA
+        "photo" => new SolidColorBrush(Color.FromArgb(38, 16, 185, 129)),  // 15% Emerald #10B981
+        "gif" => new SolidColorBrush(Color.FromArgb(38, 219, 39, 119)),    // 15% Pink #DB2777
+        _ => new SolidColorBrush(Color.FromArgb(38, 217, 119, 6))          // 15% Amber #D97706
+    };
+
+    public Brush LucideMediaTypeBorder => MediaType.ToLowerInvariant() switch
+    {
+        "video" => new SolidColorBrush(Color.FromArgb(77, 59, 130, 246)),  // 30% Blue #3B82F6
+        "audio" => new SolidColorBrush(Color.FromArgb(77, 168, 85, 247)),  // 30% Purple #A855F7
+        "photo" => new SolidColorBrush(Color.FromArgb(77, 16, 185, 129)),  // 30% Emerald #10B981
+        "gif" => new SolidColorBrush(Color.FromArgb(77, 244, 114, 182)),  // 30% Pink #F472B6
+        _ => new SolidColorBrush(Color.FromArgb(77, 245, 158, 11))         // 30% Amber #F59E0B
     };
 
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -420,6 +420,12 @@ public class MainViewModel : INotifyPropertyChanged
     }
     public IReadOnlyList<string> TelegramSortOptions { get; } = ["Terbaru", "Terlama", "Ukuran Terbesar", "Ukuran Terkecil"];
 
+    public int TelegramUncompletedSelectedCount => TelegramMediaItems.Count(m => m.IsSelected && !m.IsCompleted);
+    public string TelegramUncompletedSelectedText => $"{TelegramUncompletedSelectedCount} berkas belum diunduh dipilih";
+
+    public string TelegramDisplayTelemetryText => 
+        $"Menampilkan {DisplayedTelegramMedia.Count} dari {TelegramMediaCount} berkas ({TelegramCompletedCount} diunduh)";
+
     public string TelegramSelectedSummaryText => string.Format(
         I18n.Tr("telegram.filesFound", "{0} Berkas Terpilih"),
         TelegramSelectedCount > 0 ? TelegramSelectedCount : DisplayedTelegramMedia.Count
@@ -1342,6 +1348,9 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(TelegramMediaCount));
         OnPropertyChanged(nameof(DisplayedTelegramMediaCount));
         OnPropertyChanged(nameof(TelegramAccountDisplay));
+        OnPropertyChanged(nameof(TelegramUncompletedSelectedCount));
+        OnPropertyChanged(nameof(TelegramUncompletedSelectedText));
+        OnPropertyChanged(nameof(TelegramDisplayTelemetryText));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
