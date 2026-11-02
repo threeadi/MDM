@@ -21,7 +21,7 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <!-- Acrylic Obsidian Glass Shell Container (Stitch Kinetic Telemetry 1:1) -->
+    <!-- Acrylic Matte Dark Shell Container (Google Stitch Project 8619236184062954585 1:1) -->
     <Border Background="{StaticResource SurfaceLowBrush}" 
             BorderBrush="{StaticResource BorderBrush}" 
             BorderThickness="1" 
@@ -30,8 +30,8 @@
             ClipToBounds="True">
         <Grid>
             <Grid.RowDefinitions>
-                <!-- 0: Frameless Window Header / Drag Region -->
-                <RowDefinition Height="36"/>
+                <!-- 0: Frameless Window Header / TitleBar -->
+                <RowDefinition Height="42"/>
                 <!-- 1: Subheader with Sliders & Version Badge -->
                 <RowDefinition Height="Auto"/>
                 <!-- 2: 7-Tab Bar Navigation -->
@@ -39,49 +39,78 @@
                 <!-- 3: Scrollable Tab Content Viewport -->
                 <RowDefinition Height="*"/>
                 <!-- 4: Footer Action Bar -->
-                <RowDefinition Height="52"/>
+                <RowDefinition Height="54"/>
             </Grid.RowDefinitions>
 
-            <!-- 0: Frameless Title Bar (Clean Dark Header - NO NEON SHIMMER) -->
-            <Border Grid.Row="0" Background="#1E232B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <Grid Margin="12,0">
+            <!-- 0: Frameless Title Bar (Stitch Surface Base #0A0D14) -->
+            <Border Grid.Row="0" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid Margin="16,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Width="20" Height="20" Background="#1D2A3D" CornerRadius="5" Margin="0,0,8,0">
-                            <controls:LucideIcon Kind="zap" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <!-- Brand / Logo (MDM Official Cloud Logo) -->
+                        <Image Source="pack://application:,,,/Mdm;component/Assets/app.png" 
+                               Width="20" Height="20" 
+                               RenderOptions.BitmapScalingMode="HighQuality" 
+                               Margin="0,0,8,0" 
+                               VerticalAlignment="Center"/>
+                        <TextBlock Text="MDM" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Border Background="#1C2028" BorderBrush="#262B35" BorderThickness="1" CornerRadius="4" Padding="6,1.5" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="v4.2 PRO" FontSize="9.5" FontWeight="Medium" Foreground="#8B949E"/>
                         </Border>
-                        <TextBlock Text="{services:Loc settings.title}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="—" FontSize="12" Foreground="#64748B" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{services:Loc settings.title}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- Window Control Buttons (Minimalist & Sleek) -->
+                    <!-- Window System Controls (Minimize, Maximize, Close strictly at top right) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Width="26" Height="22" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Minimize_Click" ToolTip="Kecilkan" Margin="0,0,2,0">
+                        <!-- Minimize -->
+                        <Button Width="28" Height="28" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Minimize_Click" Margin="0,0,2,0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
-                                        <controls:LucideIcon Kind="minus" Width="11" Height="11" Foreground="#8C909F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <controls:LucideIcon x:Name="ic" Kind="minus" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bd" Property="Background" Value="#30353E"/>
+                                            <Setter TargetName="bd" Property="Background" Value="{StaticResource SurfaceHoverBrush}"/>
+                                            <Setter TargetName="ic" Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
-                        <Button Width="26" Height="22" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Close_Click" ToolTip="Tutup">
+
+                        <!-- Maximize -->
+                        <Button Width="28" Height="28" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Maximize_Click" Margin="0,0,2,0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
-                                        <controls:LucideIcon x:Name="ic" Kind="x" Width="11" Height="11" Foreground="#8C909F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <controls:LucideIcon x:Name="ic" Kind="square" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bd" Property="Background" Value="#93000A"/>
+                                            <Setter TargetName="bd" Property="Background" Value="{StaticResource SurfaceHoverBrush}"/>
+                                            <Setter TargetName="ic" Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <!-- Close -->
+                        <Button Width="28" Height="28" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Close_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
+                                        <controls:LucideIcon x:Name="ic" Kind="x" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#DC2626"/>
                                             <Setter TargetName="ic" Property="Foreground" Value="White"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
@@ -92,8 +121,8 @@
                 </Grid>
             </Border>
 
-            <!-- 1: Subheader with Sliders & Version Badge -->
-            <Border Grid.Row="1" Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource SurfaceMediumBrush}" BorderThickness="0,0,0,1" Padding="20,12">
+            <!-- 1: Subheader Banner (Stitch Clean Dark 1:1) -->
+            <Border Grid.Row="1" Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="24,14">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -102,45 +131,45 @@
 
                     <!-- Left: Sliders Icon + Title -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Width="36" Height="36" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,0,12,0">
-                            <controls:LucideIcon Kind="sliders" Width="16" Height="16" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Width="36" Height="36" Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,0,14,0">
+                            <controls:LucideIcon Kind="sliders" Width="18" Height="18" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{services:Loc settings.heading}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                            <TextBlock Text="{services:Loc settings.subtitle}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                            <TextBlock Text="{services:Loc settings.heading}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{services:Loc settings.subtitle}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,3,0,0"/>
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Right: Build Badge -->
-                    <Border Grid.Column="1" Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="5" Padding="8,3" VerticalAlignment="Center">
-                        <TextBlock Text="Build 2026.11" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <!-- Right: Single Clean Badge (Build 2026.11 PRO) -->
+                    <Border Grid.Column="1" Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
+                        <TextBlock Text="Build 2026.11 PRO" FontSize="11" FontWeight="Medium" Foreground="#CBD5E1"/>
                     </Border>
                 </Grid>
             </Border>
 
-            <!-- 2: 7-Tab Bar Navigation -->
-            <Border Grid.Row="2" Background="#11161F" BorderBrush="{StaticResource SurfaceMediumBrush}" BorderThickness="0,0,0,1" Padding="16,6,16,0">
+            <!-- 2: 7-Tab Bar Navigation (Stitch Clean Dark 1:1) -->
+            <Border Grid.Row="2" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="20,0,20,0">
                 <StackPanel Orientation="Horizontal">
                     <!-- Tab 1: Umum -->
                     <RadioButton x:Name="TabRadioGeneral" GroupName="SettingsTabs" Style="{StaticResource SettingsTabRadioStyle}" IsChecked="True" Checked="Tab_Checked">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <controls:LucideIcon Kind="monitor" Width="13" Height="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
+                            <controls:LucideIcon Kind="monitor" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,7,0"/>
                             <TextBlock Text="{services:Loc settings.tabGeneral}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
 
-                    <!-- Tab 2: Sambungan -->
+                    <!-- Tab 2: Koneksi -->
                     <RadioButton x:Name="TabRadioConnection" GroupName="SettingsTabs" Style="{StaticResource SettingsTabRadioStyle}" Checked="Tab_Checked">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <controls:LucideIcon Kind="zap" Width="13" Height="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
+                            <controls:LucideIcon Kind="zap" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,7,0"/>
                             <TextBlock Text="{services:Loc settings.tabConnection}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
 
-                    <!-- Tab 3: Jenis Berkas -->
+                    <!-- Tab 3: Tipe Berkas -->
                     <RadioButton x:Name="TabRadioFileTypes" GroupName="SettingsTabs" Style="{StaticResource SettingsTabRadioStyle}" Checked="Tab_Checked">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <controls:LucideIcon Kind="file-text" Width="13" Height="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
+                            <controls:LucideIcon Kind="file-text" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,7,0"/>
                             <TextBlock Text="{services:Loc settings.tabFileTypes}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
@@ -148,7 +177,7 @@
                     <!-- Tab 4: Lokasi Simpan -->
                     <RadioButton x:Name="TabRadioSaveTo" GroupName="SettingsTabs" Style="{StaticResource SettingsTabRadioStyle}" Checked="Tab_Checked">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <controls:LucideIcon Kind="folder-open" Width="13" Height="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
+                            <controls:LucideIcon Kind="folder" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,7,0"/>
                             <TextBlock Text="{services:Loc settings.tabSavePath}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
@@ -156,7 +185,7 @@
                     <!-- Tab 5: Ekstensi -->
                     <RadioButton x:Name="TabRadioExtensions" GroupName="SettingsTabs" Style="{StaticResource SettingsTabRadioStyle}" Checked="Tab_Checked">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <controls:LucideIcon Kind="globe" Width="13" Height="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
+                            <controls:LucideIcon Kind="globe" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,7,0"/>
                             <TextBlock Text="{services:Loc settings.tabExtensions}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
@@ -164,7 +193,7 @@
                     <!-- Tab 6: Telegram -->
                     <RadioButton x:Name="TabRadioTelegram" GroupName="SettingsTabs" Style="{StaticResource SettingsTabRadioStyle}" Checked="Tab_Checked">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <controls:LucideIcon Kind="send" Width="13" Height="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
+                            <controls:LucideIcon Kind="send" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,7,0"/>
                             <TextBlock Text="{services:Loc settings.tabTelegram}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
@@ -172,7 +201,7 @@
                     <!-- Tab 7: Proxy & SOCKS -->
                     <RadioButton x:Name="TabRadioProxy" GroupName="SettingsTabs" Style="{StaticResource SettingsTabRadioStyle}" Checked="Tab_Checked">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <controls:LucideIcon Kind="shield-check" Width="13" Height="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
+                            <controls:LucideIcon Kind="shield-check" Width="14" Height="14" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,7,0"/>
                             <TextBlock Text="{services:Loc settings.tabProxy}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
@@ -180,10 +209,10 @@
             </Border>
 
             <!-- 3: Scrollable Tab Content Viewport -->
-            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Padding="20,16">
+            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Background="{StaticResource SurfaceLowBrush}" Padding="24,20">
                 <StackPanel>
                     <!-- Success Notification Banner -->
-                    <Border x:Name="SuccessBanner" Background="#1A00E5FF" BorderBrush="#4D00E5FF" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,16" Visibility="Collapsed">
+                    <Border x:Name="SuccessBanner" Background="#1A2563EB" BorderBrush="#4D2563EB" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,16" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <controls:LucideIcon Kind="check" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
                             <TextBlock x:Name="SuccessBannerText" Text="{services:Loc settings.saveSuccess}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}"/>
@@ -191,7 +220,7 @@
                     </Border>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 1: UMUM (GENERAL) 1:1 WITH SETTINGS-MODAL.PNG       -->
+                    <!-- TAB 1: UMUM (GENERAL) - STITCH 1:1                       -->
                     <!-- ======================================================== -->
                     <Grid x:Name="PanelGeneral" Visibility="Visible">
                         <Grid.ColumnDefinitions>
@@ -200,16 +229,18 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Left Column: Bahasa + Integrasi Sistem & Startup + Integrasi Peramban Web -->
+                        <!-- Left Column: Bahasa + Integrasi Sistem & Startup -->
                         <StackPanel Grid.Column="0">
                             <!-- Card 0: Pilihan Bahasa -->
-                            <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,14">
+                            <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                                 <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                        <controls:LucideIcon Kind="globe" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
-                                        <TextBlock Text="{services:Loc settings.langTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{services:Loc settings.langDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,12">
+                                        <StackPanel Orientation="Horizontal">
+                                            <controls:LucideIcon Kind="globe" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{services:Loc settings.langTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <TextBlock Text="{services:Loc settings.langDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10"/>
                                     <ComboBox x:Name="LanguageComboBox" Style="{StaticResource DarkComboBox}">
                                         <ComboBoxItem Content="🇮🇩 Bahasa Indonesia (Indonesian)" IsSelected="True"/>
                                         <ComboBoxItem Content="🇺🇸 English (US / International)"/>
@@ -218,173 +249,204 @@
                             </Border>
 
                             <!-- Card 1: Integrasi Sistem & Startup -->
-                            <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14">
+                            <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                                 <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                        <controls:LucideIcon Kind="monitor" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
-                                        <TextBlock Text="{services:Loc settings.sysIntegration}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    </StackPanel>
+                                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,14">
+                                        <StackPanel Orientation="Horizontal">
+                                            <controls:LucideIcon Kind="monitor" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{services:Loc settings.sysIntegration}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        </StackPanel>
+                                    </Border>
 
                                     <!-- Auto Start -->
-                                    <CheckBox x:Name="AutoStartCheckBox" Style="{StaticResource DarkCheckBox}" Margin="0,2,0,8">
-                                        <StackPanel>
-                                            <TextBlock Text="{services:Loc settings.autoStart}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{services:Loc settings.autoStartDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <CheckBox x:Name="AutoStartCheckBox" Style="{StaticResource DarkCheckBox}" Margin="0,0,0,10">
+                                        <StackPanel Margin="8,0,0,0">
+                                            <TextBlock Text="{services:Loc settings.autoStart}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.autoStartDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
 
                                     <!-- Media Panel Overlay -->
-                                    <CheckBox x:Name="MediaPanelCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True" Margin="0,2,0,8">
-                                        <StackPanel>
-                                            <TextBlock Text="{services:Loc settings.mediaPanel}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{services:Loc settings.mediaPanelDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <CheckBox x:Name="MediaPanelCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True" Margin="0,0,0,10">
+                                        <StackPanel Margin="8,0,0,0">
+                                            <TextBlock Text="{services:Loc settings.mediaPanel}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.mediaPanelDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
 
                                     <!-- Clipboard Auto Capture -->
-                                    <CheckBox x:Name="ClipboardCaptureCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True" Margin="0,2,0,8">
-                                        <StackPanel>
-                                            <TextBlock Text="{services:Loc settings.clipboardCapture}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{services:Loc settings.clipboardCaptureDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <CheckBox x:Name="ClipboardCaptureCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True" Margin="0,0,0,10">
+                                        <StackPanel Margin="8,0,0,0">
+                                            <TextBlock Text="{services:Loc settings.clipboardCapture}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.clipboardCaptureDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
 
                                     <!-- Notify on Complete -->
-                                    <CheckBox x:Name="NotifyOnCompleteCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True" Margin="0,2,0,8">
-                                        <StackPanel>
-                                            <TextBlock Text="{services:Loc settings.notifyComplete}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{services:Loc settings.notifyCompleteDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <CheckBox x:Name="NotifyOnCompleteCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True" Margin="0,0,0,10">
+                                        <StackPanel Margin="8,0,0,0">
+                                            <TextBlock Text="{services:Loc settings.notifyComplete}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.notifyCompleteDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
 
                                     <!-- Minimize to Tray -->
-                                    <CheckBox x:Name="MinimizeToTrayCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True" Margin="0,2,0,8">
-                                        <StackPanel>
-                                            <TextBlock Text="{services:Loc settings.minimizeToTray}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{services:Loc settings.minimizeToTrayDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <CheckBox x:Name="MinimizeToTrayCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True" Margin="0,0,0,10">
+                                        <StackPanel Margin="8,0,0,0">
+                                            <TextBlock Text="{services:Loc settings.minimizeToTray}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.minimizeToTrayDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
 
                                     <!-- Show Completion Dialog -->
-                                    <CheckBox x:Name="ShowCompletionDialogCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True" Margin="0,2,0,2">
-                                        <StackPanel>
-                                            <TextBlock Text="{services:Loc settings.showCompletionDialog}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{services:Loc settings.showCompletionDialogDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <CheckBox x:Name="ShowCompletionDialogCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True">
+                                        <StackPanel Margin="8,0,0,0">
+                                            <TextBlock Text="{services:Loc settings.showCompletionDialog}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.showCompletionDialogDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </CheckBox>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
 
-                        <!-- Right Column: Kunci Tombol Cepat -->
+                        <!-- Right Column: Kunci Tombol Cepat + Telemetry Overview -->
                         <StackPanel Grid.Column="2">
                             <!-- Card: Kunci Tombol Cepat (Hotkeys) -->
-                            <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14">
+                            <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                                 <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                        <controls:LucideIcon Kind="layers" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
-                                        <TextBlock Text="{services:Loc settings.hotkeysTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    </StackPanel>
+                                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,14">
+                                        <StackPanel Orientation="Horizontal">
+                                            <controls:LucideIcon Kind="layers" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{services:Loc settings.hotkeysTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        </StackPanel>
+                                    </Border>
 
-                                    <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,6">
+                                    <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,10">
                                         <Grid>
-                                            <TextBlock Text="{services:Loc settings.hotkeyPrevent}" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                            <Border HorizontalAlignment="Right" Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
-                                                <TextBlock Text="Alt" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentSecondaryCyanBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.hotkeyPrevent}" FontSize="11.5" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                            <Border HorizontalAlignment="Right" Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="5" Padding="8,3">
+                                                <TextBlock Text="Alt" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}"/>
                                             </Border>
                                         </Grid>
                                     </Border>
 
-                                    <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6">
+                                    <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10">
                                         <Grid>
-                                            <TextBlock Text="{services:Loc settings.hotkeyForce}" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                            <Border HorizontalAlignment="Right" Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2">
-                                                <TextBlock Text="Insert" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentSecondaryCyanBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.hotkeyForce}" FontSize="11.5" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                            <Border HorizontalAlignment="Right" Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="5" Padding="8,3">
+                                                <TextBlock Text="Insert" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}"/>
                                             </Border>
                                         </Grid>
                                     </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card: Stitch Kinetic Telemetry Note -->
+                            <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                                <StackPanel>
+                                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,12">
+                                        <StackPanel Orientation="Horizontal">
+                                            <controls:LucideIcon Kind="flame" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
+                                            <TextBlock Text="KINETIC TELEMETRY ENGINE" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <TextBlock Text="Pengaturan preferensi di atas akan disinkronkan langsung secara persisten ke database internal MDM Turbo. Setiap perubahan pada mode unduhan langsung aktif tanpa perlu memuat ulang aplikasi." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="17" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
                     </Grid>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 2: SAMBUNGAN (CONNECTION)                            -->
+                    <!-- TAB 2: SAMBUNGAN (CONNECTION) - STITCH 1:1               -->
                     <!-- ======================================================== -->
-                    <StackPanel x:Name="PanelConnection" Visibility="Collapsed" MaxWidth="680" HorizontalAlignment="Left">
-                        <!-- Bandwidth Limiter -->
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                    <StackPanel x:Name="PanelConnection" Visibility="Collapsed">
+                        <!-- Card 1: Batas Kecepatan (Bandwidth Limiter) -->
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <controls:LucideIcon Kind="zap" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{services:Loc settings.limiterTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                    <controls:LucideIcon Kind="zap" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="BATAS KECEPATAN (BANDWIDTH LIMITER)" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
 
-                                <CheckBox x:Name="EnableLimitCheckBox" Style="{StaticResource DarkCheckBox}" Checked="EnableLimit_Checked" Unchecked="EnableLimit_Unchecked" Margin="0,0,0,12">
-                                    <StackPanel>
-                                        <TextBlock Text="{services:Loc settings.enableGlobalLimit}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{services:Loc settings.enableGlobalLimitDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <CheckBox x:Name="EnableLimitCheckBox" Style="{StaticResource DarkCheckBox}" Checked="EnableLimit_Checked" Unchecked="EnableLimit_Unchecked" Margin="0,0,0,14">
+                                    <StackPanel Margin="8,0,0,0">
+                                        <TextBlock Text="{services:Loc settings.enableGlobalLimit}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{services:Loc settings.enableGlobalLimitDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                     </StackPanel>
                                 </CheckBox>
 
-                                <Grid x:Name="SpeedLimitGrid" Margin="24,0,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="120"/>
-                                        <ColumnDefinition Width="80"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{services:Loc settings.maxSpeedLabel}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                    <TextBox Grid.Column="1" x:Name="GlobalLimitValueTextBox" Text="2048" Style="{StaticResource FlatTextBox}"/>
-                                    <ComboBox Grid.Column="2" x:Name="GlobalLimitUnitComboBox" Style="{StaticResource DarkComboBox}" Margin="6,0,0,0">
+                                <StackPanel x:Name="SpeedLimitGrid" Orientation="Horizontal" Margin="28,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{services:Loc settings.maxSpeedLabel}" FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBox x:Name="GlobalLimitValueTextBox" Text="122" Width="96" Height="32" Style="{StaticResource FlatTextBox}" TextAlignment="Center" VerticalContentAlignment="Center"/>
+                                    <ComboBox x:Name="GlobalLimitUnitComboBox" Width="76" Height="32" Style="{StaticResource DarkComboBox}" Margin="8,0,0,0">
                                         <ComboBoxItem Content="KB/s" IsSelected="True"/>
                                         <ComboBoxItem Content="MB/s"/>
                                     </ComboBox>
-                                </Grid>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
 
-                        <!-- Timeout & Auto Retries -->
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
+                        <!-- Card 2: Batas Waktu & Percobaan Jaringan -->
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <controls:LucideIcon Kind="clock" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{services:Loc settings.timeoutTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                    <controls:LucideIcon Kind="clock" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="BATAS WAKTU &amp; PERCOBAAN JARINGAN" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
 
-                                <Grid>
+                                <Grid Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="16"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
+                                    <!-- Left: Timeout -->
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{services:Loc settings.connTimeoutLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="ConnectionTimeoutTextBox" Text="30" Style="{StaticResource FlatTextBox}" Margin="0,0,0,4"/>
-                                        <TextBlock Text="{services:Loc settings.connTimeoutDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{services:Loc settings.connTimeoutLabel}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                                        <TextBox x:Name="ConnectionTimeoutTextBox" Text="30" Height="32" Style="{StaticResource FlatTextBox}" VerticalContentAlignment="Center" Margin="0,0,0,6"/>
+                                        <TextBlock Text="{services:Loc settings.connTimeoutDesc}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
                                     </StackPanel>
 
+                                    <!-- Right: Max Retries -->
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="{services:Loc settings.maxRetriesLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="MaxRetriesTextBox" Text="10" Style="{StaticResource FlatTextBox}" Margin="0,0,0,4"/>
-                                        <TextBlock Text="{services:Loc settings.maxRetriesDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{services:Loc settings.maxRetriesLabel}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                                        <TextBox x:Name="MaxRetriesTextBox" Text="10" Height="32" Style="{StaticResource FlatTextBox}" VerticalContentAlignment="Center" Margin="0,0,0,6"/>
+                                        <TextBlock Text="{services:Loc settings.maxRetriesDesc}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
                                     </StackPanel>
                                 </Grid>
+
+                                <!-- Divider -->
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,14"/>
+
+                                <!-- Parallel Connections -->
+                                <StackPanel>
+                                    <TextBlock Text="{services:Loc settings.parallelConnections}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <ComboBox x:Name="MaxParallelConnectionsComboBox" Width="210" Height="32" Style="{StaticResource DarkComboBox}" Margin="0,0,12,0">
+                                            <ComboBoxItem Content="4 Jalur (Ringan)"/>
+                                            <ComboBoxItem Content="8 Jalur (Normal)"/>
+                                            <ComboBoxItem Content="16 Jalur (Standar Turbo)" IsSelected="True"/>
+                                            <ComboBoxItem Content="32 Jalur (Maksimum Server Cepat)"/>
+                                        </ComboBox>
+                                        <TextBlock Text="{services:Loc settings.parallelConnectionsDesc}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 3: JENIS BERKAS (FILE TYPES)                         -->
+                    <!-- TAB 3: TIPE BERKAS (FILE TYPES) - STITCH 1:1             -->
                     <!-- ======================================================== -->
-                    <StackPanel x:Name="PanelFileTypes" Visibility="Collapsed" MaxWidth="680" HorizontalAlignment="Left">
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                    <StackPanel x:Name="PanelFileTypes" Visibility="Collapsed">
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <controls:LucideIcon Kind="file-text" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{services:Loc settings.fileTypesTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <controls:LucideIcon Kind="file-text" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc settings.fileTypesTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="{services:Loc settings.fileTypesDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                                <TextBlock Text="{services:Loc settings.fileTypesDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
 
                                 <TextBox x:Name="AutoCaptureExtensionsTextBox" 
                                          Height="90" 
@@ -393,103 +455,108 @@
                                          VerticalScrollBarVisibility="Auto" 
                                          Style="{StaticResource FlatTextBox}" 
                                          Foreground="{StaticResource AccentCyanBrush}"
-                                         Margin="0,0,0,6"/>
+                                         Margin="0,0,0,8"/>
 
-                                <TextBlock Text="{services:Loc settings.fileTypesHint}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Text="{services:Loc settings.fileTypesHint}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <controls:LucideIcon Kind="shield-check" Width="15" Height="15" Foreground="{StaticResource AccentRoseBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{services:Loc settings.excludedSitesTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <controls:LucideIcon Kind="shield-check" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc settings.excludedSitesTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="{services:Loc settings.excludedSitesDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                                <TextBlock Text="{services:Loc settings.excludedSitesDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
 
                                 <TextBox x:Name="ExcludedSitesTextBox" 
-                                         Height="80" 
+                                         Height="75" 
                                          TextWrapping="Wrap" 
                                          AcceptsReturn="True" 
                                          VerticalScrollBarVisibility="Auto" 
                                          Style="{StaticResource FlatTextBox}" 
                                          Foreground="{StaticResource TextPrimaryBrush}"
-                                         Margin="0,0,0,6"/>
+                                         Margin="0,0,0,8"/>
 
-                                <TextBlock Text="{services:Loc settings.excludedSitesHint}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Text="{services:Loc settings.excludedSitesHint}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 4: LOKASI SIMPAN (SAVE TO)                           -->
+                    <!-- TAB 4: LOKASI SIMPAN (SAVE TO) - STITCH 1:1              -->
                     <!-- ======================================================== -->
-                    <StackPanel x:Name="PanelSaveTo" Visibility="Collapsed" MaxWidth="680" HorizontalAlignment="Left">
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                    <StackPanel x:Name="PanelSaveTo" Visibility="Collapsed">
+                        <!-- Primary Directory -->
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <controls:LucideIcon Kind="folder-open" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{services:Loc settings.saveDirTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <controls:LucideIcon Kind="folder" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc settings.saveDirTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
 
-                                <TextBlock Text="{services:Loc settings.defaultDirLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                <Grid Margin="0,0,0,10">
+                                <TextBlock Text="{services:Loc settings.defaultDirLabel}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                                <Grid Margin="0,0,0,14">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="DefaultDownloadDirTextBox" Style="{StaticResource FlatTextBox}"/>
-                                    <Button Grid.Column="1" Style="{StaticResource FlatActionButton}" Margin="6,0,0,0" Padding="10,4" Click="BrowseDefaultDir_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <controls:LucideIcon Kind="folder" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="DefaultDownloadDirTextBox" Height="32" Style="{StaticResource FlatTextBox}" VerticalContentAlignment="Center"/>
+                                    <Button Grid.Column="1" Style="{StaticResource FlatActionButton}" Height="32" Margin="8,0,0,0" Padding="14,0" Click="BrowseDefaultDir_Click">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="folder" Width="13" Height="13" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
                                             <TextBlock Text="{services:Loc common.browse}"/>
                                         </StackPanel>
                                     </Button>
                                 </Grid>
 
-                                <CheckBox x:Name="CategorySubfoldersCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True">
-                                    <StackPanel>
-                                        <TextBlock Text="{services:Loc settings.categorySubfolders}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{services:Loc settings.categorySubfoldersDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                    </StackPanel>
-                                </CheckBox>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+                                    <CheckBox x:Name="CategorySubfoldersCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True">
+                                        <StackPanel Margin="8,0,0,0">
+                                            <TextBlock Text="{services:Loc settings.categorySubfolders}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.categorySubfoldersDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </Border>
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                        <!-- Temporary Directory -->
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <controls:LucideIcon Kind="hard-drive" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{services:Loc settings.tempDirTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <controls:LucideIcon Kind="hard-drive" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc settings.tempDirTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
 
-                                <TextBlock Text="{services:Loc settings.tempDirLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                <Grid Margin="0,0,0,6">
+                                <TextBlock Text="{services:Loc settings.tempDirLabel}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                                <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="TempDirTextBox" Style="{StaticResource FlatTextBox}"/>
-                                    <Button Grid.Column="1" Style="{StaticResource FlatActionButton}" Margin="6,0,0,0" Padding="10,4" Click="BrowseTempDir_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <controls:LucideIcon Kind="folder" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="TempDirTextBox" Height="32" Style="{StaticResource FlatTextBox}" VerticalContentAlignment="Center"/>
+                                    <Button Grid.Column="1" Style="{StaticResource FlatActionButton}" Height="32" Margin="8,0,0,0" Padding="14,0" Click="BrowseTempDir_Click">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="folder" Width="13" Height="13" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
                                             <TextBlock Text="{services:Loc common.browse}"/>
                                         </StackPanel>
                                     </Button>
                                 </Grid>
-                                <TextBlock Text="{services:Loc settings.tempDirDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{services:Loc settings.tempDirDesc}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
+                        <!-- Duplicate Action -->
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <controls:LucideIcon Kind="layers" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{services:Loc settings.duplicateTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <controls:LucideIcon Kind="copy" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc settings.duplicateTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="{services:Loc settings.duplicateDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                                <TextBlock Text="{services:Loc settings.duplicateDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10"/>
 
-                                <ComboBox x:Name="DuplicateActionComboBox" Style="{StaticResource DarkComboBox}">
+                                <ComboBox x:Name="DuplicateActionComboBox" Style="{StaticResource DarkComboBox}" Height="32" Width="360" HorizontalAlignment="Left">
                                     <ComboBoxItem Content="{services:Loc settings.duplicateAsk}" IsSelected="True"/>
                                     <ComboBoxItem Content="{services:Loc settings.duplicateNumber}"/>
                                     <ComboBoxItem Content="{services:Loc settings.duplicateOverwrite}"/>
@@ -500,32 +567,32 @@
                     </StackPanel>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 5: EKSTENSI (1:1 WITH EXTENSION-SETTINGS.PNG)       -->
+                    <!-- TAB 5: EKSTENSI - STITCH 1:1                             -->
                     <!-- ======================================================== -->
-                    <StackPanel x:Name="PanelExtensions" Visibility="Collapsed" MaxWidth="680" HorizontalAlignment="Left">
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                    <StackPanel x:Name="PanelExtensions" Visibility="Collapsed">
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                             <StackPanel>
-                                <Grid Margin="0,0,0,10">
+                                <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <controls:LucideIcon Kind="globe" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{services:Loc settings.extTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <controls:LucideIcon Kind="globe" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{services:Loc settings.extTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
                                     <Border Grid.Column="1" Background="#2610B981" BorderBrush="#6610B981" BorderThickness="1" CornerRadius="4" Padding="8,2">
                                         <TextBlock Text="{services:Loc settings.ipcActive}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentEmeraldBrush}"/>
                                     </Border>
                                 </Grid>
 
-                                <TextBlock Text="{services:Loc settings.extSubtitle}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                <TextBlock Text="{services:Loc settings.extSubtitle}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,14"/>
 
-                                <!-- 4 Browser Cards 2x2 Grid (1:1 with extension-settings.png) -->
-                                <Grid Margin="0,0,0,14">
+                                <!-- 4 Browser Cards 2x2 Grid -->
+                                <Grid Margin="0,0,0,16">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="6"/>
+                                        <RowDefinition Height="8"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
@@ -535,12 +602,12 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Google Chrome -->
-                                    <Border Grid.Row="0" Grid.Column="0" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                                    <Border Grid.Row="0" Grid.Column="0" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10">
                                         <Grid>
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Ellipse Width="7" Height="7" Fill="{StaticResource AccentEmeraldBrush}" Margin="0,0,8,0"/>
                                                 <StackPanel>
-                                                    <TextBlock Text="Google Chrome" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                    <TextBlock Text="Google Chrome" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
                                                     <TextBlock Text="{services:Loc settings.browserConnected}" FontSize="10" Foreground="{StaticResource AccentEmeraldBrush}"/>
                                                 </StackPanel>
                                             </StackPanel>
@@ -549,12 +616,12 @@
                                     </Border>
 
                                     <!-- Microsoft Edge -->
-                                    <Border Grid.Row="0" Grid.Column="2" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                                    <Border Grid.Row="0" Grid.Column="2" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10">
                                         <Grid>
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Ellipse Width="7" Height="7" Fill="{StaticResource AccentEmeraldBrush}" Margin="0,0,8,0"/>
                                                 <StackPanel>
-                                                    <TextBlock Text="Microsoft Edge" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                    <TextBlock Text="Microsoft Edge" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
                                                     <TextBlock Text="{services:Loc settings.browserConnected}" FontSize="10" Foreground="{StaticResource AccentEmeraldBrush}"/>
                                                 </StackPanel>
                                             </StackPanel>
@@ -563,12 +630,12 @@
                                     </Border>
 
                                     <!-- Mozilla Firefox -->
-                                    <Border Grid.Row="2" Grid.Column="0" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                                    <Border Grid.Row="2" Grid.Column="0" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10">
                                         <Grid>
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Ellipse Width="7" Height="7" Fill="{StaticResource AccentEmeraldBrush}" Margin="0,0,8,0"/>
                                                 <StackPanel>
-                                                    <TextBlock Text="Mozilla Firefox" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                    <TextBlock Text="Mozilla Firefox" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
                                                     <TextBlock Text="{services:Loc settings.browserInstalledActive}" FontSize="10" Foreground="{StaticResource AccentEmeraldBrush}"/>
                                                 </StackPanel>
                                             </StackPanel>
@@ -577,12 +644,12 @@
                                     </Border>
 
                                     <!-- Brave Browser -->
-                                    <Border Grid.Row="2" Grid.Column="2" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                                    <Border Grid.Row="2" Grid.Column="2" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10">
                                         <Grid>
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <Ellipse Width="7" Height="7" Fill="{StaticResource AccentEmeraldBrush}" Margin="0,0,8,0"/>
                                                 <StackPanel>
-                                                    <TextBlock Text="Brave Browser" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                    <TextBlock Text="Brave Browser" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
                                                     <TextBlock Text="{services:Loc settings.browserConnected}" FontSize="10" Foreground="{StaticResource AccentEmeraldBrush}"/>
                                                 </StackPanel>
                                             </StackPanel>
@@ -591,8 +658,8 @@
                                     </Border>
                                 </Grid>
 
-                                <!-- Diagnostics Info Box (Matching extension-settings.png) -->
-                                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,0,14">
+                                <!-- Diagnostics Info Box -->
+                                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,14">
                                     <StackPanel>
                                         <Grid Margin="0,0,0,6">
                                             <TextBlock Text="Host Name:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
@@ -610,15 +677,15 @@
                                 </Border>
 
                                 <!-- Register Native Host & Open Extension Folder Buttons -->
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Style="{StaticResource FlatActionButton}" BorderBrush="{StaticResource AccentCyanBrush}" Padding="12,6" Click="RegisterNativeHost_Click">
-                                        <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource FlatActionButton}" Height="32" Padding="12,0" Click="RegisterNativeHost_Click">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <controls:LucideIcon Kind="refresh-cw" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
                                             <TextBlock Text="{services:Loc settings.reRegisterHost}" Foreground="{StaticResource AccentCyanBrush}"/>
                                         </StackPanel>
                                     </Button>
-                                    <Button Style="{StaticResource FlatActionButton}" Padding="12,6" Click="OpenExtensionFolder_Click" Margin="8,0,0,0">
-                                        <StackPanel Orientation="Horizontal">
+                                    <Button Style="{StaticResource FlatActionButton}" Height="32" Padding="12,0" Click="OpenExtensionFolder_Click" Margin="8,0,0,0">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <controls:LucideIcon Kind="folder" Width="12" Height="12" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,6,0"/>
                                             <TextBlock Text="{services:Loc settings.openExtFolder}" Foreground="{StaticResource TextPrimaryBrush}"/>
                                         </StackPanel>
@@ -629,39 +696,41 @@
                         </Border>
 
                         <!-- Guide Card -->
-                        <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14">
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
                             <StackPanel>
-                                <TextBlock Text="{services:Loc settings.extGuideTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                <TextBlock Text="{services:Loc settings.extGuideDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{services:Loc settings.extGuideTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <TextBlock Text="{services:Loc settings.extGuideDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
 
                     <!-- ======================================================== -->
-                    <!-- TAB 6: TELEGRAM                                          -->
+                    <!-- TAB 6: TELEGRAM - STITCH 1:1                             -->
                     <!-- ======================================================== -->
-                    <StackPanel x:Name="PanelTelegram" Visibility="Collapsed" MaxWidth="680" HorizontalAlignment="Left">
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                    <StackPanel x:Name="PanelTelegram" Visibility="Collapsed">
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                             <StackPanel>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <controls:LucideIcon Kind="send" Width="15" Height="15" Foreground="{StaticResource AccentSecondaryCyanBrush}" Margin="0,0,8,0"/>
-                                        <StackPanel>
-                                            <TextBlock Text="{services:Loc settings.tgTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{services:Loc settings.tgSubtitle}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="send" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
+                                            <StackPanel>
+                                                <TextBlock Text="{services:Loc settings.tgTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                <TextBlock Text="{services:Loc settings.tgSubtitle}" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            </StackPanel>
                                         </StackPanel>
-                                    </StackPanel>
-                                    <Border x:Name="TelegramStatusBadge" Grid.Column="1" Background="#2610B981" BorderBrush="#6610B981" BorderThickness="1" CornerRadius="4" Padding="8,2">
-                                        <TextBlock x:Name="TelegramStatusBadgeText" Text="{services:Loc settings.tgConnectedBadge}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentEmeraldBrush}"/>
-                                    </Border>
-                                </Grid>
+                                        <Border x:Name="TelegramStatusBadge" Grid.Column="1" Background="#101B38" BorderBrush="#1E3A8A" BorderThickness="1" CornerRadius="4" Padding="8,2">
+                                            <TextBlock x:Name="TelegramStatusBadgeText" Text="{services:Loc settings.tgConnectedBadge}" FontSize="10" FontWeight="Bold" Foreground="#60A5FA"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
 
                                 <!-- Sub-Tabs: Akun Terdaftar / Login Nomor Telepon -->
-                                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="3" Margin="0,0,0,12">
+                                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="3" Margin="0,0,0,14">
                                     <StackPanel Orientation="Horizontal">
                                         <RadioButton x:Name="SubTabTgAccounts" GroupName="TgSubTabs" Style="{StaticResource SubTabRadioStyle}" IsChecked="True" Checked="TgSubTab_Checked" Content="{services:Loc settings.tgSubTabAccounts}"/>
                                         <RadioButton x:Name="SubTabTgLogin" GroupName="TgSubTabs" Style="{StaticResource SubTabRadioStyle}" Checked="TgSubTab_Checked" Content="{services:Loc settings.tgSubTabLogin}"/>
@@ -670,24 +739,24 @@
 
                                 <!-- Sub-Tab Panel 1: Akun Terdaftar -->
                                 <StackPanel x:Name="PanelTgAccountsList">
-                                    <Border x:Name="ActiveAccountCard" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource AccentSecondaryCyanBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                    <Border x:Name="ActiveAccountCard" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,8">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Border Width="32" Height="32" Background="#264CD7F6" CornerRadius="8" Margin="0,0,10,0">
-                                                    <controls:LucideIcon Kind="user-check" Width="16" Height="16" Foreground="{StaticResource AccentSecondaryCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Border Width="32" Height="32" Background="#101B38" BorderBrush="#1E3A8A" BorderThickness="1" CornerRadius="16" Margin="0,0,12,0">
+                                                    <controls:LucideIcon Kind="user" Width="15" Height="15" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                                 <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock x:Name="TgAccountNameText" Text="{services:Loc settings.tgActiveAccount}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                                    <TextBlock Text="User MTProto Session (mdm_telegram.session)" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                                    <TextBlock x:Name="TgAccountNameText" Text="{services:Loc settings.tgActiveAccount}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                    <TextBlock Text="User MTProto Session (session_telegram_mdm.dat)" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}" Margin="0,1,0,0"/>
                                                 </StackPanel>
                                             </StackPanel>
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Border Background="#264CD7F6" BorderBrush="#664CD7F6" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                                    <TextBlock Text="{services:Loc settings.tgActiveBadge}" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentSecondaryCyanBrush}"/>
+                                                <Border Background="#101B38" BorderBrush="#1E3A8A" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                                    <TextBlock Text="{services:Loc settings.tgActiveBadge}" FontSize="9.5" FontWeight="Bold" Foreground="#60A5FA"/>
                                                 </Border>
                                                 <Button Style="{StaticResource FlatActionButton}" Width="28" Height="28" Padding="0" Click="TgLogout_Click" ToolTip="{services:Loc settings.tgDeleteSessionTooltip}">
                                                     <controls:LucideIcon Kind="trash-2" Width="12" Height="12" Foreground="{StaticResource AccentRoseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -697,7 +766,7 @@
                                     </Border>
 
                                     <!-- Empty State when no account is connected -->
-                                    <Border x:Name="TgNoAccountCard" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,16" Margin="0,0,0,8" Visibility="Collapsed">
+                                    <Border x:Name="TgNoAccountCard" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="20,16" Margin="0,0,0,8" Visibility="Collapsed">
                                         <StackPanel HorizontalAlignment="Center">
                                             <controls:LucideIcon Kind="shield-alert" Width="24" Height="24" Foreground="{StaticResource AccentAmberBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                             <TextBlock Text="{services:Loc telegram.noAccount}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource AccentAmberBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
@@ -709,7 +778,7 @@
                                 <!-- Sub-Tab Panel 2: Login Nomor Telepon -->
                                 <StackPanel x:Name="PanelTgLoginOtp" Visibility="Collapsed">
                                     <!-- Info notice when an account is already active -->
-                                    <Border x:Name="TgActiveNoticeBorder" Background="#142334" BorderBrush="#3B82F6" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,12" Visibility="Collapsed">
+                                    <Border x:Name="TgActiveNoticeBorder" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,12" Visibility="Collapsed">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -724,10 +793,10 @@
                                     </Border>
 
                                     <!-- Quick Launch Interactive Login Wizard -->
-                                    <Button Style="{StaticResource PrimaryCyanButton}" Height="34" Margin="0,0,0,14" Click="OpenInteractiveLogin_Click">
+                                    <Button Style="{StaticResource PrimaryBlueButton}" Height="34" Margin="0,0,0,14" Click="OpenInteractiveLogin_Click">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <controls:LucideIcon Kind="send" Width="14" Height="14" Foreground="#090E16" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Buka Panduan Login Interaktif (Langkah demi Langkah)" FontSize="11" FontWeight="Bold" Foreground="#090E16" VerticalAlignment="Center"/>
+                                            <controls:LucideIcon Kind="send" Width="14" Height="14" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Buka Panduan Login Interaktif (Langkah demi Langkah)" FontSize="11" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
 
@@ -777,8 +846,8 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBox x:Name="TgPhoneTextBox" Text="+62" Style="{StaticResource FlatTextBox}" KeyDown="TgPhone_KeyDown"/>
-                                        <Button x:Name="TgSendOtpBtn" Grid.Column="1" Style="{StaticResource PrimaryBlueButton}" Margin="8,0,0,0" Padding="12,4" Click="TgSendOtp_Click">
-                                            <TextBlock x:Name="TgSendOtpBtnText" Text="{services:Loc settings.tgSendOtp}"/>
+                                        <Button x:Name="TgSendOtpBtn" Grid.Column="1" Style="{StaticResource PrimaryBlueButton}" Margin="8,0,0,0" Padding="14,4" Click="TgSendOtp_Click">
+                                            <TextBlock x:Name="TgSendOtpBtnText" Text="{services:Loc settings.tgSendOtp}" Foreground="White" FontWeight="Bold"/>
                                         </Button>
                                     </Grid>
 
@@ -806,20 +875,20 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <Grid Grid.Column="0">
-                                                <PasswordBox x:Name="TgPasswordBox" Background="#090E16" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="8,4,28,4" FontSize="12" KeyDown="TgPassword_KeyDown"/>
+                                                <PasswordBox x:Name="TgPasswordBox" Background="{StaticResource SurfaceLowestBrush}" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="8,4,28,4" FontSize="12" KeyDown="TgPassword_KeyDown"/>
                                                 <TextBox x:Name="TgPasswordVisibleTextBox" Style="{StaticResource FlatTextBox}" Padding="8,4,28,4" Visibility="Collapsed" KeyDown="TgPassword_KeyDown"/>
                                                 <Button Style="{StaticResource FlatActionButton}" Width="24" Height="24" Padding="0" HorizontalAlignment="Right" Margin="0,0,4,0" Click="ToggleTgPassword_Click" ToolTip="{services:Loc settings.proxyPasswordTooltip}">
                                                     <controls:LucideIcon x:Name="TgEyeIcon" Kind="eye" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Button>
                                             </Grid>
-                                            <Button x:Name="TgVerifyPasswordBtn" Grid.Column="1" Style="{StaticResource PrimaryCyanButton}" Margin="8,0,0,0" Padding="12,4" Click="TgVerifyPassword_Click">
-                                                <TextBlock x:Name="TgVerifyPasswordBtnText" Text="{services:Loc settings.tg2faConfirm}"/>
+                                            <Button x:Name="TgVerifyPasswordBtn" Grid.Column="1" Style="{StaticResource PrimaryBlueButton}" Margin="8,0,0,0" Padding="12,4" Click="TgVerifyPassword_Click">
+                                                <TextBlock x:Name="TgVerifyPasswordBtnText" Text="{services:Loc settings.tg2faConfirm}" Foreground="White" FontWeight="Bold"/>
                                             </Button>
                                         </Grid>
                                     </StackPanel>
 
                                     <!-- Error Banner -->
-                                    <Border x:Name="TgErrorBorder" Background="#26FF5252" BorderBrush="#66FF5252" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,10,0,0" Visibility="Collapsed">
+                                    <Border x:Name="TgErrorBorder" Background="#26EF4444" BorderBrush="#66EF4444" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,10,0,0" Visibility="Collapsed">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -834,70 +903,76 @@
                         </Border>
 
                         <!-- Direktori Unduhan Telegram -->
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <controls:LucideIcon Kind="folder-open" Width="15" Height="15" Foreground="{StaticResource AccentSecondaryCyanBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{services:Loc settings.tgDirTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                </StackPanel>
-
-                                <TextBlock Text="{services:Loc settings.tgDirLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="TelegramDirTextBox" Style="{StaticResource FlatTextBox}"/>
-                                    <Button Grid.Column="1" Style="{StaticResource FlatActionButton}" Margin="6,0,0,0" Padding="10,4" Click="BrowseTelegramDir_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <controls:LucideIcon Kind="folder" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
-                                            <TextBlock Text="{services:Loc common.browse}"/>
-                                        </StackPanel>
-                                    </Button>
-                                </Grid>
-
-                                <CheckBox x:Name="TelegramSubfolderCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True">
-                                    <StackPanel>
-                                        <TextBlock Text="{services:Loc settings.tgSubfolder}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{services:Loc settings.tgSubfolderDesc}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,12">
+                                    <StackPanel Orientation="Horizontal">
+                                        <controls:LucideIcon Kind="folder" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{services:Loc settings.tgDirTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
                                     </StackPanel>
-                                </CheckBox>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                                </Border>
 
-                    <!-- ======================================================== -->
-                    <!-- TAB 7: PROXY & SOCKS                                     -->
-                    <!-- ======================================================== -->
-                    <StackPanel x:Name="PanelProxy" Visibility="Collapsed" MaxWidth="680" HorizontalAlignment="Left">
-                        <!-- Proxy & SOCKS Server Card -->
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
-                            <StackPanel>
+                                <TextBlock Text="{services:Loc settings.tgDirLabel}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Border Width="32" Height="32" Background="#2600E5FF" CornerRadius="8" Margin="0,0,10,0">
-                                            <controls:LucideIcon Kind="shield-check" Width="16" Height="16" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <StackPanel VerticalAlignment="Center">
-                                            <TextBlock Text="{services:Loc settings.proxyTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{services:Loc settings.proxySubtitle}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBox x:Name="TelegramDirTextBox" Height="32" Style="{StaticResource FlatTextBox}" VerticalContentAlignment="Center"/>
+                                    <Button Grid.Column="1" Style="{StaticResource FlatActionButton}" Height="32" Margin="8,0,0,0" Padding="14,0" Click="BrowseTelegramDir_Click">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="folder" Width="13" Height="13" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0"/>
+                                            <TextBlock Text="{services:Loc common.browse}"/>
                                         </StackPanel>
-                                    </StackPanel>
-
-                                    <!-- Enable Switch / CheckBox -->
-                                    <CheckBox x:Name="ProxyEnabledCheckBox" Grid.Column="1" Style="{StaticResource DarkCheckBox}" Checked="ProxyEnabled_Checked" Unchecked="ProxyEnabled_Unchecked" VerticalAlignment="Center">
-                                        <TextBlock Text="{services:Loc settings.proxyEnable}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}"/>
-                                    </CheckBox>
+                                    </Button>
                                 </Grid>
+
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+                                    <CheckBox x:Name="TelegramSubfolderCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True">
+                                        <StackPanel Margin="8,0,0,0">
+                                            <TextBlock Text="{services:Loc settings.tgSubfolder}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.tgSubfolderDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- ======================================================== -->
+                    <!-- TAB 7: PROXY & SOCKS - STITCH 1:1                        -->
+                    <!-- ======================================================== -->
+                    <StackPanel x:Name="PanelProxy" Visibility="Collapsed">
+                        <!-- Proxy & SOCKS Server Card -->
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
+                            <StackPanel>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Border Width="28" Height="28" Background="#101B38" BorderBrush="#1E3A8A" BorderThickness="1" CornerRadius="6" Margin="0,0,10,0">
+                                                <controls:LucideIcon Kind="shield-check" Width="14" Height="14" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{services:Loc settings.proxyTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                <TextBlock Text="{services:Loc settings.proxySubtitle}" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <!-- Enable Switch / CheckBox -->
+                                        <CheckBox x:Name="ProxyEnabledCheckBox" Grid.Column="1" Style="{StaticResource DarkCheckBox}" Checked="ProxyEnabled_Checked" Unchecked="ProxyEnabled_Unchecked" VerticalAlignment="Center">
+                                            <TextBlock Text="{services:Loc settings.proxyEnable}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}"/>
+                                        </CheckBox>
+                                    </Grid>
+                                </Border>
 
                                 <!-- Proxy Config Controls -->
                                 <StackPanel x:Name="ProxyConfigFields" Opacity="0.5" IsEnabled="False">
-                                    <TextBlock Text="{services:Loc settings.proxyTypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                                    <Grid Margin="0,0,0,12">
+                                    <TextBlock Text="{services:Loc settings.proxyTypeLabel}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                                    <Grid Margin="0,0,0,14" MaxWidth="380" HorizontalAlignment="Left">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="8"/>
@@ -914,16 +989,16 @@
                                     <Grid Margin="0,0,0,12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="3*"/>
-                                            <ColumnDefinition Width="10"/>
+                                            <ColumnDefinition Width="12"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="{services:Loc settings.proxyHostLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                            <TextBox x:Name="ProxyHostTextBox" Text="127.0.0.1" Style="{StaticResource FlatTextBox}"/>
+                                            <TextBlock Text="{services:Loc settings.proxyHostLabel}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                                            <TextBox x:Name="ProxyHostTextBox" Text="127.0.0.1" Height="32" Style="{StaticResource FlatTextBox}" VerticalContentAlignment="Center"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="{services:Loc settings.proxyPortLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                            <TextBox x:Name="ProxyPortTextBox" Text="1080" Style="{StaticResource FlatTextBox}"/>
+                                            <TextBlock Text="{services:Loc settings.proxyPortLabel}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                                            <TextBox x:Name="ProxyPortTextBox" Text="1080" Height="32" Style="{StaticResource FlatTextBox}" VerticalContentAlignment="Center" TextAlignment="Center"/>
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
@@ -931,35 +1006,37 @@
                         </Border>
 
                         <!-- Autentikasi Proxy -->
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                             <StackPanel>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{services:Loc settings.proxyAuthTitle}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{services:Loc settings.proxyAuthSubtitle}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                    </StackPanel>
-                                    <CheckBox x:Name="ProxyAuthCheckBox" Grid.Column="1" Style="{StaticResource DarkCheckBox}" Checked="ProxyAuth_Checked" Unchecked="ProxyAuth_Unchecked" VerticalAlignment="Center"/>
-                                </Grid>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{services:Loc settings.proxyAuthTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{services:Loc settings.proxyAuthSubtitle}" FontSize="10.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                        <CheckBox x:Name="ProxyAuthCheckBox" Grid.Column="1" Style="{StaticResource DarkCheckBox}" Checked="ProxyAuth_Checked" Unchecked="ProxyAuth_Unchecked" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
 
-                                <Grid x:Name="ProxyAuthFields" Margin="0,6,0,0" Visibility="Collapsed">
+                                <Grid x:Name="ProxyAuthFields" Margin="0,8,0,0" Visibility="Collapsed">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="12"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{services:Loc settings.proxyUserLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="ProxyUserTextBox" Style="{StaticResource FlatTextBox}"/>
+                                        <TextBlock Text="{services:Loc settings.proxyUserLabel}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                                        <TextBox x:Name="ProxyUserTextBox" Height="32" Style="{StaticResource FlatTextBox}" VerticalContentAlignment="Center"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="{services:Loc settings.proxyPassLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{services:Loc settings.proxyPassLabel}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
                                         <Grid>
-                                            <PasswordBox x:Name="ProxyPasswordBox" Background="#090E16" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="8,4" FontSize="12"/>
-                                            <TextBox x:Name="ProxyPasswordVisibleTextBox" Style="{StaticResource FlatTextBox}" Visibility="Collapsed"/>
+                                            <PasswordBox x:Name="ProxyPasswordBox" Height="32" Background="{StaticResource SurfaceLowestBrush}" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="8,4,28,4" FontSize="12" VerticalContentAlignment="Center"/>
+                                            <TextBox x:Name="ProxyPasswordVisibleTextBox" Height="32" Style="{StaticResource FlatTextBox}" Padding="8,4,28,4" Visibility="Collapsed" VerticalContentAlignment="Center"/>
                                             <Button Style="{StaticResource FlatActionButton}" Width="24" Height="24" Padding="0" HorizontalAlignment="Right" Margin="0,0,4,0" Click="ToggleProxyPassword_Click" ToolTip="{services:Loc settings.proxyPasswordTooltip}">
                                                 <controls:LucideIcon x:Name="EyeIcon" Kind="eye" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Button>
@@ -970,17 +1047,17 @@
                         </Border>
 
                         <!-- Uji Koneksi Proxy Card -->
-                        <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="16">
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
-                                <Grid Margin="0,0,0,10">
+                                <Grid Margin="0,0,0,14">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Button x:Name="TestProxyBtn" Style="{StaticResource PrimaryCyanButton}" Padding="14,6" Click="TestProxy_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <controls:LucideIcon Kind="refresh-cw" Width="14" Height="14" Foreground="#090E16" Margin="0,0,8,0"/>
-                                            <TextBlock Text="{services:Loc settings.proxyTestBtn}"/>
+                                    <Button x:Name="TestProxyBtn" Style="{StaticResource PrimaryBlueButton}" Height="34" Padding="16,0" Click="TestProxy_Click">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="refresh-cw" Width="13" Height="13" Foreground="White" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{services:Loc settings.proxyTestBtn}" Foreground="White" FontWeight="SemiBold"/>
                                         </StackPanel>
                                     </Button>
 
@@ -994,10 +1071,10 @@
                                 </Grid>
 
                                 <!-- Tip Callout -->
-                                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10">
+                                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <controls:LucideIcon Kind="flame" Width="16" Height="16" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{services:Loc settings.proxyTip}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                        <controls:LucideIcon Kind="info" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{services:Loc settings.proxyTip}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -1006,29 +1083,38 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- 4: Footer Action Bar (Matching settings-modal.png) -->
-            <Border Grid.Row="4" Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource SurfaceMediumBrush}" BorderThickness="0,1,0,0" Padding="20,10">
-                <Grid>
+            <!-- 4: Footer Action Bar (Stitch Clean Dark 1:1) -->
+            <Border Grid.Row="4" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="24,0">
+                <Grid VerticalAlignment="Center">
                     <!-- Reset Defaults (Left) -->
-                    <Button Style="{StaticResource FlatActionButton}" HorizontalAlignment="Left" Padding="12,6" Click="ResetDefaults_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <controls:LucideIcon Kind="rotate-ccw" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0"/>
-                            <TextBlock Text="{services:Loc settings.resetDefault}"/>
-                        </StackPanel>
+                    <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="ResetDefaults_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="rotate-ccw" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,7,0"/>
+                                    <TextBlock Text="{services:Loc settings.resetDefault}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
                     </Button>
 
-                    <!-- Cancel, Apply, OK (Right) -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Style="{StaticResource FlatActionButton}" Width="80" Padding="0,6" Margin="0,0,8,0" Click="Cancel_Click">
-                            <TextBlock Text="{services:Loc common.cancel}"/>
+                    <!-- Cancel and Save Settings (Right) -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <!-- Batal -->
+                        <Button Style="{StaticResource FlatActionButton}" Height="34" Padding="18,0" Margin="0,0,10,0" Click="Cancel_Click">
+                            <TextBlock Text="{services:Loc common.cancel}" FontSize="12"/>
                         </Button>
-                        <Button Style="{StaticResource FlatActionButton}" BorderBrush="#4D00E5FF" Width="86" Padding="0,6" Margin="0,0,8,0" Click="Apply_Click">
-                            <TextBlock Text="{services:Loc common.apply}" Foreground="{StaticResource AccentCyanBrush}"/>
-                        </Button>
-                        <Button Style="{StaticResource PrimaryCyanButton}" Width="92" Padding="0,6" Click="Ok_Click">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <controls:LucideIcon Kind="check" Width="13" Height="13" Foreground="#090E16" Margin="0,0,6,0"/>
-                                <TextBlock Text="{services:Loc common.ok}"/>
+
+                        <!-- Simpan Pengaturan -->
+                        <Button Style="{StaticResource PrimaryBlueButton}" Height="34" Padding="18,0" Click="Ok_Click">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <controls:LucideIcon Kind="check" Width="14" Height="14" Foreground="White" Margin="0,0,7,0"/>
+                                <TextBlock Text="{services:Loc settings.saveSettings}" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>

@@ -51,6 +51,11 @@ public partial class SettingsDialog : Window
                 TgSubTab_Checked(this, new RoutedEventArgs());
             }
         }
+        else if (string.Equals(initialTab, "connection", StringComparison.OrdinalIgnoreCase) || string.Equals(initialTab, "koneksi", StringComparison.OrdinalIgnoreCase))
+        {
+            TabRadioConnection.IsChecked = true;
+            Tab_Checked(this, new RoutedEventArgs());
+        }
     }
 
     #region Window Drag & Navigation Controls
@@ -66,6 +71,11 @@ public partial class SettingsDialog : Window
     private void Minimize_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
+    }
+
+    private void Maximize_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     }
 
     private void Close_Click(object sender, RoutedEventArgs e)
@@ -133,6 +143,18 @@ public partial class SettingsDialog : Window
 
         ConnectionTimeoutTextBox.Text = _database.GetSetting("connection_timeout_sec", "30") ?? "30";
         MaxRetriesTextBox.Text = _database.GetSetting("max_retries", "10") ?? "10";
+
+        string maxConn = _database.GetSetting("max_connections", "16") ?? "16";
+        if (MaxParallelConnectionsComboBox != null)
+        {
+            MaxParallelConnectionsComboBox.SelectedIndex = maxConn switch
+            {
+                "4" => 0,
+                "8" => 1,
+                "32" => 3,
+                _ => 2 // "16"
+            };
+        }
 
         // --- 3. JENIS BERKAS (FILE TYPES) ---
         AutoCaptureExtensionsTextBox.Text = _database.GetSetting("auto_capture_extensions", DefaultAutoCaptureExt) ?? DefaultAutoCaptureExt;
@@ -886,6 +908,18 @@ public partial class SettingsDialog : Window
         _database.SetSetting("connection_timeout_sec", ConnectionTimeoutTextBox.Text.Trim());
         _database.SetSetting("max_retries", MaxRetriesTextBox.Text.Trim());
 
+        if (MaxParallelConnectionsComboBox != null)
+        {
+            string connCount = MaxParallelConnectionsComboBox.SelectedIndex switch
+            {
+                0 => "4",
+                1 => "8",
+                3 => "32",
+                _ => "16"
+            };
+            _database.SetSetting("max_connections", connCount);
+        }
+
         // 3. JENIS BERKAS
         _database.SetSetting("auto_capture_extensions", AutoCaptureExtensionsTextBox.Text.Trim());
         _database.SetSetting("excluded_sites", ExcludedSitesTextBox.Text.Trim());
@@ -969,6 +1003,10 @@ public partial class SettingsDialog : Window
             GlobalLimitUnitComboBox.SelectedIndex = 0;
             ConnectionTimeoutTextBox.Text = "30";
             MaxRetriesTextBox.Text = "10";
+            if (MaxParallelConnectionsComboBox != null)
+            {
+                MaxParallelConnectionsComboBox.SelectedIndex = 2; // 16 Jalur (Standar Turbo)
+            }
 
             AutoCaptureExtensionsTextBox.Text = DefaultAutoCaptureExt;
             ExcludedSitesTextBox.Text = DefaultExcludedSites;

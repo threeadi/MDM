@@ -281,12 +281,12 @@ public class I18n : INotifyPropertyChanged
             ["properties.computeHash"] = "Hitung Hash",
 
             // Settings Dialog
-            ["settings.title"] = "MDM - Opsi & Pengaturan",
-            ["settings.heading"] = "Pengaturan & Opsi Konfigurasi",
-            ["settings.subtitle"] = "Sesuaikan kapabilitas unduhan, modul peramban, dan opsi lanjutan.",
+            ["settings.title"] = "Opsi & Pengaturan",
+            ["settings.heading"] = "Pengaturan & Konfigurasi Jaringan",
+            ["settings.subtitle"] = "Kelola multithreading, batas kecepatan global, modul integrasi browser, dan preferensi unduhan.",
             ["settings.tabGeneral"] = "Umum",
-            ["settings.tabConnection"] = "Sambungan",
-            ["settings.tabFileTypes"] = "Jenis Berkas",
+            ["settings.tabConnection"] = "Koneksi",
+            ["settings.tabFileTypes"] = "Tipe Berkas",
             ["settings.tabSavePath"] = "Lokasi Simpan",
             ["settings.tabExtensions"] = "Ekstensi",
             ["settings.tabTelegram"] = "Telegram",
@@ -312,7 +312,10 @@ public class I18n : INotifyPropertyChanged
             ["settings.openExtFolder"] = "Buka Folder Ekstensi",
             ["settings.extGuideTitle"] = "Panduan Instalasi Manual Ekstensi:",
             ["settings.extGuideDesc"] = "Buka chrome://extensions di browser Chromium Anda, aktifkan Developer Mode, lalu klik Load unpacked dan pilih direktori extension/ pada folder instalasi MDM.",
-            ["settings.resetDefault"] = "Atur Ulang Default",
+            ["settings.resetDefault"] = "Atur Ulang ke Default",
+            ["settings.saveSettings"] = "Simpan Pengaturan",
+            ["settings.parallelConnections"] = "Koneksi Paralel Maksimum per Unduhan:",
+            ["settings.parallelConnectionsDesc"] = "Membagi berkas menjadi pecahan chunk simultan.",
 
             // Settings Dialog - Full Localization
             ["settings.saveSuccess"] = "Pengaturan berhasil disimpan dan diterapkan!",
@@ -668,9 +671,9 @@ public class I18n : INotifyPropertyChanged
             ["properties.computeHash"] = "Compute Hash",
 
             // Settings Dialog
-            ["settings.title"] = "MDM - Options & Settings",
-            ["settings.heading"] = "Settings & Configuration Options",
-            ["settings.subtitle"] = "Customize download capabilities, browser modules, and advanced options.",
+            ["settings.title"] = "Options & Settings",
+            ["settings.heading"] = "Network Settings & Configuration",
+            ["settings.subtitle"] = "Manage multithreading, global speed limit, browser integration, and download preferences.",
             ["settings.tabGeneral"] = "General",
             ["settings.tabConnection"] = "Connection",
             ["settings.tabFileTypes"] = "File Types",
@@ -700,6 +703,9 @@ public class I18n : INotifyPropertyChanged
             ["settings.extGuideTitle"] = "Manual Extension Installation Guide:",
             ["settings.extGuideDesc"] = "Open chrome://extensions in your Chromium browser, enable Developer Mode, click Load unpacked and select the extension/ directory in MDM installation folder.",
             ["settings.resetDefault"] = "Reset to Default",
+            ["settings.saveSettings"] = "Save Settings",
+            ["settings.parallelConnections"] = "Maximum Parallel Connections per Download:",
+            ["settings.parallelConnectionsDesc"] = "Splits file into simultaneous chunks.",
 
             // Settings Dialog - Full Localization
             ["settings.saveSuccess"] = "Settings successfully saved and applied!",
