@@ -28,6 +28,13 @@ public class TelegramService
 
     public int LastScanTotalServerCount { get; private set; }
 
+    private int _lastPhotoOffsetId = 0;
+    private int _lastVideoOffsetId = 0;
+    private int _lastDocOffsetId = 0;
+    private string? _lastScannedChatKey;
+    private string? _lastScannedFilter;
+    private readonly SemaphoreSlim _downloadThrottle = new(2, 2);
+
     public TelegramService(Database database, string? customSessionDir = null)
     {
         _database = database;
@@ -623,14 +630,25 @@ public class TelegramService
             var messagesList = new List<MessageBase>();
             int totalServerCount = 0;
 
+            // Reset offsets if chat changed or filter changed or offsetId == 0 (fresh scan)
+            string currentChatKey = peer.ID.ToString();
+            if (offsetId == 0 || _lastScannedChatKey != currentChatKey || _lastScannedFilter != filterLower)
+            {
+                _lastPhotoOffsetId = 0;
+                _lastVideoOffsetId = 0;
+                _lastDocOffsetId = 0;
+                _lastScannedChatKey = currentChatKey;
+                _lastScannedFilter = filterLower;
+            }
+
             if (filterLower == "all")
             {
                 // In Telegram MTProto, supergroups index photos and videos separately.
-                // To get the full shared media catalog (e.g. 1,612 videos + 5,529 photos), query both Video and Photos.
+                // Using independent cursors ensures neither media type skips or starves the other!
                 try
                 {
-                    var vidTask = _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterVideo(), offset_id: offsetId, limit: 50);
-                    var photoTask = _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterPhotos(), offset_id: offsetId, limit: 50);
+                    var vidTask = _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterVideo(), offset_id: _lastVideoOffsetId, limit: 50);
+                    var photoTask = _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterPhotos(), offset_id: _lastPhotoOffsetId, limit: 50);
                     await Task.WhenAll(vidTask, photoTask);
 
                     var vidRes = await vidTask;
@@ -638,18 +656,27 @@ public class TelegramService
 
                     totalServerCount = vidRes.Count + photoRes.Count;
 
-                    if (vidRes.Messages != null) messagesList.AddRange(vidRes.Messages);
-                    if (photoRes.Messages != null) messagesList.AddRange(photoRes.Messages);
+                    if (vidRes.Messages != null && vidRes.Messages.Length > 0)
+                    {
+                        _lastVideoOffsetId = vidRes.Messages[^1].ID;
+                        messagesList.AddRange(vidRes.Messages);
+                    }
+                    if (photoRes.Messages != null && photoRes.Messages.Length > 0)
+                    {
+                        _lastPhotoOffsetId = photoRes.Messages[^1].ID;
+                        messagesList.AddRange(photoRes.Messages);
+                    }
 
                     // Initial scan: also check documents so files are included
                     if (offsetId == 0)
                     {
                         try
                         {
-                            var docRes = await _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterDocument(), offset_id: 0, limit: 30);
-                            if (docRes != null && docRes.Messages != null)
+                            var docRes = await _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterDocument(), offset_id: 0, limit: 20);
+                            if (docRes != null && docRes.Messages != null && docRes.Messages.Length > 0)
                             {
                                 totalServerCount += docRes.Count;
+                                _lastDocOffsetId = docRes.Messages[^1].ID;
                                 messagesList.AddRange(docRes.Messages);
                             }
                         }
@@ -676,11 +703,27 @@ public class TelegramService
                     _ => new InputMessagesFilterVideo()
                 };
 
+                int specificOffset = filterLower switch
+                {
+                    "video" => _lastVideoOffsetId,
+                    "photo" => _lastPhotoOffsetId,
+                    "document" => _lastDocOffsetId,
+                    _ => offsetId
+                };
+
                 try
                 {
-                    var res = await _client.Messages_Search(peer, q: "", filter: serverFilter, offset_id: offsetId, limit: limit);
+                    var res = await _client.Messages_Search(peer, q: "", filter: serverFilter, offset_id: specificOffset, limit: limit);
                     totalServerCount = res.Count;
-                    if (res.Messages != null) messagesList.AddRange(res.Messages);
+                    if (res.Messages != null && res.Messages.Length > 0)
+                    {
+                        int lowestId = res.Messages[^1].ID;
+                        if (filterLower == "video") _lastVideoOffsetId = lowestId;
+                        else if (filterLower == "photo") _lastPhotoOffsetId = lowestId;
+                        else if (filterLower == "document") _lastDocOffsetId = lowestId;
+
+                        messagesList.AddRange(res.Messages);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -858,58 +901,66 @@ public class TelegramService
             throw new InvalidOperationException("Klien Telegram belum login atau tidak terhubung.");
         }
 
-        // Get peer
-        var dialogs = await _client.Messages_GetAllDialogs();
-        dialogs.chats.TryGetValue(chatId, out var chat);
-        dialogs.users.TryGetValue(chatId, out var user);
-
-        if (chat == null && user == null)
+        await _downloadThrottle.WaitAsync(ct);
+        try
         {
-            throw new Exception($"Chat ID {chatId} tidak ditemukan dalam daftar dialog.");
-        }
+            // Get peer
+            var dialogs = await _client.Messages_GetAllDialogs();
+            dialogs.chats.TryGetValue(chatId, out var chat);
+            dialogs.users.TryGetValue(chatId, out var user);
 
-        Messages_MessagesBase messagesBase;
-        if (chat is Channel ch)
-        {
-            messagesBase = await _client.Channels_GetMessages(ch, new InputMessage[] { messageId });
-        }
-        else
-        {
-            messagesBase = await _client.Messages_GetMessages(new InputMessage[] { messageId });
-        }
-
-        if (messagesBase.Messages.Length == 0 || messagesBase.Messages[0] is not Message msg)
-        {
-            throw new Exception($"Pesan Telegram ID {messageId} tidak ditemukan.");
-        }
-
-        string? dir = Path.GetDirectoryName(targetFilePath);
-        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
-
-        using var fileStream = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, 65536, useAsync: true);
-
-        if (msg.media is MessageMediaDocument docMedia && docMedia.document is Document doc)
-        {
-            await _client.DownloadFileAsync(doc, fileStream, progress: (done, total) =>
+            if (chat == null && user == null)
             {
-                if (ct.IsCancellationRequested) throw new OperationCanceledException();
-                onProgress(done, total);
-            });
-        }
-        else if (msg.media is MessageMediaPhoto photoMedia && photoMedia.photo is Photo photo)
-        {
-            await _client.DownloadFileAsync(photo, fileStream, progress: (done, total) =>
+                throw new Exception($"Chat ID {chatId} tidak ditemukan dalam daftar dialog.");
+            }
+
+            Messages_MessagesBase messagesBase;
+            if (chat is Channel ch)
             {
-                if (ct.IsCancellationRequested) throw new OperationCanceledException();
-                onProgress(done, total);
-            });
+                messagesBase = await _client.Channels_GetMessages(ch, new InputMessage[] { messageId });
+            }
+            else
+            {
+                messagesBase = await _client.Messages_GetMessages(new InputMessage[] { messageId });
+            }
+
+            if (messagesBase.Messages.Length == 0 || messagesBase.Messages[0] is not Message msg)
+            {
+                throw new Exception($"Pesan Telegram ID {messageId} tidak ditemukan.");
+            }
+
+            string? dir = Path.GetDirectoryName(targetFilePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            using var fileStream = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, 65536, useAsync: true);
+
+            if (msg.media is MessageMediaDocument docMedia && docMedia.document is Document doc)
+            {
+                await _client.DownloadFileAsync(doc, fileStream, progress: (done, total) =>
+                {
+                    if (ct.IsCancellationRequested) throw new OperationCanceledException();
+                    onProgress(done, total);
+                });
+            }
+            else if (msg.media is MessageMediaPhoto photoMedia && photoMedia.photo is Photo photo)
+            {
+                await _client.DownloadFileAsync(photo, fileStream, progress: (done, total) =>
+                {
+                    if (ct.IsCancellationRequested) throw new OperationCanceledException();
+                    onProgress(done, total);
+                });
+            }
+            else
+            {
+                throw new Exception("Pesan tidak memiliki berkas media yang dapat diunduh.");
+            }
         }
-        else
+        finally
         {
-            throw new Exception("Pesan tidak memiliki berkas media yang dapat diunduh.");
+            _downloadThrottle.Release();
         }
     }
 }

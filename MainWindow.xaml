@@ -12,13 +12,13 @@
         Height="720" Width="1160"
         MinHeight="560" MinWidth="860"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
+        WindowStyle="SingleBorderWindow"
         Background="{StaticResource CanvasBrush}">
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="40"
                       ResizeBorderThickness="6"
-                      GlassFrameThickness="0"
+                      GlassFrameThickness="1"
                       CornerRadius="0"
                       UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
@@ -54,6 +54,16 @@
     </Window.Resources>
 
     <Grid Background="{StaticResource CanvasBrush}">
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Setter Property="Margin" Value="0"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                        <Setter Property="Margin" Value="8"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
         <Grid.RowDefinitions>
             <!-- 0: Tier 1 Titlebar & Quick Search -->
             <RowDefinition Height="40"/>
@@ -1174,173 +1184,231 @@
                                     </Grid>
                                 </Border>
 
-                                <!-- Table Rows ScrollViewer -->
-                                <ScrollViewer x:Name="TelegramMediaScrollViewer" 
-                                              Grid.Row="2" 
-                                              VerticalScrollBarVisibility="Auto" 
-                                              HorizontalScrollBarVisibility="Disabled"
-                                              ScrollChanged="TelegramMediaScrollViewer_ScrollChanged"
-                                              PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
-                                    <StackPanel>
-                                        <!-- Empty Media State -->
-                                        <Border Visibility="{Binding HasNoTelegramMedia, Converter={StaticResource BoolToVis}}" Padding="32,48">
-                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <Border Width="48" Height="48" Background="#11141A" CornerRadius="24" Margin="0,0,0,12" HorizontalAlignment="Center">
-                                                    <controls:LucideIcon Kind="send" Width="20" Height="20" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <TextBlock Text="Belum ada berkas media dipindai" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                                <TextBlock Text="Pilih saluran di panel kiri atau klik 'Sinkronkan' untuk memindai pesan." FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Border>
+                                <!-- Table Content Grid (Virtualized ListBox + Bottom Status Strip) -->
+                                <Grid Grid.Row="2">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                                        <!-- Rows -->
-                                        <ItemsControl ItemsSource="{Binding DisplayedTelegramMedia}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BorderBrush="#232834" BorderThickness="0,0,0,1" Padding="12,7">
-                                                        <Border.Style>
-                                                            <Style TargetType="Border">
-                                                                <Setter Property="Background" Value="Transparent"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                        <Setter Property="Background" Value="#121D30"/>
-                                                                    </DataTrigger>
-                                                                    <MultiDataTrigger>
-                                                                        <MultiDataTrigger.Conditions>
-                                                                            <Condition Binding="{Binding IsSelected}" Value="False"/>
-                                                                            <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True"/>
-                                                                        </MultiDataTrigger.Conditions>
-                                                                        <Setter Property="Background" Value="#1E2430"/>
-                                                                    </MultiDataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Border.Style>
+                                    <!-- Empty Media State -->
+                                    <Border Grid.Row="0" Visibility="{Binding HasNoTelegramMedia, Converter={StaticResource BoolToVis}}" Padding="32,48" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Border Width="48" Height="48" Background="#11141A" CornerRadius="24" Margin="0,0,0,12" HorizontalAlignment="Center">
+                                                <controls:LucideIcon Kind="send" Width="20" Height="20" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="Belum ada berkas media dipindai" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Pilih saluran di panel kiri atau klik 'Sinkronkan' untuk memindai pesan." FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
 
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="100"/>
-                                                                <ColumnDefinition Width="140"/>
-                                                                <ColumnDefinition Width="75"/>
-                                                            </Grid.ColumnDefinitions>
-
-                                                            <!-- Col 0: Checkbox + Icon + Filename + Inline Status Badge -->
-                                                            <Grid VerticalAlignment="Center">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="Auto"/> <!-- Checkbox -->
-                                                                    <ColumnDefinition Width="Auto"/> <!-- Icon -->
-                                                                    <ColumnDefinition Width="Auto" MaxWidth="300"/> <!-- Filename -->
-                                                                    <ColumnDefinition Width="Auto"/> <!-- Status Badge -->
-                                                                    <ColumnDefinition Width="*"/>
-                                                                </Grid.ColumnDefinitions>
-
-                                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-
-                                                                <!-- Media Icon in Container -->
-                                                                <Border Grid.Column="1" Width="24" Height="24" CornerRadius="4" Background="{Binding LucideMediaTypeBg}" BorderBrush="{Binding LucideMediaTypeBorder}" BorderThickness="1" Margin="0,0,8,0" VerticalAlignment="Center">
-                                                                    <controls:LucideIcon Kind="{Binding LucideMediaTypeIcon}" Width="13" Height="13" Foreground="{Binding LucideMediaTypeColor}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                </Border>
-
-                                                                <!-- Filename -->
-                                                                <TextBlock Grid.Column="2" Text="{Binding Filename}" Foreground="#F1F5F9" FontWeight="Medium" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
-
-                                                                <!-- Status: Selesai -->
-                                                                <Border Grid.Column="3" Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" Background="#1A10B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="4" Padding="6,1.5" VerticalAlignment="Center">
-                                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                        <controls:LucideIcon Kind="check" Width="11" Height="11" Foreground="#10B981" Margin="0,0,3,0"/>
-                                                                        <TextBlock Text="Selesai" Foreground="#10B981" FontSize="10" FontWeight="Medium"/>
-                                                                    </StackPanel>
-                                                                </Border>
-
-                                                                <!-- Status: Belum Ada -->
-                                                                <Border Grid.Column="3" Visibility="{Binding IsReady, Converter={StaticResource BoolToVis}}" Background="#11141A" BorderBrush="#232834" BorderThickness="1" CornerRadius="4" Padding="6,1.5" VerticalAlignment="Center">
-                                                                    <TextBlock Text="Belum Ada" Foreground="#94A3B8" FontSize="10" FontWeight="Medium"/>
-                                                                </Border>
-                                                            </Grid>
-
-                                                            <!-- Col 1: Ukuran -->
-                                                            <TextBlock Grid.Column="1" Text="{Binding SizeFormatted}" Foreground="#E2E8F0" FontWeight="Medium" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-
-                                                            <!-- Col 2: Tanggal -->
-                                                            <TextBlock Grid.Column="2" Text="{Binding DateFormatted}" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                                            <!-- Col 3: Aksi Button -->
-                                                            <StackPanel Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                                                <!-- Buka Button (Completed) -->
-                                                                <Button Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" 
-                                                                        Command="{Binding DataContext.OpenFileTelegramCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                                                        CommandParameter="{Binding}" 
-                                                                        Style="{StaticResource TableBukaButton}" Content="Buka"/>
-
-                                                                <!-- Unduh Button (Not Completed) -->
-                                                                <Button Visibility="{Binding IsReady, Converter={StaticResource BoolToVis}}" 
-                                                                        Command="{Binding DataContext.DownloadSingleTelegramItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                                                        CommandParameter="{Binding}" 
-                                                                        Style="{StaticResource TableUnduhButton}" Content="Unduh"/>
-                                                            </StackPanel>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-
-                                        <!-- Pagination Strip (Scroll Down / Load More) -->
-                                        <Border Visibility="{Binding HasTelegramMedia, Converter={StaticResource BoolToVis}}" 
-                                                Padding="16,14" HorizontalAlignment="Center">
-                                            <StackPanel HorizontalAlignment="Center">
-                                                <!-- Scanning Indicator -->
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" 
-                                                            Visibility="{Binding TelegramIsScanning, Converter={StaticResource BoolToVis}}" 
-                                                            Margin="0,4,0,4">
-                                                    <controls:LucideIcon Kind="refresh-cw" Width="14" Height="14" Foreground="#60A5FA" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Memindai media selanjutnya dari Telegram..." FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                                                </StackPanel>
-
-                                                <!-- Load More Button (When Not Scanning and HasMoreTelegramMedia) -->
-                                                <Button Command="{Binding ScanTelegramCommand}" 
-                                                        CommandParameter="loadMore" 
-                                                        Padding="18,6" Cursor="Hand">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryGlassButton}">
-                                                            <Setter Property="Visibility" Value="Visible"/>
+                                    <!-- Virtualized ListBox: RAM-Friendly (Only instantiates visible rows) -->
+                                    <ListBox x:Name="TelegramMediaListBox" 
+                                             Grid.Row="0"
+                                             Visibility="{Binding HasTelegramMedia, Converter={StaticResource BoolToVis}}"
+                                             ItemsSource="{Binding DisplayedTelegramMedia}"
+                                             VirtualizingPanel.IsVirtualizing="True"
+                                             VirtualizingPanel.VirtualizationMode="Recycling"
+                                             VirtualizingPanel.ScrollUnit="Pixel"
+                                             ScrollViewer.CanContentScroll="True"
+                                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             ScrollViewer.ScrollChanged="TelegramMediaListBox_ScrollChanged"
+                                             BorderThickness="0"
+                                             Background="Transparent"
+                                             Padding="0"
+                                             ItemContainerStyle="{StaticResource TelegramMediaListBoxItemStyle}">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="#232834" BorderThickness="0,0,0,1" Padding="12,7">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="Transparent"/>
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding TelegramIsScanning}" Value="True">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                    <Setter Property="Background" Value="#121D30"/>
                                                                 </DataTrigger>
-                                                                <DataTrigger Binding="{Binding HasMoreTelegramMedia}" Value="False">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <controls:LucideIcon Kind="chevron-down" Width="14" Height="14" Foreground="#60A5FA" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                        <TextBlock Text="Muat Lebih Banyak Media (Halaman Berikutnya)" FontSize="11.5" FontWeight="Medium" Foreground="#CBD5E1" VerticalAlignment="Center"/>
-                                                    </StackPanel>
-                                                </Button>
-
-                                                <!-- End of Media Notice -->
-                                                <TextBlock Text="Semua media dalam obrolan/kanal ini telah dimuat" 
-                                                           FontSize="11" FontStyle="Italic" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,6,0,0">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                            <Style.Triggers>
                                                                 <MultiDataTrigger>
                                                                     <MultiDataTrigger.Conditions>
-                                                                        <Condition Binding="{Binding HasMoreTelegramMedia}" Value="False"/>
-                                                                        <Condition Binding="{Binding TelegramIsScanning}" Value="False"/>
+                                                                        <Condition Binding="{Binding IsSelected}" Value="False"/>
+                                                                        <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True"/>
                                                                     </MultiDataTrigger.Conditions>
-                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                    <Setter Property="Background" Value="#1E2430"/>
                                                                 </MultiDataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
+                                                    </Border.Style>
+
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="100"/>
+                                                            <ColumnDefinition Width="140"/>
+                                                            <ColumnDefinition Width="75"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <!-- Col 0: Checkbox + Icon + Filename + Inline Status Badge -->
+                                                        <Grid VerticalAlignment="Center">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/> <!-- Checkbox -->
+                                                                <ColumnDefinition Width="Auto"/> <!-- Icon -->
+                                                                <ColumnDefinition Width="Auto" MaxWidth="300"/> <!-- Filename -->
+                                                                <ColumnDefinition Width="Auto"/> <!-- Status Badge -->
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                                                            <!-- Media Icon in Container -->
+                                                            <Border Grid.Column="1" Width="24" Height="24" CornerRadius="4" Background="{Binding LucideMediaTypeBg}" BorderBrush="{Binding LucideMediaTypeBorder}" BorderThickness="1" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                                <controls:LucideIcon Kind="{Binding LucideMediaTypeIcon}" Width="13" Height="13" Foreground="{Binding LucideMediaTypeColor}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+
+                                                            <!-- Filename -->
+                                                            <TextBlock Grid.Column="2" Text="{Binding Filename}" Foreground="#F1F5F9" FontWeight="Medium" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+
+                                                            <!-- Status: Selesai -->
+                                                            <Border Grid.Column="3" Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" Background="#1A10B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="4" Padding="6,1.5" VerticalAlignment="Center">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <controls:LucideIcon Kind="check" Width="11" Height="11" Foreground="#10B981" Margin="0,0,3,0"/>
+                                                                    <TextBlock Text="Selesai" Foreground="#10B981" FontSize="10" FontWeight="Medium"/>
+                                                                </StackPanel>
+                                                            </Border>
+
+                                                            <!-- Status: Belum Ada -->
+                                                            <Border Grid.Column="3" Visibility="{Binding IsReady, Converter={StaticResource BoolToVis}}" Background="#11141A" BorderBrush="#232834" BorderThickness="1" CornerRadius="4" Padding="6,1.5" VerticalAlignment="Center">
+                                                                <TextBlock Text="Belum Ada" Foreground="#94A3B8" FontSize="10" FontWeight="Medium"/>
+                                                            </Border>
+                                                        </Grid>
+
+                                                        <!-- Col 1: Ukuran -->
+                                                        <TextBlock Grid.Column="1" Text="{Binding SizeFormatted}" Foreground="#E2E8F0" FontWeight="Medium" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+
+                                                        <!-- Col 2: Tanggal -->
+                                                        <TextBlock Grid.Column="2" Text="{Binding DateFormatted}" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                                        <!-- Col 3: Aksi Button -->
+                                                        <StackPanel Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                            <!-- Buka Button (Completed) -->
+                                                            <Button Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" 
+                                                                    Command="{Binding DataContext.OpenFileTelegramCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                                    CommandParameter="{Binding}" 
+                                                                    Style="{StaticResource TableBukaButton}" Content="Buka"/>
+
+                                                            <!-- Unduh Button (Not Completed) - Icon Only -->
+                                                            <Button Visibility="{Binding IsReady, Converter={StaticResource BoolToVis}}" 
+                                                                    Command="{Binding DataContext.DownloadSingleTelegramItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                                    CommandParameter="{Binding}" 
+                                                                    ToolTip="Unduh Berkas"
+                                                                    Style="{StaticResource TableUnduhButton}">
+                                                                <controls:LucideIcon Kind="download" Width="13" Height="13" Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <!-- Bottom Pagination & Auto-Fetch Strip -->
+                                    <Border Grid.Row="1" Visibility="{Binding HasTelegramMedia, Converter={StaticResource BoolToVis}}" 
+                                            Background="#0D1117" BorderBrush="#232834" BorderThickness="0,1,0,0" Padding="12,8">
+                                        <Grid>
+                                            <!-- Auto-Fetch Active State -->
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" 
+                                                        Visibility="{Binding IsAutoFetchingAllTelegram, Converter={StaticResource BoolToVis}}">
+                                                <controls:LucideIcon Kind="refresh-cw" Width="14" Height="14" Foreground="#38BDF8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding AutoFetchStatusText, FallbackValue='Memuat seluruh media...'}" FontSize="11.5" FontWeight="Medium" Foreground="#E2E8F0" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                <Button Command="{Binding CancelAutoFetchTelegramCommand}" Style="{StaticResource SecondaryGlassButton}" Padding="10,3" Cursor="Hand">
+                                                    <TextBlock Text="Batal" FontSize="11" Foreground="#EF4444"/>
+                                                </Button>
                                             </StackPanel>
-                                        </Border>
-                                    </StackPanel>
-                                </ScrollViewer>
+
+                                            <!-- Scanning Indicator (Single Batch) -->
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" 
+                                                        Margin="0,2">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding TelegramIsScanning}" Value="True"/>
+                                                                    <Condition Binding="{Binding IsAutoFetchingAllTelegram}" Value="False"/>
+                                                                </MultiDataTrigger.Conditions>
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <controls:LucideIcon Kind="refresh-cw" Width="14" Height="14" Foreground="#60A5FA" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Memindai media selanjutnya dari Telegram..." FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                            </StackPanel>
+
+                                            <!-- Ready State: Load More & Auto-Fetch Buttons -->
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding TelegramIsScanning}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsAutoFetchingAllTelegram}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding HasMoreTelegramMedia}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+
+                                                <!-- Button 1: Load Next Batch -->
+                                                <Button Command="{Binding ScanTelegramCommand}" 
+                                                        CommandParameter="loadMore" 
+                                                        Style="{StaticResource SecondaryGlassButton}"
+                                                        Padding="14,5" Margin="0,0,8,0" Cursor="Hand">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <controls:LucideIcon Kind="chevron-down" Width="13" Height="13" Foreground="#60A5FA" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Muat Lebih Banyak" FontSize="11" FontWeight="Medium" Foreground="#CBD5E1" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <!-- Button 2: Auto-Fetch All Media -->
+                                                <Button Command="{Binding AutoFetchAllTelegramCommand}" 
+                                                        Style="{StaticResource SecondaryGlassButton}"
+                                                        ToolTip="Otomatis memuat seluruh halaman media secara berurutan ke dalam tabel"
+                                                        Padding="14,5" Cursor="Hand">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <controls:LucideIcon Kind="chevrons-down" Width="13" Height="13" Foreground="#38BDF8" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Muat Semua Media Otomatis" FontSize="11" FontWeight="Medium" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+
+                                            <!-- End of Media Notice -->
+                                            <TextBlock Text="Semua media dalam obrolan/kanal ini telah dimuat" 
+                                                       FontSize="11" FontStyle="Italic" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,4,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding HasMoreTelegramMedia}" Value="False"/>
+                                                                    <Condition Binding="{Binding TelegramIsScanning}" Value="False"/>
+                                                                    <Condition Binding="{Binding IsAutoFetchingAllTelegram}" Value="False"/>
+                                                                </MultiDataTrigger.Conditions>
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
                             </Grid>
                         </Border>
 
@@ -1353,8 +1421,9 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Left: Blue Unduh Terpilih Button + Uncompleted Count Text -->
+                                <!-- Left: Unduh Terpilih + Unduh Semua Belum Ada + Streaming Progress -->
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <!-- Unduh Terpilih Button -->
                                     <Button Command="{Binding DownloadSelectedTelegramCommand}" Style="{StaticResource PrimaryBlueButton}" Padding="16,7">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <controls:LucideIcon Kind="download" Width="15" Height="15" Foreground="#FFFFFF" Margin="0,0,6,0"/>
@@ -1362,8 +1431,34 @@
                                         </StackPanel>
                                     </Button>
 
-                                    <!-- Subtitle next to button -->
-                                    <TextBlock Text="{Binding TelegramUncompletedSelectedText, FallbackValue='2 berkas belum diunduh dipilih'}" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                    <!-- Unduh Semua Belum Ada (Direct-to-Download Queue Streaming) -->
+                                    <Button Command="{Binding DownloadAllUncompletedTelegramCommand}" 
+                                            Style="{StaticResource TelegramBatchDownloadButton}" 
+                                            Visibility="{Binding IsNotBatchQueueingTelegram, Converter={StaticResource BoolToVis}}"
+                                            ToolTip="Unduh SEMUA media yang belum ada di saluran ini tanpa harus menggulir (streaming antrean langsung ke unduhan)"
+                                            Margin="8,0,0,0">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="download" Width="14" Height="14" Foreground="#38BDF8" Margin="0,0,6,0"/>
+                                            <TextBlock Text="Unduh Semua Belum Ada" FontSize="12" FontWeight="SemiBold" Foreground="#F1F5F9"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Batch Queue Streaming Active Progress Indicator -->
+                                    <Border Visibility="{Binding IsBatchQueueingTelegram, Converter={StaticResource BoolToVis}}"
+                                            Background="#111827" BorderBrush="#0284C7" BorderThickness="1" CornerRadius="4" Padding="10,4" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="refresh-cw" Width="13" Height="13" Foreground="#38BDF8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding BatchQueueStatusText}" Foreground="#E2E8F0" FontSize="11" FontWeight="Medium" VerticalAlignment="Center"/>
+                                            <Button Command="{Binding CancelBatchQueueTelegramCommand}" Style="{StaticResource SecondaryGlassButton}" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center" Cursor="Hand">
+                                                <TextBlock Text="Batal" FontSize="10.5" Foreground="#EF4444"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Subtitle next to buttons (when not batch queueing) -->
+                                    <TextBlock Visibility="{Binding IsNotBatchQueueingTelegram, Converter={StaticResource BoolToVis}}"
+                                               Text="{Binding TelegramUncompletedSelectedText, FallbackValue='2 berkas belum diunduh dipilih'}" 
+                                               Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0"/>
                                 </StackPanel>
 
                                 <!-- Right: Save Dir Picker in Pill Container -->

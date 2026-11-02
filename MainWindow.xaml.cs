@@ -16,6 +16,8 @@ namespace Mdm;
 public partial class MainWindow : Window
 {
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    private const int DWMWCP_ROUND = 2;
 
     [DllImport("dwmapi.dll", PreserveSig = true)]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
@@ -38,10 +40,14 @@ public partial class MainWindow : Window
 
         Loaded += (_, _) =>
         {
-            // Enable native Windows 11 / 10 Dark Mode titlebar
+            // Enable native Windows 11 / 10 Dark Mode titlebar & DWM hardware composition
             var handle = new WindowInteropHelper(this).Handle;
             int useImmersiveDarkMode = 1;
             DwmSetWindowAttribute(handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useImmersiveDarkMode, sizeof(int));
+
+            // Enable native Windows 11 rounded corners matching OS DWM
+            int cornerPreference = DWMWCP_ROUND;
+            DwmSetWindowAttribute(handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref cornerPreference, sizeof(int));
 
             // Initialize System Tray
             _trayService = new TrayIconService(this);
@@ -148,17 +154,24 @@ public partial class MainWindow : Window
 
     private void TitleBar_Minimize_Click(object sender, RoutedEventArgs e)
     {
-        WindowState = WindowState.Minimized;
+        SystemCommands.MinimizeWindow(this);
     }
 
     private void TitleBar_Maximize_Click(object sender, RoutedEventArgs e)
     {
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        if (WindowState == WindowState.Maximized)
+        {
+            SystemCommands.RestoreWindow(this);
+        }
+        else
+        {
+            SystemCommands.MaximizeWindow(this);
+        }
     }
 
     private void TitleBar_Close_Click(object sender, RoutedEventArgs e)
     {
-        Close();
+        SystemCommands.CloseWindow(this);
     }
 
     private void AddDownload_Click(object sender, RoutedEventArgs e)
@@ -365,7 +378,20 @@ public partial class MainWindow : Window
         double scrollableHeight = e.ExtentHeight - e.ViewportHeight;
         if (e.VerticalChange > 0 && scrollableHeight > 0 && e.VerticalOffset >= scrollableHeight - 80)
         {
-            if (DataContext is MainViewModel vm && !vm.TelegramIsScanning && vm.HasTelegramMedia && vm.HasMoreTelegramMedia)
+            if (DataContext is MainViewModel vm && !vm.TelegramIsScanning && !vm.IsAutoFetchingAllTelegram && !vm.IsBatchQueueingTelegram && vm.HasTelegramMedia && vm.HasMoreTelegramMedia)
+            {
+                vm.ScanTelegramCommand.Execute("loadMore");
+            }
+        }
+    }
+
+    private void TelegramMediaListBox_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        // Virtualized ListBox infinite scroll: auto-paginate when user scrolls near the bottom
+        double scrollableHeight = e.ExtentHeight - e.ViewportHeight;
+        if (e.VerticalChange > 0 && scrollableHeight > 0 && e.VerticalOffset >= scrollableHeight - 80)
+        {
+            if (DataContext is MainViewModel vm && !vm.TelegramIsScanning && !vm.IsAutoFetchingAllTelegram && !vm.IsBatchQueueingTelegram && vm.HasTelegramMedia && vm.HasMoreTelegramMedia)
             {
                 vm.ScanTelegramCommand.Execute("loadMore");
             }

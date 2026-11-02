@@ -68,6 +68,7 @@ public class TrayIconService : IDisposable
     private NOTIFYICONDATA _nid;
     private bool _isCreated;
     private ContextMenu? _contextMenu;
+    private System.Drawing.Icon? _trayIcon;
 
     public event Action? OnOpenRequested;
     public event Action? OnAddDownloadRequested;
@@ -89,25 +90,58 @@ public class TrayIconService : IDisposable
         _hwndSource?.AddHook(HwndHook);
 
         IntPtr iconHandle = IntPtr.Zero;
+        int targetSize = (int)SystemParameters.SmallIconWidth;
+        if (targetSize <= 0) targetSize = 16;
+
         try
         {
-            string icoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "app.ico");
-            if (File.Exists(icoPath))
+            // 1. Try loading from WPF pack resource stream (embedded /Mdm;component/Assets/app.ico)
+            var resUri = new Uri("pack://application:,,,/Mdm;component/Assets/app.ico", UriKind.Absolute);
+            var streamInfo = Application.GetResourceStream(resUri)
+                          ?? Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico", UriKind.Absolute));
+
+            if (streamInfo?.Stream != null)
             {
-                iconHandle = LoadImage(IntPtr.Zero, icoPath, 1, 16, 16, 0x00000010);
+                using var stream = streamInfo.Stream;
+                _trayIcon = new System.Drawing.Icon(stream, targetSize, targetSize);
+                iconHandle = _trayIcon.Handle;
             }
 
+            // 2. Fallback: try loading from file on disk
             if (iconHandle == IntPtr.Zero)
             {
-                IntPtr hInst = GetModuleHandle(null);
-                iconHandle = LoadIcon(hInst, (IntPtr)1);
+                string icoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "app.ico");
+                if (!File.Exists(icoPath))
+                {
+                    icoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+                }
+
+                if (File.Exists(icoPath))
+                {
+                    _trayIcon = new System.Drawing.Icon(icoPath, targetSize, targetSize);
+                    iconHandle = _trayIcon.Handle;
+                }
+            }
+
+            // 3. Fallback: try extracting from process executable icon
+            if (iconHandle == IntPtr.Zero)
+            {
+                string exePath = Process.GetCurrentProcess().MainModule?.FileName ?? "";
+                if (!string.IsNullOrEmpty(exePath) && File.Exists(exePath))
+                {
+                    _trayIcon = System.Drawing.Icon.ExtractAssociatedIcon(exePath);
+                    if (_trayIcon != null)
+                    {
+                        iconHandle = _trayIcon.Handle;
+                    }
+                }
             }
         }
         catch { }
 
         if (iconHandle == IntPtr.Zero)
         {
-            iconHandle = LoadIcon(IntPtr.Zero, (IntPtr)32512); // IDI_APPLICATION default icon
+            iconHandle = LoadIcon(IntPtr.Zero, (IntPtr)32512); // IDI_APPLICATION fallback
         }
 
         _nid = new NOTIFYICONDATA
@@ -200,6 +234,9 @@ public class TrayIconService : IDisposable
             Shell_NotifyIcon(NIM_DELETE, ref _nid);
             _isCreated = false;
         }
+
+        _trayIcon?.Dispose();
+        _trayIcon = null;
 
         if (_hwndSource != null)
         {

@@ -323,6 +323,31 @@ public class Database
         cmd.ExecuteNonQuery();
     }
 
+    public HashSet<string> GetAllDownloadUrls()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            using var conn = new SqliteConnection(_connectionString);
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT url FROM downloads";
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                if (!reader.IsDBNull(0))
+                {
+                    set.Add(reader.GetString(0));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"GetAllDownloadUrls error: {ex.Message}");
+        }
+        return set;
+    }
+
     public string? GetSetting(string key, string? defaultValue = null)
     {
         using var conn = new SqliteConnection(_connectionString);

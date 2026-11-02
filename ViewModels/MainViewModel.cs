@@ -458,9 +458,76 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand SelectOnlyUncompletedTelegramCommand { get; }
     public ICommand SyncCurrentTelegramChannelCommand { get; }
     public ICommand DownloadSelectedTelegramCommand { get; }
+    public ICommand DownloadAllUncompletedTelegramCommand { get; }
+    public ICommand CancelBatchQueueTelegramCommand { get; }
+    public ICommand AutoFetchAllTelegramCommand { get; }
+    public ICommand CancelAutoFetchTelegramCommand { get; }
     public ICommand DownloadSingleTelegramItemCommand { get; }
     public ICommand OpenFileTelegramCommand { get; }
     public ICommand ChangeTelegramDirCommand { get; }
+
+    private bool _isBatchQueueingTelegram;
+    public bool IsBatchQueueingTelegram
+    {
+        get => _isBatchQueueingTelegram;
+        set
+        {
+            if (_isBatchQueueingTelegram != value)
+            {
+                _isBatchQueueingTelegram = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotBatchQueueingTelegram));
+            }
+        }
+    }
+    public bool IsNotBatchQueueingTelegram => !_isBatchQueueingTelegram;
+
+    private string _batchQueueStatusText = string.Empty;
+    public string BatchQueueStatusText
+    {
+        get => _batchQueueStatusText;
+        set
+        {
+            if (_batchQueueStatusText != value)
+            {
+                _batchQueueStatusText = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    private bool _isAutoFetchingAllTelegram;
+    public bool IsAutoFetchingAllTelegram
+    {
+        get => _isAutoFetchingAllTelegram;
+        set
+        {
+            if (_isAutoFetchingAllTelegram != value)
+            {
+                _isAutoFetchingAllTelegram = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotAutoFetchingAllTelegram));
+            }
+        }
+    }
+    public bool IsNotAutoFetchingAllTelegram => !_isAutoFetchingAllTelegram;
+
+    private string _autoFetchStatusText = string.Empty;
+    public string AutoFetchStatusText
+    {
+        get => _autoFetchStatusText;
+        set
+        {
+            if (_autoFetchStatusText != value)
+            {
+                _autoFetchStatusText = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    private CancellationTokenSource? _batchQueueCts;
+    private CancellationTokenSource? _autoFetchCts;
 
     public Database Database => _database;
     public DownloadEngine Engine => _engine;
@@ -523,6 +590,10 @@ public class MainViewModel : INotifyPropertyChanged
             SelectOnlyUncompletedTelegramCommand = new RelayCommand(() => { });
             SyncCurrentTelegramChannelCommand = new RelayCommand(() => { });
             DownloadSelectedTelegramCommand = new RelayCommand(() => { });
+            DownloadAllUncompletedTelegramCommand = new RelayCommand(() => { });
+            CancelBatchQueueTelegramCommand = new RelayCommand(() => { });
+            AutoFetchAllTelegramCommand = new RelayCommand(() => { });
+            CancelAutoFetchTelegramCommand = new RelayCommand(() => { });
             DownloadSingleTelegramItemCommand = new RelayCommand(_ => { });
             OpenFileTelegramCommand = new RelayCommand(_ => { });
             ChangeTelegramDirCommand = new RelayCommand(() => { });
@@ -909,6 +980,26 @@ public class MainViewModel : INotifyPropertyChanged
         DownloadSelectedTelegramCommand = new RelayCommand(() =>
         {
             DownloadSelectedTelegram();
+        });
+
+        DownloadAllUncompletedTelegramCommand = new RelayCommand(() =>
+        {
+            _ = DownloadAllUncompletedTelegramAsync();
+        });
+
+        CancelBatchQueueTelegramCommand = new RelayCommand(() =>
+        {
+            _batchQueueCts?.Cancel();
+        });
+
+        AutoFetchAllTelegramCommand = new RelayCommand(() =>
+        {
+            _ = AutoFetchAllTelegramAsync();
+        });
+
+        CancelAutoFetchTelegramCommand = new RelayCommand(() =>
+        {
+            _autoFetchCts?.Cancel();
         });
 
         DownloadSingleTelegramItemCommand = new RelayCommand(p =>
@@ -1385,6 +1476,236 @@ public class MainViewModel : INotifyPropertyChanged
         item.Status = "Sedang Mengunduh";
         UpdateCounts();
         UpdateTelegramCounts();
+    }
+
+    public async Task DownloadAllUncompletedTelegramAsync()
+    {
+        if (IsBatchQueueingTelegram) return;
+        if (!_engine.TelegramService.AuthStatus.IsAuthenticated) return;
+        if (string.IsNullOrWhiteSpace(TelegramChatInput) && SelectedTelegramChannel == null) return;
+
+        string saveDir = EffectiveTelegramTargetDir;
+        if (!Directory.Exists(saveDir))
+        {
+            try { Directory.CreateDirectory(saveDir); } catch { }
+        }
+
+        _batchQueueCts?.Cancel();
+        _batchQueueCts = new CancellationTokenSource();
+        var ct = _batchQueueCts.Token;
+
+        IsBatchQueueingTelegram = true;
+        int totalQueued = 0;
+        var existingUrls = _database.GetAllDownloadUrls();
+
+        try
+        {
+            BatchQueueStatusText = "Menyiapkan antrean unduhan...";
+
+            // 1. Queue uncompleted items already loaded in memory
+            var uncompletedInMemory = TelegramMediaItems.Where(m => !m.IsCompleted).ToList();
+            foreach (var item in uncompletedInMemory)
+            {
+                if (ct.IsCancellationRequested) break;
+
+                string filePath = Path.Combine(saveDir, item.Filename);
+                if (existingUrls.Contains(item.TgUrl))
+                {
+                    item.Status = "Sedang Mengunduh";
+                    continue;
+                }
+
+                var task = new DownloadTask
+                {
+                    Url = item.TgUrl,
+                    Filename = item.Filename,
+                    SaveDir = saveDir,
+                    FilePath = filePath,
+                    TotalBytes = item.FileSize > 0 ? item.FileSize : null,
+                    DownloadedBytes = 0,
+                    Status = DownloadStatus.Downloading,
+                    Connections = 1,
+                    Category = CategoryHelper.DetectCategory(item.Filename),
+                    Referer = item.ChatTitle,
+                    Source = "telegram",
+                    TelegramChannelTitle = item.ChatTitle
+                };
+
+                _database.UpsertTask(task);
+                existingUrls.Add(item.TgUrl);
+
+                if (Application.Current?.Dispatcher != null)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var itemVm = new DownloadItemViewModel(task);
+                        _allTasks.Insert(0, itemVm);
+                    });
+                }
+                else
+                {
+                    var itemVm = new DownloadItemViewModel(task);
+                    _allTasks.Insert(0, itemVm);
+                }
+
+                _engine.StartDownload(task);
+                item.Status = "Sedang Mengunduh";
+                item.IsSelected = false;
+                totalQueued++;
+            }
+
+            UpdateCounts();
+            UpdateTelegramCounts();
+
+            int serverTotal = _engine.TelegramService.LastScanTotalServerCount;
+            if (SelectedTelegramChannel?.MediaCount.HasValue == true && SelectedTelegramChannel.MediaCount.Value > serverTotal)
+            {
+                serverTotal = SelectedTelegramChannel.MediaCount.Value;
+            }
+
+            // 2. If server has more items beyond what's loaded, stream crawl the rest from MTProto
+            int consecutiveEmptyBatches = 0;
+            while (!ct.IsCancellationRequested && consecutiveEmptyBatches < 3)
+            {
+                BatchQueueStatusText = serverTotal > 0
+                    ? $"Mengantrekan berkas... {totalQueued} / ~{serverTotal}"
+                    : $"Mengantrekan berkas... {totalQueued} ditambahkan";
+
+                var batch = await _engine.TelegramService.ScanChatMediaAsync(TelegramChatInput, TelegramMediaFilter, limit: 100, offsetId: 1);
+                if (batch == null || batch.Count == 0)
+                {
+                    consecutiveEmptyBatches++;
+                    await Task.Delay(100, ct);
+                    continue;
+                }
+                consecutiveEmptyBatches = 0;
+
+                int newInBatch = 0;
+                foreach (var item in batch)
+                {
+                    if (ct.IsCancellationRequested) break;
+                    if (existingUrls.Contains(item.TgUrl)) continue;
+
+                    string filePath = Path.Combine(saveDir, item.Filename);
+                    if (File.Exists(filePath)) continue;
+
+                    var task = new DownloadTask
+                    {
+                        Url = item.TgUrl,
+                        Filename = item.Filename,
+                        SaveDir = saveDir,
+                        FilePath = filePath,
+                        TotalBytes = item.FileSize > 0 ? item.FileSize : null,
+                        DownloadedBytes = 0,
+                        Status = DownloadStatus.Downloading,
+                        Connections = 1,
+                        Category = CategoryHelper.DetectCategory(item.Filename),
+                        Referer = item.ChatTitle,
+                        Source = "telegram",
+                        TelegramChannelTitle = item.ChatTitle
+                    };
+
+                    _database.UpsertTask(task);
+                    existingUrls.Add(item.TgUrl);
+
+                    if (Application.Current?.Dispatcher != null)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            var itemVm = new DownloadItemViewModel(task);
+                            _allTasks.Insert(0, itemVm);
+                        });
+                    }
+                    else
+                    {
+                        var itemVm = new DownloadItemViewModel(task);
+                        _allTasks.Insert(0, itemVm);
+                    }
+
+                    _engine.StartDownload(task);
+                    totalQueued++;
+                    newInBatch++;
+                }
+
+                if (newInBatch > 0)
+                {
+                    UpdateCounts();
+                }
+
+                await Task.Delay(100, ct);
+            }
+
+            BatchQueueStatusText = $"Selesai! {totalQueued} berkas ditambahkan ke antrean.";
+            await Task.Delay(3500);
+        }
+        catch (OperationCanceledException)
+        {
+            BatchQueueStatusText = $"Pengantrean dihentikan ({totalQueued} berkas ditambahkan).";
+            await Task.Delay(2500);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"Batch queue error: {ex.Message}");
+            BatchQueueStatusText = $"Kesalahan: {ex.Message}";
+            await Task.Delay(3000);
+        }
+        finally
+        {
+            IsBatchQueueingTelegram = false;
+            BatchQueueStatusText = string.Empty;
+            UpdateCounts();
+            UpdateTelegramCounts();
+        }
+    }
+
+    public async Task AutoFetchAllTelegramAsync()
+    {
+        if (IsAutoFetchingAllTelegram || TelegramIsScanning) return;
+        if (!_engine.TelegramService.AuthStatus.IsAuthenticated) return;
+        if (string.IsNullOrWhiteSpace(TelegramChatInput) && SelectedTelegramChannel == null) return;
+
+        _autoFetchCts?.Cancel();
+        _autoFetchCts = new CancellationTokenSource();
+        var ct = _autoFetchCts.Token;
+
+        IsAutoFetchingAllTelegram = true;
+        try
+        {
+            while (HasMoreTelegramMedia && !ct.IsCancellationRequested)
+            {
+                int serverTotal = _engine.TelegramService.LastScanTotalServerCount;
+                AutoFetchStatusText = serverTotal > 0
+                    ? $"Memuat seluruh media... ({TelegramMediaItems.Count} / {serverTotal})"
+                    : $"Memuat seluruh media... ({TelegramMediaItems.Count} dimuat)";
+
+                int previousCount = TelegramMediaItems.Count;
+                await ScanTelegramAsync(TelegramChatInput, TelegramMediaFilter, loadMore: true);
+
+                if (TelegramMediaItems.Count == previousCount || !HasMoreTelegramMedia)
+                {
+                    break;
+                }
+
+                await Task.Delay(80, ct);
+            }
+            AutoFetchStatusText = $"Selesai memuat {TelegramMediaItems.Count} media!";
+            await Task.Delay(2000);
+        }
+        catch (OperationCanceledException)
+        {
+            AutoFetchStatusText = "Pemuatan dihentikan.";
+            await Task.Delay(1500);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"Auto fetch error: {ex.Message}");
+        }
+        finally
+        {
+            IsAutoFetchingAllTelegram = false;
+            AutoFetchStatusText = string.Empty;
+            UpdateTelegramCounts();
+        }
     }
 
     public void UpdateTelegramCounts()
