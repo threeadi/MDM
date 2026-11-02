@@ -68,6 +68,8 @@ public class MainViewModel : INotifyPropertyChanged
 
     public bool HasMultipleSelection => _selectedTasks.Count > 1;
 
+    public string FilteredCountText => $"{_allTasks.Count} Berkas Terlihat";
+
     public string SelectedCountText => _selectedTasks.Count switch
     {
         > 1 => string.Format(I18n.Tr("table.filesCountSelected", "{0} berkas ({1} dipilih)"), _allTasks.Count, _selectedTasks.Count),
@@ -395,9 +397,11 @@ public class MainViewModel : INotifyPropertyChanged
         SwitchToDownloadsCommand = new RelayCommand(() => ActiveView = "downloads");
         SwitchToTelegramCommand = new RelayCommand(() => ActiveView = "telegram");
 
-        PauseCommand = new RelayCommand(() =>
+        PauseCommand = new RelayCommand(param =>
         {
-            var targets = SelectedTasks.Count > 0 ? SelectedTasks.ToList() : (SelectedTask != null ? [SelectedTask] : []);
+            var targets = param is DownloadItemViewModel single 
+                ? [single] 
+                : (SelectedTasks.Count > 0 ? SelectedTasks.ToList() : (SelectedTask != null ? [SelectedTask] : []));
             foreach (var t in targets)
             {
                 if (t.Status == DownloadStatus.Downloading)
@@ -407,9 +411,11 @@ public class MainViewModel : INotifyPropertyChanged
             }
         });
 
-        ResumeCommand = new RelayCommand(() =>
+        ResumeCommand = new RelayCommand(param =>
         {
-            var targets = SelectedTasks.Count > 0 ? SelectedTasks.ToList() : (SelectedTask != null ? [SelectedTask] : []);
+            var targets = param is DownloadItemViewModel single 
+                ? [single] 
+                : (SelectedTasks.Count > 0 ? SelectedTasks.ToList() : (SelectedTask != null ? [SelectedTask] : []));
             foreach (var t in targets)
             {
                 if (t.Status != DownloadStatus.Downloading)
@@ -446,9 +452,11 @@ public class MainViewModel : INotifyPropertyChanged
             UpdateCounts();
         });
 
-        DeleteCommand = new RelayCommand(() =>
+        DeleteCommand = new RelayCommand(param =>
         {
-            var targets = SelectedTasks.Count > 0 ? SelectedTasks.ToList() : (SelectedTask != null ? [SelectedTask] : []);
+            var targets = param is DownloadItemViewModel single 
+                ? [single] 
+                : (SelectedTasks.Count > 0 ? SelectedTasks.ToList() : (SelectedTask != null ? [SelectedTask] : []));
             if (targets.Count == 0) return;
 
             if (RequestDeleteConfirmation != null)
@@ -461,11 +469,12 @@ public class MainViewModel : INotifyPropertyChanged
             }
         });
 
-        OpenFileCommand = new RelayCommand(() =>
+        OpenFileCommand = new RelayCommand(param =>
         {
-            if (SelectedTask != null && File.Exists(SelectedTask.FilePath))
+            var target = param is DownloadItemViewModel single ? single : SelectedTask;
+            if (target != null && File.Exists(target.FilePath))
             {
-                Process.Start(new ProcessStartInfo(SelectedTask.FilePath) { UseShellExecute = true });
+                Process.Start(new ProcessStartInfo(target.FilePath) { UseShellExecute = true });
             }
         });
 
@@ -822,6 +831,7 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ActiveCountText));
         OnPropertyChanged(nameof(CompletedCountText));
         OnPropertyChanged(nameof(SelectedCountText));
+        OnPropertyChanged(nameof(FilteredCountText));
     }
 
     public async Task ScanTelegramAsync(string? input = null, string? filter = null, bool loadMore = false)

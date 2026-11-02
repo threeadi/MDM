@@ -223,7 +223,7 @@
                     <DataGridTemplateColumn Header="Ukuran" Width="100" IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding SizeFormatted}" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource AppFontMono}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding SizeFormatted}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -232,7 +232,7 @@
                     <DataGridTemplateColumn Header="Tanggal" Width="130" IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding DateFormatted}" Foreground="{StaticResource TextMutedBrush}" FontFamily="{StaticResource AppFontMono}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding DateFormatted}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

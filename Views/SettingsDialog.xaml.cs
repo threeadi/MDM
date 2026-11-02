@@ -118,22 +118,6 @@ public partial class SettingsDialog : Window
         NotifyOnCompleteCheckBox.IsChecked = _database.GetSetting("notify_on_complete", "1") == "1";
         ShowCompletionDialogCheckBox.IsChecked = _database.GetSetting("show_completion_dialog", "1") == "1";
 
-        string connType = _database.GetSetting("connection_type", "broadband") ?? "broadband";
-        ConnectionTypeComboBox.SelectedIndex = connType switch
-        {
-            "standard" => 1,
-            "metered" => 2,
-            _ => 0
-        };
-
-        if (int.TryParse(_database.GetSetting("default_threads", "16"), out int threads))
-        {
-            ConnectionsSlider.Value = Math.Clamp(threads, 4, 32);
-        }
-        UpdateConnectionsBadge((int)ConnectionsSlider.Value);
-
-        TcpTuningCheckBox.IsChecked = _database.GetSetting("tcp_tuning", "1") == "1";
-
         // --- 2. SAMBUNGAN (CONNECTION) ---
         bool limitEnabled = _database.GetSetting("global_limit_enabled", "0") == "1";
         EnableLimitCheckBox.IsChecked = limitEnabled;
@@ -203,28 +187,6 @@ public partial class SettingsDialog : Window
         string pass = _database.GetSetting("proxy_pass", "") ?? "";
         ProxyPasswordBox.Password = pass;
         ProxyPasswordVisibleTextBox.Text = pass;
-    }
-
-    private void ConnectionsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (ConnectionsBadgeText != null)
-        {
-            UpdateConnectionsBadge((int)e.NewValue);
-        }
-    }
-
-    private void UpdateConnectionsBadge(int count)
-    {
-        if (ConnectionsBadgeText == null) return;
-
-        if (count >= 16)
-        {
-            ConnectionsBadgeText.Text = $"{count} (Turbo)";
-        }
-        else
-        {
-            ConnectionsBadgeText.Text = $"{count} " + I18n.Tr("settings.connectionsSuffix", "Sambungan");
-        }
     }
 
     private void EnableLimit_Checked(object sender, RoutedEventArgs e)
@@ -826,16 +788,6 @@ public partial class SettingsDialog : Window
         _database.SetSetting("notify_on_complete", NotifyOnCompleteCheckBox.IsChecked == true ? "1" : "0");
         _database.SetSetting("show_completion_dialog", ShowCompletionDialogCheckBox.IsChecked == true ? "1" : "0");
 
-        string connType = ConnectionTypeComboBox.SelectedIndex switch
-        {
-            1 => "standard",
-            2 => "metered",
-            _ => "broadband"
-        };
-        _database.SetSetting("connection_type", connType);
-        _database.SetSetting("default_threads", ((int)ConnectionsSlider.Value).ToString());
-        _database.SetSetting("tcp_tuning", TcpTuningCheckBox.IsChecked == true ? "1" : "0");
-
         // Windows Startup Registry
         try
         {
@@ -949,9 +901,6 @@ public partial class SettingsDialog : Window
             ClipboardCaptureCheckBox.IsChecked = true;
             NotifyOnCompleteCheckBox.IsChecked = true;
             ShowCompletionDialogCheckBox.IsChecked = true;
-            ConnectionTypeComboBox.SelectedIndex = 0;
-            ConnectionsSlider.Value = 16;
-            TcpTuningCheckBox.IsChecked = true;
 
             EnableLimitCheckBox.IsChecked = false;
             GlobalLimitValueTextBox.Text = "2048";

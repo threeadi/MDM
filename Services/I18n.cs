@@ -118,12 +118,12 @@ public class I18n : INotifyPropertyChanged
             ["status.waiting"] = "Menunggu",
 
             // Toolbar
-            ["toolbar.title"] = "IDM Turbo Desktop",
+            ["toolbar.title"] = "MDM",
             ["toolbar.searchPlaceholder"] = "Cari file, tautan unduhan, atau ekstensi...",
             ["toolbar.addUrl"] = "Tambah URL",
             ["toolbar.resumeAll"] = "Mulai Semua",
             ["toolbar.pauseAll"] = "Jeda Semua",
-            ["toolbar.clearCompleted"] = "Bersihkan",
+            ["toolbar.clearCompleted"] = "Bersihkan Selesai",
             ["toolbar.queue"] = "Antrean Unduhan",
             ["toolbar.telegramGrabber"] = "Telegram Grabber",
             ["toolbar.settings"] = "Pengaturan",
@@ -133,7 +133,7 @@ public class I18n : INotifyPropertyChanged
             // Sidebar
             ["sidebar.downloadStatus"] = "STATUS UNDUHAN",
             ["sidebar.statusAll"] = "Semua Unduhan",
-            ["sidebar.statusDownloading"] = "Sedang Berjalan",
+            ["sidebar.statusDownloading"] = "Sedang Mengunduh",
             ["sidebar.statusCompleted"] = "Selesai",
             ["sidebar.statusPaused"] = "Dijeda",
             ["sidebar.statusFailed"] = "Gagal",
@@ -153,7 +153,7 @@ public class I18n : INotifyPropertyChanged
             ["table.filesCountSelected"] = "{0} berkas ({1} dipilih)",
             ["table.colName"] = "Nama Berkas",
             ["table.colSize"] = "Ukuran",
-            ["table.colProgress"] = "Progres",
+            ["table.colProgress"] = "Kemajuan",
             ["table.colSpeed"] = "Kecepatan",
             ["table.colEta"] = "Sisa Waktu",
             ["table.colStatus"] = "Status",
@@ -170,6 +170,10 @@ public class I18n : INotifyPropertyChanged
             ["statusbar.completed"] = "Selesai: {0} berkas",
             ["statusbar.downloadedData"] = "Data Terunduh: {0}",
             ["statusbar.globalSpeed"] = "Kecepatan Global:",
+            ["statusbar.speed"] = "Kecepatan:",
+            ["statusbar.quotaUsage"] = "Penggunaan Kuota:",
+            ["statusbar.extensionConnected"] = "Ekstensi Browser Terhubung (Chrome & Firefox)",
+            ["statusbar.sslVerified"] = "SSL/TLS Terverifikasi",
 
             // Transfer Window
             ["transfer.windowTitle"] = "Detail Transfer - MDM",
@@ -227,9 +231,9 @@ public class I18n : INotifyPropertyChanged
             ["deleteConfirm.deleteDisk"] = "Hapus juga berkas fisik dari penyimpanan disk komputer",
             ["deleteConfirm.deleteDiskDesc"] = "Jika dicentang, file yang telah diunduh di disk akan dihapus secara permanen.",
             ["deleteConfirm.deleteBtn"] = "Hapus Berkas",
-            ["deleteConfirm.promptSubtitle"] = "Tugas unduhan ini akan dihapus dari daftar MDM Turbo Desktop.",
+            ["deleteConfirm.promptSubtitle"] = "Tugas unduhan ini akan dihapus dari daftar MDM.",
             ["deleteConfirm.promptMultipleTitle"] = "Hapus {0} berkas ini dari antrean unduhan?",
-            ["deleteConfirm.promptMultipleSubtitle"] = "Seluruh tugas unduhan terpilih akan dihapus dari daftar MDM Turbo Desktop.",
+            ["deleteConfirm.promptMultipleSubtitle"] = "Seluruh tugas unduhan terpilih akan dihapus dari daftar MDM.",
             ["deleteConfirm.selectedBadge"] = "{0} Terpilih",
             ["deleteConfirm.cancelBtn"] = "Batal",
 
@@ -277,9 +281,9 @@ public class I18n : INotifyPropertyChanged
             ["properties.computeHash"] = "Hitung Hash",
 
             // Settings Dialog
-            ["settings.title"] = "MDM Turbo Desktop - Opsi & Pengaturan",
+            ["settings.title"] = "MDM - Opsi & Pengaturan",
             ["settings.heading"] = "Pengaturan & Opsi Konfigurasi",
-            ["settings.subtitle"] = "Sesuaikan kapabilitas unduhan, modul peramban, dan jalur paralel jaringan.",
+            ["settings.subtitle"] = "Sesuaikan kapabilitas unduhan, modul peramban, dan opsi lanjutan.",
             ["settings.tabGeneral"] = "Umum",
             ["settings.tabConnection"] = "Sambungan",
             ["settings.tabFileTypes"] = "Jenis Berkas",
@@ -288,9 +292,9 @@ public class I18n : INotifyPropertyChanged
             ["settings.tabTelegram"] = "Telegram",
             ["settings.tabProxy"] = "Proxy & SOCKS",
             ["settings.langTitle"] = "PILIHAN BAHASA (LANGUAGE)",
-            ["settings.langDesc"] = "Pilih bahasa antarmuka aplikasi MDM Turbo Desktop:",
+            ["settings.langDesc"] = "Pilih bahasa antarmuka aplikasi MDM:",
             ["settings.sysIntegration"] = "INTEGRASI SISTEM & STARTUP",
-            ["settings.runAtStartup"] = "Jalankan MDM Turbo Desktop secara otomatis saat Windows boot",
+            ["settings.runAtStartup"] = "Jalankan MDM secara otomatis saat Windows boot",
             ["settings.startMinimized"] = "Mulai dalam mode terminimalkan ke System Tray",
             ["settings.showNotifications"] = "Tampilkan notifikasi desktop saat unduhan selesai",
             ["settings.connSpeed"] = "KECEPATAN SAMBUNGAN & JALUR DATA",
@@ -312,7 +316,7 @@ public class I18n : INotifyPropertyChanged
 
             // Settings Dialog - Full Localization
             ["settings.saveSuccess"] = "Pengaturan berhasil disimpan dan diterapkan!",
-            ["settings.autoStart"] = "Jalankan IDM Turbo saat Windows dinyalakan",
+            ["settings.autoStart"] = "Jalankan MDM saat Windows dinyalakan",
             ["settings.autoStartDesc"] = "Memuat layanan background optimizer dan tray monitor secara lekas.",
             ["settings.mediaPanel"] = "Tampilkan panel download melayang pada pemutar media",
             ["settings.mediaPanelDesc"] = "Otomatis deteksi format m3u8, MP4, MKV, dan audio resolusi tinggi.",
@@ -338,7 +342,7 @@ public class I18n : INotifyPropertyChanged
             ["settings.peakLimitLabel"] = "Estimasi Batas Puncak:",
             ["settings.uncapped"] = "Tak Terbatas (Uncapped)",
             ["settings.hotkeysTitle"] = "KUNCI TOMBOL CEPAT",
-            ["settings.hotkeyPrevent"] = "Cegah unduhan IDM saat klik tautan:",
+            ["settings.hotkeyPrevent"] = "Cegah unduhan MDM saat klik tautan:",
             ["settings.hotkeyForce"] = "Paksa tangkap unduhan secara langsung:",
             ["settings.limiterTitle"] = "BATASI KECEPATAN (BANDWIDTH LIMITER)",
             ["settings.enableGlobalLimit"] = "Batasi Kecepatan Unduh Global",
@@ -497,7 +501,7 @@ public class I18n : INotifyPropertyChanged
             ["status.waiting"] = "Waiting",
 
             // Toolbar
-            ["toolbar.title"] = "IDM Turbo Desktop",
+            ["toolbar.title"] = "MDM",
             ["toolbar.searchPlaceholder"] = "Search files, download links, or extensions...",
             ["toolbar.addUrl"] = "Add URL",
             ["toolbar.resumeAll"] = "Resume All",
@@ -549,6 +553,10 @@ public class I18n : INotifyPropertyChanged
             ["statusbar.completed"] = "Completed: {0} files",
             ["statusbar.downloadedData"] = "Downloaded: {0}",
             ["statusbar.globalSpeed"] = "Global Speed:",
+            ["statusbar.speed"] = "Speed:",
+            ["statusbar.quotaUsage"] = "Data Usage:",
+            ["statusbar.extensionConnected"] = "Browser Extension Connected (Chrome & Firefox)",
+            ["statusbar.sslVerified"] = "SSL/TLS Verified",
 
             // Transfer Window
             ["transfer.windowTitle"] = "Transfer Details - MDM",
@@ -656,9 +664,9 @@ public class I18n : INotifyPropertyChanged
             ["properties.computeHash"] = "Compute Hash",
 
             // Settings Dialog
-            ["settings.title"] = "MDM Turbo Desktop - Options & Settings",
+            ["settings.title"] = "MDM - Options & Settings",
             ["settings.heading"] = "Settings & Configuration Options",
-            ["settings.subtitle"] = "Customize download capabilities, browser modules, and network parallel tracks.",
+            ["settings.subtitle"] = "Customize download capabilities, browser modules, and advanced options.",
             ["settings.tabGeneral"] = "General",
             ["settings.tabConnection"] = "Connection",
             ["settings.tabFileTypes"] = "File Types",
@@ -667,9 +675,9 @@ public class I18n : INotifyPropertyChanged
             ["settings.tabTelegram"] = "Telegram",
             ["settings.tabProxy"] = "Proxy & SOCKS",
             ["settings.langTitle"] = "LANGUAGE SELECTION",
-            ["settings.langDesc"] = "Choose the interface language for MDM Turbo Desktop:",
+            ["settings.langDesc"] = "Choose the interface language for MDM:",
             ["settings.sysIntegration"] = "SYSTEM INTEGRATION & STARTUP",
-            ["settings.runAtStartup"] = "Launch MDM Turbo Desktop automatically when Windows boots",
+            ["settings.runAtStartup"] = "Launch MDM automatically when Windows boots",
             ["settings.startMinimized"] = "Start minimized to System Tray",
             ["settings.showNotifications"] = "Show desktop notification when a download completes",
             ["settings.connSpeed"] = "CONNECTION SPEED & DATA TRACKS",
@@ -691,7 +699,7 @@ public class I18n : INotifyPropertyChanged
 
             // Settings Dialog - Full Localization
             ["settings.saveSuccess"] = "Settings successfully saved and applied!",
-            ["settings.autoStart"] = "Run IDM Turbo on Windows startup",
+            ["settings.autoStart"] = "Run MDM on Windows startup",
             ["settings.autoStartDesc"] = "Launch background optimizer and tray monitor service immediately.",
             ["settings.mediaPanel"] = "Show floating download panel on media players",
             ["settings.mediaPanelDesc"] = "Automatically detect m3u8, MP4, MKV, and high-res audio formats.",
@@ -717,7 +725,7 @@ public class I18n : INotifyPropertyChanged
             ["settings.peakLimitLabel"] = "Peak Limit Estimation:",
             ["settings.uncapped"] = "Uncapped",
             ["settings.hotkeysTitle"] = "HOTKEYS",
-            ["settings.hotkeyPrevent"] = "Prevent IDM download when clicking link:",
+            ["settings.hotkeyPrevent"] = "Prevent MDM download when clicking link:",
             ["settings.hotkeyForce"] = "Force direct download capture:",
             ["settings.limiterTitle"] = "SPEED LIMIT (BANDWIDTH LIMITER)",
             ["settings.enableGlobalLimit"] = "Enable Global Download Speed Limiter",

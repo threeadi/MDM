@@ -89,7 +89,7 @@
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock x:Name="PromptTitleText" Text="Hapus berkas ini dari antrean unduhan?" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                        <TextBlock x:Name="PromptSubtitleText" Text="Tugas unduhan ini akan dihapus dari daftar MDM Turbo Desktop." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="PromptSubtitleText" Text="Tugas unduhan ini akan dihapus dari daftar MDM." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Grid>
 
@@ -109,7 +109,7 @@
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock x:Name="FilenameText" Text="filename.zip" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                    <TextBlock x:Name="SizeSummaryText" Text="178.6 MB" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="SizeSummaryText" Text="178.6 MB" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                     <TextBlock Text="&#x2022;" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="5,0" VerticalAlignment="Center"/>
                                     <Border x:Name="StatusBadgeBorder" Background="#2610B981" BorderBrush="#8010B981" BorderThickness="1" CornerRadius="4" Padding="5,1">
                                         <TextBlock x:Name="StatusBadgeText" Text="Selesai" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentEmeraldBrush}"/>
@@ -126,7 +126,7 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <controls:LucideIcon Kind="hard-drive" Width="11" Height="11" Foreground="{StaticResource AccentSecondaryCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="FilePathText" Text="C:\Downloads\file.zip" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="FilePathText" Text="C:\Downloads\file.zip" FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
                     </StackPanel>

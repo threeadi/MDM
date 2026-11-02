@@ -22,50 +22,55 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <!-- Acrylic Obsidian Glass Container (1:1 with Stitch Kinetic Telemetry) -->
+    <!-- Clean Dark Matte Dialog Container (Stitch Project 8619236184062954585) -->
     <Border Background="{StaticResource SurfaceLowBrush}" 
             BorderBrush="{StaticResource BorderBrush}" 
             BorderThickness="1" 
-            CornerRadius="12" 
+            CornerRadius="8" 
             Margin="6"
             ClipToBounds="True">
         <Grid>
             <Grid.RowDefinitions>
                 <!-- 0: Frameless Window Header / Drag Region -->
-                <RowDefinition Height="38"/>
+                <RowDefinition Height="36"/>
                 <!-- 1: Dynamic Content Viewport (In-Place Morphing) -->
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- 0: Frameless Window Header / Drag Region (Clean Dark Header - NO NEON) -->
-            <Border Grid.Row="0" Background="#1E232B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <!-- 0: Frameless Window Header / Drag Region (Stitch Clean Dark Header) -->
+            <Border Grid.Row="0" Background="{StaticResource HeaderBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid Margin="12,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Left: Status Icon + Percent + Filename -->
+                    <!-- Left: Download Icon Box + Percentage Badge + Filename -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Width="22" Height="22" Background="{Binding StatusBgBrush}" CornerRadius="5" Margin="0,0,8,0">
-                            <controls:LucideIcon Kind="zap" Width="12" Height="12" Foreground="{Binding StatusBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <!-- Clean Square Icon Badge -->
+                        <Border Width="22" Height="22" Background="#212631" BorderBrush="#2D3341" BorderThickness="1" CornerRadius="4" Margin="0,0,8,0">
+                            <controls:LucideIcon Kind="download" Width="11" Height="11" Foreground="#9CA3AF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="{Binding ProgressText}" FontSize="12" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="{Binding StatusBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="•" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock Text="{Binding Filename}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" MaxWidth="360" TextTrimming="CharacterEllipsis"/>
+                        <!-- Percentage Badge (NO MONOSPACE) -->
+                        <Border Background="#1E232D" BorderBrush="#2B313E" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="0,0,8,0">
+                            <TextBlock Text="{Binding ProgressText}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        </Border>
+                        <!-- Filename -->
+                        <TextBlock Text="{Binding Filename}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" MaxWidth="360" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
 
-                    <!-- Right: Minimize & Close Buttons -->
+                    <!-- Right: Minimalist Window Controls (Stitch Style) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Width="26" Height="22" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="Minimize_Click" ToolTip="Kecilkan" Margin="0,0,2,0">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
-                                        <controls:LucideIcon Kind="minus" Width="11" Height="11" Foreground="#8C909F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <controls:LucideIcon Kind="minus" Width="11" Height="11" Foreground="#8B949E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bd" Property="Background" Value="#30353E"/>
+                                            <Setter TargetName="bd" Property="Background" Value="#222733"/>
+                                            <Setter Property="Foreground" Value="White"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -75,11 +80,11 @@
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
-                                        <controls:LucideIcon x:Name="ic" Kind="x" Width="11" Height="11" Foreground="#8C909F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <controls:LucideIcon x:Name="ic" Kind="x" Width="11" Height="11" Foreground="#8B949E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bd" Property="Background" Value="#93000A"/>
+                                            <Setter TargetName="bd" Property="Background" Value="#881337"/>
                                             <Setter TargetName="ic" Property="Foreground" Value="White"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
@@ -106,45 +111,45 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Success Banner -->
-                    <Border Grid.Row="0" Background="#162920" BorderBrush="#334EDEA3" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+                    <!-- Success Banner (Clean Dark Matte Emerald) -->
+                    <Border Grid.Row="0" Background="#14221B" BorderBrush="#234231" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,12">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Width="40" Height="40" Background="#2610B981" CornerRadius="8" Margin="0,0,14,0">
-                                <controls:LucideIcon Kind="check" Width="20" Height="20" Foreground="{StaticResource AccentEmeraldBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border Width="36" Height="36" Background="#1E3A2B" BorderBrush="#2A523D" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <controls:LucideIcon Kind="check" Width="18" Height="18" Foreground="{StaticResource AccentEmeraldBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{services:Loc transfer.completedTitle}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                <TextBlock Text="{Binding DownloadedFormatted, StringFormat='Tersimpan utuh di disk ({0})'}" FontSize="11" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                <TextBlock Text="{services:Loc transfer.completedTitle}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Text="{Binding DownloadedFormatted, StringFormat='Tersimpan utuh di disk ({0})'}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Grid>
                     </Border>
 
-                    <!-- File Details Card -->
-                    <Border Grid.Row="1" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+                    <!-- File Details Card (Clean Matte) -->
+                    <Border Grid.Row="1" Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
                         <StackPanel>
                             <!-- Filename -->
                             <Grid Margin="0,0,0,8">
                                 <TextBlock Text="{services:Loc transfer.fileName}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                <TextBlock Text="{Binding Filename}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right" MaxWidth="380" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding Filename}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right" MaxWidth="380" TextTrimming="CharacterEllipsis"/>
                             </Grid>
 
                             <!-- Size -->
                             <Grid Margin="0,0,0,10">
                                 <TextBlock Text="{services:Loc transfer.finalSize}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                <TextBlock Text="{Binding DownloadedFormatted}" FontSize="12" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentEmeraldBrush}" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{Binding DownloadedFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentEmeraldBrush}" HorizontalAlignment="Right"/>
                             </Grid>
 
-                            <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,10"/>
+                            <Border Height="1" Background="#232732" Margin="0,0,0,10"/>
 
                             <!-- Location with Copy Button -->
                             <Grid>
                                 <TextBlock Text="{services:Loc transfer.saveDir}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding FilePath}" FontSize="11" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentSecondaryCyanBrush}" MaxWidth="310" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding FilePath}" FontSize="11" Foreground="{StaticResource AccentSecondaryCyanBrush}" MaxWidth="310" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                     <Button x:Name="CopyPathBtn" Style="{StaticResource FlatActionButton}" Padding="6,3" Click="CopyPath_Click" ToolTip="{services:Loc transfer.copyPathTooltip}">
                                         <controls:LucideIcon x:Name="CopyIcon" Kind="copy" Width="11" Height="11" Foreground="{StaticResource TextSecondaryBrush}"/>
                                     </Button>
@@ -163,8 +168,8 @@
                         <!-- Left: Open Folder -->
                         <Button Style="{StaticResource FlatActionButton}" HorizontalAlignment="Left" Padding="14,6" Click="OpenFolder_Click">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <controls:LucideIcon Kind="folder-open" Width="13" Height="13" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{services:Loc transfer.openFolder}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <controls:LucideIcon Kind="folder-open" Width="13" Height="13" Foreground="{StaticResource AccentSecondaryCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{services:Loc transfer.openFolder}" FontSize="11" FontWeight="Medium" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
@@ -173,8 +178,8 @@
                             <Button Content="{services:Loc transfer.close}" Style="{StaticResource FlatActionButton}" Width="80" Padding="0,6" Margin="0,0,8,0" Click="Close_Click"/>
                             <Button Style="{StaticResource PrimaryEmeraldButton}" Width="125" Padding="0,6" Click="OpenFile_Click">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="play" Width="12" Height="12" Foreground="#090E16" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{services:Loc transfer.openFile}" FontSize="11" FontWeight="Bold" Foreground="#090E16" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="play" Width="12" Height="12" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc transfer.openFile}" FontSize="11" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -192,29 +197,29 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Error Banner -->
-                    <Border Grid.Row="0" Background="#261418" BorderBrush="#66FF5252" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+                    <!-- Error Banner (Clean Dark Matte Rose) -->
+                    <Border Grid.Row="0" Background="#221618" BorderBrush="#3E2327" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,12">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Width="40" Height="40" Background="#33FF5252" CornerRadius="8" Margin="0,0,14,0">
-                                <controls:LucideIcon Kind="alert-triangle" Width="20" Height="20" Foreground="{StaticResource AccentRoseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border Width="36" Height="36" Background="#3A1E22" BorderBrush="#542B30" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <controls:LucideIcon Kind="alert-triangle" Width="18" Height="18" Foreground="{StaticResource AccentRoseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{services:Loc transfer.failedTitle}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                <TextBlock Text="{Binding ErrorMessage, TargetNullValue='Koneksi server terputus atau URL habis masa berlakunya.'}" FontSize="11" FontFamily="{StaticResource AppFontMono}" Foreground="#FFB4AB" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                <TextBlock Text="{services:Loc transfer.failedTitle}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Text="{Binding ErrorMessage, TargetNullValue='Koneksi server terputus atau URL habis masa berlakunya.'}" FontSize="11" Foreground="#FFB4AB" TextWrapping="Wrap" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Grid>
                     </Border>
 
                     <!-- Diagnostic Info Card -->
-                    <Border Grid.Row="1" Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+                    <Border Grid.Row="1" Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
                         <StackPanel>
                             <Grid Margin="0,0,0,8">
                                 <TextBlock Text="{services:Loc transfer.downloadedBeforeFail}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                <TextBlock FontSize="12" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right">
+                                <TextBlock FontSize="12" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right">
                                     <Run Text="{Binding DownloadedFormatted, Mode=OneWay}"/>
                                     <Run Text=" ("/><Run Text="{Binding ProgressText, Mode=OneWay}"/><Run Text=")"/>
                                 </TextBlock>
@@ -222,10 +227,10 @@
 
                             <Grid Margin="0,0,0,10">
                                 <TextBlock Text="{services:Loc transfer.serverStatus}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                <TextBlock Text="{services:Loc transfer.serverStatusDesc}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentAmberBrush}" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{services:Loc transfer.serverStatusDesc}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource AccentAmberBrush}" HorizontalAlignment="Right"/>
                             </Grid>
 
-                            <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,10"/>
+                            <Border Height="1" Background="#232732" Margin="0,0,0,10"/>
 
                             <TextBlock Text="{services:Loc transfer.failedSafeNotice}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
                         </StackPanel>
@@ -243,7 +248,7 @@
                             <Button Style="{StaticResource FlatActionButton}" BorderBrush="{StaticResource AccentAmberBrush}" Padding="12,6" Margin="0,0,8,0" Click="RefreshLink_Click">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <controls:LucideIcon Kind="refresh-cw" Width="12" Height="12" Foreground="{StaticResource AccentAmberBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{services:Loc transfer.refreshLink}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentAmberBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc transfer.refreshLink}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentAmberBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                             <Button x:Name="ReportIssueBtn" Style="{StaticResource FlatActionButton}" Padding="10,6" Click="ReportIssue_Click">
@@ -260,7 +265,7 @@
                             <Button Style="{StaticResource PrimaryBlueButton}" Width="110" Padding="0,6" Click="Retry_Click">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <controls:LucideIcon Kind="rotate-ccw" Width="12" Height="12" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{services:Loc transfer.retry}" FontSize="11" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{services:Loc transfer.retry}" FontSize="11" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -269,35 +274,34 @@
 
                 <!-- ========================================================= -->
                 <!-- PHASE C: IN-FLIGHT TRANSFER (DOWNLOADING / PAUSED)        -->
+                <!-- 1:1 REPLICATION OF STITCH PROJECT SCREEN 98c434dcce...    -->
                 <!-- ========================================================= -->
                 <Grid Visibility="{Binding IsInFlight, Converter={StaticResource BoolToVis}}" VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
-                        <!-- 0: 3-Tab Bar -->
+                        <!-- 0: Pill Tab Bar (Stitch Flat Pill Tabs) -->
                         <RowDefinition Height="Auto"/>
-                        <!-- 1: Tab Content & Progress Visualizers -->
+                        <!-- 1: Scrollable Tab Content & Telemetry Visualizers -->
                         <RowDefinition Height="*"/>
-                        <!-- 2: Footer Control Bar -->
-                        <RowDefinition Height="46"/>
                     </Grid.RowDefinitions>
 
-                    <!-- 0: 3-Tab Bar -->
-                    <Border Grid.Row="0" Background="#11161F" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="14,6,14,0">
+                    <!-- 0: Pill Tab Bar (Matte Flat Pill Tabs) -->
+                    <Border Grid.Row="0" Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="14,8">
                         <StackPanel Orientation="Horizontal">
-                            <RadioButton x:Name="TabRadioStatus" GroupName="TransferTabs" Style="{StaticResource SettingsTabRadioStyle}" IsChecked="True" Checked="Tab_Checked">
+                            <RadioButton x:Name="TabRadioStatus" GroupName="TransferTabs" Style="{StaticResource PillTabRadioStyle}" IsChecked="True" Checked="Tab_Checked" Margin="0,0,4,0">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="sliders" Width="12" Height="12" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
+                                    <controls:LucideIcon Kind="download" Width="12" Height="12" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
                                     <TextBlock Text="{services:Loc transfer.tabStatus}" FontSize="11" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </RadioButton>
 
-                            <RadioButton x:Name="TabRadioLimiter" GroupName="TransferTabs" Style="{StaticResource SettingsTabRadioStyle}" Checked="Tab_Checked">
+                            <RadioButton x:Name="TabRadioLimiter" GroupName="TransferTabs" Style="{StaticResource PillTabRadioStyle}" Checked="Tab_Checked" Margin="0,0,4,0">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="gauge" Width="12" Height="12" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
+                                    <controls:LucideIcon Kind="zap" Width="12" Height="12" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
                                     <TextBlock Text="{services:Loc transfer.tabLimiter}" FontSize="11" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </RadioButton>
 
-                            <RadioButton x:Name="TabRadioOptions" GroupName="TransferTabs" Style="{StaticResource SettingsTabRadioStyle}" Checked="Tab_Checked">
+                            <RadioButton x:Name="TabRadioOptions" GroupName="TransferTabs" Style="{StaticResource PillTabRadioStyle}" Checked="Tab_Checked">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <controls:LucideIcon Kind="settings" Width="12" Height="12" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" Margin="0,0,6,0"/>
                                     <TextBlock Text="{services:Loc transfer.tabSave}" FontSize="11" VerticalAlignment="Center"/>
@@ -306,59 +310,76 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- 1: Tab Content & Progress Visualizers -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14,10">
+                    <!-- 1: Scrollable Tab Content & Telemetry Visualizers -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,12,16,8">
                         <StackPanel>
-                            <!-- Tab 1: Status Content -->
+
+                            <!-- TAB 1: Status Unduhan Overview Card -->
                             <StackPanel x:Name="PanelStatus" Visibility="Visible">
-                                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                                <Border Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
                                     <StackPanel>
+                                        <!-- Row 1: Status Unduhan -->
                                         <Grid Margin="0,0,0,6">
                                             <TextBlock Text="{services:Loc transfer.transferStatus}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="Bold" Foreground="{Binding StatusBrush}" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="Medium" Foreground="#E2E8F0" HorizontalAlignment="Right"/>
                                         </Grid>
+
+                                        <!-- Row 2: Ukuran Berkas -->
                                         <Grid Margin="0,0,0,6">
                                             <TextBlock Text="{services:Loc transfer.fileSize}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                            <TextBlock Text="{Binding SizeFormatted}" FontSize="11" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right"/>
-                                        </Grid>
-                                        <Grid Margin="0,0,0,6">
-                                            <TextBlock Text="{services:Loc transfer.downloaded}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                            <TextBlock FontSize="11" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right">
-                                                <Run Text="{Binding DownloadedFormatted, Mode=OneWay}"/>
-                                                <Run Text=" ("/><Run Text="{Binding ProgressText, Mode=OneWay}"/><Run Text=")"/>
+                                            <TextBlock FontSize="11" Foreground="#CBD5E1" HorizontalAlignment="Right">
+                                                <Run Text="{Binding DownloadedFormatted, Mode=OneWay}" FontWeight="SemiBold" Foreground="White"/>
+                                                <Run Text=" dari "/>
+                                                <Run Text="{Binding SizeFormatted, Mode=OneWay}"/>
+                                                <Run Text=" ("/><Run Text="{Binding ProgressText, Mode=OneWay}"/><Run Text=" selesai)"/>
                                             </TextBlock>
                                         </Grid>
+
+                                        <!-- Row 3: Tingkat Transfer -->
                                         <Grid Margin="0,0,0,6">
                                             <TextBlock Text="{services:Loc transfer.transferSpeed}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                            <TextBlock Text="{Binding SpeedFormatted}" FontSize="11" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentEmeraldBrush}" HorizontalAlignment="Right"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding SpeedFormatted, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                <Border Background="#232936" BorderBrush="#303848" BorderThickness="1" CornerRadius="3" Padding="6,1" VerticalAlignment="Center">
+                                                    <TextBlock Text="Standard" FontSize="10" FontWeight="Medium" Foreground="#93A4BC"/>
+                                                </Border>
+                                            </StackPanel>
                                         </Grid>
+
+                                        <!-- Row 4: Waktu Tersisa -->
                                         <Grid Margin="0,0,0,6">
                                             <TextBlock Text="{services:Loc transfer.estimatedEta}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                            <TextBlock Text="{Binding EtaFormatted, StringFormat='± {0}'}" FontSize="11" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentAmberBrush}" HorizontalAlignment="Right"/>
+                                            <TextBlock FontSize="11" Foreground="#CBD5E1" HorizontalAlignment="Right">
+                                                <Run Text="± "/><Run Text="{Binding EtaFormatted, Mode=OneWay}"/>
+                                            </TextBlock>
                                         </Grid>
-                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,2,0,6"/>
+
+                                        <!-- Separator -->
+                                        <Border Height="1" Background="#232732" Margin="0,4,0,6"/>
+
+                                        <!-- Row 5: Kemampuan Melanjutkan -->
                                         <Grid>
                                             <TextBlock Text="{services:Loc transfer.resumeCapability}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                                <controls:LucideIcon Kind="check" Width="11" Height="11" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,4,0"/>
-                                                <TextBlock Text="{services:Loc transfer.serverRangeSupported}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentEmeraldBrush}"/>
+                                                <controls:LucideIcon Kind="check" Width="12" Height="12" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,4,0"/>
+                                                <TextBlock Text="{services:Loc transfer.serverRangeSupported}" FontSize="11" FontWeight="Medium" Foreground="#E2E8F0"/>
                                             </StackPanel>
                                         </Grid>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
 
-                            <!-- Tab 2: Limiter Content -->
+                            <!-- TAB 2: Pembatas Kecepatan Card -->
                             <StackPanel x:Name="PanelLimiter" Visibility="Collapsed">
-                                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                                <Border Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
                                     <StackPanel>
                                         <Grid Margin="0,0,0,10">
                                             <TextBlock Text="{services:Loc transfer.currentSpeed}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                            <TextBlock Text="{Binding SpeedFormatted}" FontSize="11" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding SpeedFormatted}" FontSize="11" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"/>
                                         </Grid>
                                         <CheckBox x:Name="TaskLimiterCheckBox" Style="{StaticResource DarkCheckBox}" Content="{services:Loc transfer.limitCheckbox}" IsChecked="False" Checked="TaskLimiter_Changed" Unchecked="TaskLimiter_Changed" Margin="0,0,0,8"/>
                                         <StackPanel Orientation="Horizontal" Margin="22,0,0,0">
-                                            <TextBox x:Name="TaskLimitValueTextBox" Style="{StaticResource FlatTextBox}" Width="70" Height="26" Text="1" FontFamily="{StaticResource AppFontMono}" FontSize="11" VerticalContentAlignment="Center" Margin="0,0,8,0" TextChanged="TaskLimiter_InputChanged"/>
+                                            <TextBox x:Name="TaskLimitValueTextBox" Style="{StaticResource FlatTextBox}" Width="70" Height="26" Text="1" FontSize="11" VerticalContentAlignment="Center" Margin="0,0,8,0" TextChanged="TaskLimiter_InputChanged"/>
                                             <ComboBox x:Name="TaskLimitUnitComboBox" Style="{StaticResource DarkComboBox}" Width="80" Height="26" SelectedIndex="0" SelectionChanged="TaskLimiter_SelectionChanged">
                                                 <ComboBoxItem Content="KB/s"/>
                                                 <ComboBoxItem Content="MB/s"/>
@@ -368,34 +389,61 @@
                                 </Border>
                             </StackPanel>
 
-                            <!-- Tab 3: Options Content -->
+                            <!-- TAB 3: Opsi saat selesai Card -->
                             <StackPanel x:Name="PanelOptions" Visibility="Collapsed">
-                                <Border Background="{StaticResource SurfaceLowestBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                                <Border Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
                                     <StackPanel>
                                         <TextBlock Text="{services:Loc transfer.saveDir}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                        <TextBlock Text="{Binding FilePath}" FontSize="11" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentSecondaryCyanBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{Binding FilePath}" FontSize="11" Foreground="{StaticResource AccentSecondaryCyanBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                                         <TextBlock Text="{services:Loc transfer.saveDirNotice}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
 
-                            <!-- Overall Download Progress Bar -->
+                            <!-- Overall Total Progress Section -->
                             <Grid Margin="0,2,0,4">
-                                <TextBlock Text="{services:Loc transfer.totalProgress}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                <TextBlock Text="{Binding ProgressText}" FontSize="11" FontWeight="Bold" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{services:Loc transfer.totalProgress}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding ProgressText}" FontSize="11" FontWeight="Medium" Foreground="White" HorizontalAlignment="Right"/>
                             </Grid>
-                            <Border Height="14" Background="#07090E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Margin="0,0,0,10" ClipToBounds="True">
-                                <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Style="{StaticResource SharpProgressBar}" Foreground="{StaticResource AccentEmeraldBrush}" Height="12"/>
-                            </Border>
+                            <!-- Flat Emerald Progress Bar (NO GLOW) -->
+                            <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Style="{StaticResource SharpProgressBar}" Height="10" Margin="0,0,0,10"/>
 
-                            <!-- Multi-Thread Segment Strip (Stitch Kinetic Telemetry) -->
-                            <Grid Margin="0,0,0,4">
-                                <TextBlock Text="{services:Loc transfer.bufferSegments}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                <TextBlock FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Right">
-                                    <Run Text="{Binding Segments.Count, Mode=OneWay}"/><Run Text=" Jalur Paralel"/>
+                            <!-- Quick Action Buttons Bar (Stitch Clean Actions) -->
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Left: Sembunyikan / Tampilkan Detail Button -->
+                                <Button Style="{StaticResource FlatActionButton}" HorizontalAlignment="Left" Padding="10,5" Click="ToggleDetails_Click">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <controls:LucideIcon x:Name="ToggleChevronIcon" Kind="chevron-up" Width="11" Height="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="ToggleDetailsText" Text="{services:Loc transfer.hideThreadDetails}" FontSize="11" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Right: Mulai (or Jeda) + Batal Buttons -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button x:Name="PauseResumeBtn" Style="{StaticResource FlatActionButton}" Width="85" Padding="0,5" Margin="0,0,8,0" Click="PauseResume_Click">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon x:Name="PauseResumeIcon" Kind="pause" Width="11" Height="11" Foreground="{StaticResource AccentAmberBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="PauseResumeText" Text="{services:Loc transfer.pause}" FontSize="11" FontWeight="Medium" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Content="{services:Loc transfer.cancel}" Style="{StaticResource DangerCancelButton}" Width="80" Padding="0,5" Click="Cancel_Click"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Multi-Connection Segment Strip Section -->
+                            <Grid Margin="0,2,0,4">
+                                <TextBlock Text="{services:Loc transfer.bufferSegments}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <TextBlock FontSize="10" Foreground="#94A3B8" HorizontalAlignment="Right">
+                                    <Run Text="{Binding Segments.Count, Mode=OneWay}"/><Run Text=" Threads"/>
                                 </TextBlock>
                             </Grid>
-                            <Border Height="16" Background="#07090E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="1" Margin="0,0,0,8">
+                            <!-- Segment Strip (Muted Slate & Emerald Blocks) -->
+                            <Border Height="12" Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="3" Padding="1" Margin="0,0,0,8">
                                 <ItemsControl ItemsSource="{Binding Segments}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -407,13 +455,13 @@
                                             <Border Margin="1" CornerRadius="1">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#141B2B"/>
+                                                        <Setter Property="Background" Value="#242936"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                <Setter Property="Background" Value="#00E5FF"/>
+                                                                <Setter Property="Background" Value="#10B981"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding IsFinished}" Value="True">
-                                                                <Setter Property="Background" Value="#10B981"/>
+                                                                <Setter Property="Background" Value="#64748B"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -424,53 +472,71 @@
                                 </ItemsControl>
                             </Border>
 
-                            <!-- Toggle Segment Details Button -->
-                            <Button Style="{StaticResource FlatActionButton}" HorizontalAlignment="Left" Padding="8,3" Click="ToggleDetails_Click" Margin="0,0,0,6">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <controls:LucideIcon x:Name="ToggleChevronIcon" Kind="chevron-down" Width="11" Height="11" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="ToggleDetailsText" Text="{services:Loc transfer.showThreadDetails}" FontSize="10" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
+                            <!-- Connection Threads Table (Crisp, Tabular, Muted) -->
+                            <Border x:Name="SegmentDetailsPanel" Background="#161921" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" MaxHeight="140" Visibility="Visible">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
 
-                            <!-- Expandable Segment Telemetry Table -->
-                            <Border x:Name="SegmentDetailsPanel" Background="#07090E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" MaxHeight="110" Visibility="Collapsed">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{Binding Segments}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border BorderBrush="#141B2B" BorderThickness="0,0,0,1" Padding="8,4">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="40"/>
-                                                            <ColumnDefinition Width="100"/>
-                                                            <ColumnDefinition Width="*"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="{Binding Index, StringFormat='#{0}'}" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource TextMutedBrush}"/>
-                                                        <TextBlock Grid.Column="1" Text="{Binding DownloadedFormatted}" FontSize="10" FontFamily="{StaticResource AppFontMono}" Foreground="{StaticResource AccentCyanBrush}"/>
-                                                        <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
+                                    <!-- Table Header -->
+                                    <Border Grid.Row="0" Background="#1A1E28" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="8,4">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="45"/>
+                                                <ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="N." FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="Diunduh" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            <TextBlock Grid.Column="2" Text="Info" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Table Body Rows -->
+                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl ItemsSource="{Binding Segments}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="8,3.5">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="45"/>
+                                                                <ColumnDefinition Width="110"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <!-- Thread Index -->
+                                                            <TextBlock Text="{Binding Index}" FontSize="11" Foreground="#6E7681" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            <!-- Downloaded -->
+                                                            <TextBlock Grid.Column="1" Text="{Binding DownloadedFormatted}" FontSize="11" Foreground="#CBD5E1" VerticalAlignment="Center"/>
+                                                            <!-- Info with status dot -->
+                                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <Ellipse Width="6" Height="6" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                                    <Ellipse.Style>
+                                                                        <Style TargetType="Ellipse">
+                                                                            <Setter Property="Fill" Value="#484F5D"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                                    <Setter Property="Fill" Value="#10B981"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Ellipse.Style>
+                                                                </Ellipse>
+                                                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Grid>
                             </Border>
+
                         </StackPanel>
                     </ScrollViewer>
-
-                    <!-- 2: Footer Control Bar (In-Flight) -->
-                    <Border Grid.Row="2" Background="#11161F" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="14,8">
-                        <!-- Right: Pause/Resume + Cancel -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <Button x:Name="PauseResumeBtn" Style="{StaticResource FlatActionButton}" Width="95" Padding="0,5" Margin="0,0,8,0" Click="PauseResume_Click">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <controls:LucideIcon x:Name="PauseResumeIcon" Kind="pause" Width="11" Height="11" Foreground="{StaticResource AccentAmberBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="PauseResumeText" Text="{services:Loc transfer.pause}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Content="{services:Loc transfer.cancel}" Style="{StaticResource FlatActionButton}" Width="85" Padding="0,5" Foreground="#FF5252" BorderBrush="#4DFF5252" Click="Cancel_Click"/>
-                        </StackPanel>
-                    </Border>
                 </Grid>
 
             </Grid>

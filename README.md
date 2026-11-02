@@ -13,7 +13,7 @@ Aplikasi ini dirancang untuk mereplikasi kecepatan responsif dan efisiensi memor
   - **Dark Mode Utilitarian**: Menggunakan palet Obsidian `#12151B`, toolbar flat `#181B22`, dan aksen Electric Cyan `#00E5FF`.
   - **Akselerasi DirectX & Virtualization**: Komponen `DataGrid` menggunakan `VirtualizingPanel.VirtualizationMode="Recycling"` sehingga pembaruan progres dan kecepatan transfer berkali-kali per detik tetap berjalan di **60 FPS** mulus tanpa lag.
   - **Native Dark Titlebar**: Terintegrasi langsung dengan kernel Windows Desktop Window Manager (`DwmSetWindowAttribute` - `DWMWA_USE_IMMERSIVE_DARK_MODE`).
-  - **Toolbar Aksi**: `+ Tambah URL`, `▶ Lanjut`, `⏸ Jeda`, `✕ Hapus`, `📁 Berkas`, `📂 Folder`, serta Quick Search.
+  - **Toolbar Aksi**: `Tambah URL`, `▶ Lanjut`, `⏸ Jeda`, `✕ Hapus`, `📁 Berkas`, `📂 Folder`, serta Quick Search.
   - **Kategori Status**: `Semua Unduhan`, `Sedang Berjalan`, `Selesai`, `Dijeda`, `Gagal`.
   - **In-Flight Segment Monitor**: Jendela pop-up transfer dengan bilah monitor multi-thread dinamis.
 - **Engine Unduhan**:

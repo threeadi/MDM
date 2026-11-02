@@ -28,24 +28,58 @@ public class DownloadItemViewModel : INotifyPropertyChanged
     public string CreatedAt => Task.CreatedAt;
     public long TotalBytes => Task.TotalBytes ?? 0;
 
-    public string LucideCategoryIcon => Category?.ToLowerInvariant() switch
+    public string LucideCategoryIcon
     {
-        "video" => "video",
-        "musik" or "audio" => "music",
-        "kompresi" or "compressed" => "archive",
-        "program" or "programs" => "cpu",
-        "dokumen" or "documents" => "file-text",
-        _ => "file-text"
-    };
+        get
+        {
+            if (Status == DownloadStatus.Completed)
+            {
+                return "task_alt";
+            }
 
-    public Brush LucideCategoryColor => Category?.ToLowerInvariant() switch
+            string fn = (Filename ?? Task.Filename ?? string.Empty).ToLowerInvariant();
+            if (fn.EndsWith(".iso") || fn.EndsWith(".img") || fn.EndsWith(".vmdk"))
+            {
+                return "disc_full";
+            }
+            if (fn.EndsWith(".exe") || fn.EndsWith(".msi") || fn.EndsWith(".apk") || fn.EndsWith(".appx") || fn.EndsWith(".bat") || fn.EndsWith(".cmd"))
+            {
+                return "widgets";
+            }
+            if (fn.EndsWith(".zip") || fn.EndsWith(".rar") || fn.EndsWith(".7z") || fn.EndsWith(".tar") || fn.EndsWith(".gz") || fn.EndsWith(".bz2"))
+            {
+                return "folder_zip";
+            }
+            if (fn.EndsWith(".mp4") || fn.EndsWith(".mkv") || fn.EndsWith(".avi") || fn.EndsWith(".mov") || fn.EndsWith(".webm") || fn.EndsWith(".flv"))
+            {
+                return "movie";
+            }
+            if (fn.EndsWith(".mp3") || fn.EndsWith(".flac") || fn.EndsWith(".wav") || fn.EndsWith(".aac") || fn.EndsWith(".m4a") || fn.EndsWith(".ogg"))
+            {
+                return "music_note";
+            }
+            if (fn.EndsWith(".pdf") || fn.EndsWith(".docx") || fn.EndsWith(".doc") || fn.EndsWith(".txt") || fn.EndsWith(".xlsx") || fn.EndsWith(".pptx"))
+            {
+                return "description";
+            }
+
+            return Category?.ToLowerInvariant() switch
+            {
+                "video" => "movie",
+                "musik" or "audio" => "music_note",
+                "kompresi" or "compressed" => "folder_zip",
+                "program" or "programs" => "widgets",
+                "dokumen" or "documents" => "description",
+                _ => "description"
+            };
+        }
+    }
+
+    public Brush LucideCategoryColor => Status switch
     {
-        "video" => new SolidColorBrush(Color.FromRgb(78, 222, 163)),
-        "musik" or "audio" => new SolidColorBrush(Color.FromRgb(245, 158, 11)),
-        "kompresi" or "compressed" => new SolidColorBrush(Color.FromRgb(192, 132, 252)),
-        "program" or "programs" => new SolidColorBrush(Color.FromRgb(76, 215, 246)),
-        "dokumen" or "documents" => new SolidColorBrush(Color.FromRgb(173, 198, 255)),
-        _ => new SolidColorBrush(Color.FromRgb(140, 144, 159))
+        DownloadStatus.Completed => new SolidColorBrush(Color.FromRgb(16, 185, 129)), // Emerald #10B981
+        DownloadStatus.Paused => new SolidColorBrush(Color.FromRgb(148, 163, 184)), // Slate #94A3B8
+        _ => new SolidColorBrush(Color.FromRgb(59, 130, 246)) // Primary Blue #3B82F6
     };
 
     public bool IsTelegram => Task.Url?.StartsWith("tg://", StringComparison.OrdinalIgnoreCase) == true 

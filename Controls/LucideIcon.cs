@@ -515,6 +515,202 @@ public class LucideIcon : Control
             group.Freeze();
             Geometries["check-square"] = group;
         }
+        {
+            // add_link (Link chain with plus)
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"));
+            group.Children.Add(Geometry.Parse("M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"));
+            group.Children.Add(Geometry.Parse("M19 14v6"));
+            group.Children.Add(Geometry.Parse("M16 17h6"));
+            group.Freeze();
+            Geometries["add_link"] = group;
+            Geometries["add-link"] = group;
+        }
+        {
+            // list_alt (Document list with text lines)
+            var group = new GeometryGroup();
+            group.Children.Add(new RectangleGeometry(new Rect(3, 3, 18, 18), 2, 2));
+            group.Children.Add(Geometry.Parse("M7 8h10"));
+            group.Children.Add(Geometry.Parse("M7 12h10"));
+            group.Children.Add(Geometry.Parse("M7 16h6"));
+            group.Freeze();
+            Geometries["list_alt"] = group;
+            Geometries["list-alt"] = group;
+        }
+        {
+            // downloading (Material Symbols progress circle arcs with downward arrow)
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M12 3a9 9 0 0 1 9 9"));
+            group.Children.Add(Geometry.Parse("M12 21a9 9 0 0 1-9-9"));
+            group.Children.Add(Geometry.Parse("M12 7v8"));
+            group.Children.Add(Geometry.Parse("m8.5 11.5 3.5 3.5 3.5-3.5"));
+            group.Freeze();
+            Geometries["downloading"] = group;
+        }
+        {
+            // clear_all (Clean horizontal staggered bars)
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M4 6h16"));
+            group.Children.Add(Geometry.Parse("M7 12h13"));
+            group.Children.Add(Geometry.Parse("M10 18h10"));
+            group.Freeze();
+            Geometries["clear_all"] = group;
+            Geometries["clear-all"] = group;
+        }
+        {
+            // speed (Tachometer / Speedometer)
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"));
+            group.Children.Add(Geometry.Parse("M12 2a10 10 0 1 0 10 10"));
+            group.Children.Add(Geometry.Parse("m13.4 10.6 3.6-3.6"));
+            group.Freeze();
+            Geometries["speed"] = group;
+        }
+        {
+            // delete_outline (Clean outlined trash can)
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M3 6h18"));
+            group.Children.Add(Geometry.Parse("M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"));
+            group.Children.Add(Geometry.Parse("M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"));
+            group.Children.Add(Geometry.Parse("M10 11v6"));
+            group.Children.Add(Geometry.Parse("M14 11v6"));
+            group.Freeze();
+            Geometries["delete_outline"] = group;
+            Geometries["delete-outline"] = group;
+            Geometries["delete"] = group;
+        }
+        {
+            // apps (3x3 grid dots)
+            var group = new GeometryGroup();
+            group.Children.Add(new RectangleGeometry(new Rect(3, 3, 4, 4), 1, 1));
+            group.Children.Add(new RectangleGeometry(new Rect(10, 3, 4, 4), 1, 1));
+            group.Children.Add(new RectangleGeometry(new Rect(17, 3, 4, 4), 1, 1));
+            group.Children.Add(new RectangleGeometry(new Rect(3, 10, 4, 4), 1, 1));
+            group.Children.Add(new RectangleGeometry(new Rect(10, 10, 4, 4), 1, 1));
+            group.Children.Add(new RectangleGeometry(new Rect(17, 10, 4, 4), 1, 1));
+            group.Children.Add(new RectangleGeometry(new Rect(3, 17, 4, 4), 1, 1));
+            group.Children.Add(new RectangleGeometry(new Rect(10, 17, 4, 4), 1, 1));
+            group.Children.Add(new RectangleGeometry(new Rect(17, 17, 4, 4), 1, 1));
+            group.Freeze();
+            Geometries["apps"] = group;
+        }
+        {
+            // description (Document paper with lines)
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"));
+            group.Children.Add(Geometry.Parse("M14 2v6h6"));
+            group.Children.Add(Geometry.Parse("M16 13H8"));
+            group.Children.Add(Geometry.Parse("M16 17H8"));
+            group.Children.Add(Geometry.Parse("M10 9H8"));
+            group.Freeze();
+            Geometries["description"] = group;
+        }
+        {
+            // movie (Film / clapperboard)
+            var group = new GeometryGroup();
+            group.Children.Add(new RectangleGeometry(new Rect(2, 4, 20, 16), 2, 2));
+            group.Children.Add(Geometry.Parse("M2 8h20"));
+            group.Children.Add(Geometry.Parse("M6 4v4"));
+            group.Children.Add(Geometry.Parse("M10 4v4"));
+            group.Children.Add(Geometry.Parse("M14 4v4"));
+            group.Children.Add(Geometry.Parse("M18 4v4"));
+            group.Freeze();
+            Geometries["movie"] = group;
+        }
+        {
+            // music_note / audiotrack
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M9 18V5l12-2v13"));
+            group.Children.Add(Geometry.Parse("M9 9l12-2"));
+            group.Children.Add(new EllipseGeometry(new Point(6, 18), 3, 2.5));
+            group.Children.Add(new EllipseGeometry(new Point(18, 16), 3, 2.5));
+            group.Freeze();
+            Geometries["music_note"] = group;
+            Geometries["audiotrack"] = group;
+        }
+        {
+            // folder_zip
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"));
+            group.Children.Add(Geometry.Parse("M11 9h2"));
+            group.Children.Add(Geometry.Parse("M11 11h2"));
+            group.Children.Add(Geometry.Parse("M11 13h2"));
+            group.Children.Add(Geometry.Parse("M11 15h2"));
+            group.Freeze();
+            Geometries["folder_zip"] = group;
+            Geometries["folder-zip"] = group;
+        }
+        {
+            // schedule (Clock)
+            var group = new GeometryGroup();
+            group.Children.Add(new EllipseGeometry(new Point(12, 12), 9, 9));
+            group.Children.Add(Geometry.Parse("M12 7v5l3 2"));
+            group.Freeze();
+            Geometries["schedule"] = group;
+        }
+        {
+            // disc_full (CD / Disc)
+            var group = new GeometryGroup();
+            group.Children.Add(new EllipseGeometry(new Point(12, 12), 9.5, 9.5));
+            group.Children.Add(new EllipseGeometry(new Point(12, 12), 3, 3));
+            group.Freeze();
+            Geometries["disc_full"] = group;
+            Geometries["disc"] = group;
+        }
+        {
+            // widgets (4 neat blocks)
+            var group = new GeometryGroup();
+            group.Children.Add(new RectangleGeometry(new Rect(3, 3, 7.5, 7.5), 1.5, 1.5));
+            group.Children.Add(new RectangleGeometry(new Rect(13.5, 3, 7.5, 7.5), 1.5, 1.5));
+            group.Children.Add(new RectangleGeometry(new Rect(3, 13.5, 7.5, 7.5), 1.5, 1.5));
+            group.Children.Add(new RectangleGeometry(new Rect(13.5, 13.5, 7.5, 7.5), 1.5, 1.5));
+            group.Freeze();
+            Geometries["widgets"] = group;
+        }
+        {
+            // task_alt (Circle with clean check)
+            var group = new GeometryGroup();
+            group.Children.Add(new EllipseGeometry(new Point(12, 12), 9.5, 9.5));
+            group.Children.Add(Geometry.Parse("m8 12 3 3 5.5-5.5"));
+            group.Freeze();
+            Geometries["task_alt"] = group;
+        }
+        {
+            // more_vert (Three vertical dots)
+            var group = new GeometryGroup();
+            group.Children.Add(new EllipseGeometry(new Point(12, 5), 1.5, 1.5));
+            group.Children.Add(new EllipseGeometry(new Point(12, 12), 1.5, 1.5));
+            group.Children.Add(new EllipseGeometry(new Point(12, 19), 1.5, 1.5));
+            group.Freeze();
+            Geometries["more_vert"] = group;
+            Geometries["more-vert"] = group;
+        }
+        {
+            // unfold_more (Double arrows sort)
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("m7 15 5 5 5-5"));
+            group.Children.Add(Geometry.Parse("m7 9 5-5 5 5"));
+            group.Freeze();
+            Geometries["unfold_more"] = group;
+            Geometries["unfold-more"] = group;
+        }
+        {
+            // data_usage (Donut quota / pie chart)
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"));
+            group.Children.Add(Geometry.Parse("M12 6v6l4.5 4.5"));
+            group.Freeze();
+            Geometries["data_usage"] = group;
+            Geometries["data-usage"] = group;
+        }
+        {
+            // lock (Padlock)
+            var group = new GeometryGroup();
+            group.Children.Add(new RectangleGeometry(new Rect(5, 11, 14, 10), 2, 2));
+            group.Children.Add(Geometry.Parse("M8 11V7a4 4 0 0 1 8 0v4"));
+            group.Freeze();
+            Geometries["lock"] = group;
+        }
 
         // Aliases matching my-own-idm
         Geometries["sliders"] = Geometries["sliders-horizontal"];
