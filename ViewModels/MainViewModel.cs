@@ -837,7 +837,18 @@ public class MainViewModel : INotifyPropertyChanged
 
         SetTelegramFilterCommand = new RelayCommand(p =>
         {
-            if (p != null) TelegramMediaFilter = p.ToString()!;
+            if (p != null)
+            {
+                string newFilter = p.ToString()!;
+                if (TelegramMediaFilter != newFilter)
+                {
+                    TelegramMediaFilter = newFilter;
+                    if (!string.IsNullOrWhiteSpace(TelegramChatInput))
+                    {
+                        _ = ScanTelegramAsync(TelegramChatInput, newFilter);
+                    }
+                }
+            }
         });
 
         SetTelegramStatusFilterCommand = new RelayCommand(p =>

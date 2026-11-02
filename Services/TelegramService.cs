@@ -619,52 +619,76 @@ public class TelegramService
             });
 
             // Retrieve messages with server-side media filter (parity with Telegram Shared Media)
-            Messages_MessagesBase messagesResult;
             string filterLower = (mediaFilter ?? "all").ToLowerInvariant();
-            MessagesFilter serverFilter = filterLower switch
-            {
-                "video" => new InputMessagesFilterVideo(),
-                "photo" => new InputMessagesFilterPhotos(),
-                "document" => new InputMessagesFilterDocument(),
-                "audio" => new InputMessagesFilterMusic(),
-                "gif" => new InputMessagesFilterGif(),
-                _ => new InputMessagesFilterPhotoVideo() // default "all" searches photos & videos directly from server
-            };
-
+            var messagesList = new List<MessageBase>();
             int totalServerCount = 0;
-            try
-            {
-                messagesResult = await _client.Messages_Search(peer, q: "", filter: serverFilter, offset_id: offsetId, limit: limit);
-                totalServerCount = messagesResult.Count;
-            }
-            catch (Exception ex)
-            {
-                Logger.Warn($"Messages_Search dengan filter '{filterLower}' gagal ({ex.Message}), fallback ke Messages_GetHistory.");
-                messagesResult = await _client.Messages_GetHistory(peer, offset_id: offsetId, limit: limit);
-                totalServerCount = messagesResult.Count;
-            }
 
-            var messagesList = new List<MessageBase>(messagesResult.Messages);
-
-            // If "all" filter and initial scan, also fetch documents so files are included
-            if (filterLower == "all" && offsetId == 0)
+            if (filterLower == "all")
             {
+                // In Telegram MTProto, supergroups index photos and videos separately.
+                // To get the full shared media catalog (e.g. 1,612 videos + 5,529 photos), query both Video and Photos.
                 try
                 {
-                    var docResult = await _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterDocument(), offset_id: 0, limit: 30);
-                    if (docResult != null && docResult.Messages != null && docResult.Messages.Length > 0)
+                    var vidTask = _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterVideo(), offset_id: offsetId, limit: 50);
+                    var photoTask = _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterPhotos(), offset_id: offsetId, limit: 50);
+                    await Task.WhenAll(vidTask, photoTask);
+
+                    var vidRes = await vidTask;
+                    var photoRes = await photoTask;
+
+                    totalServerCount = vidRes.Count + photoRes.Count;
+
+                    if (vidRes.Messages != null) messagesList.AddRange(vidRes.Messages);
+                    if (photoRes.Messages != null) messagesList.AddRange(photoRes.Messages);
+
+                    // Initial scan: also check documents so files are included
+                    if (offsetId == 0)
                     {
-                        totalServerCount += docResult.Count;
-                        foreach (var docMsg in docResult.Messages)
+                        try
                         {
-                            if (!messagesList.Any(m => m.ID == docMsg.ID))
+                            var docRes = await _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterDocument(), offset_id: 0, limit: 30);
+                            if (docRes != null && docRes.Messages != null)
                             {
-                                messagesList.Add(docMsg);
+                                totalServerCount += docRes.Count;
+                                messagesList.AddRange(docRes.Messages);
                             }
                         }
+                        catch { }
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Logger.Warn($"Messages_Search all gagal ({ex.Message}), fallback ke Messages_GetHistory.");
+                    var histRes = await _client.Messages_GetHistory(peer, offset_id: offsetId, limit: limit);
+                    totalServerCount = histRes.Count;
+                    if (histRes.Messages != null) messagesList.AddRange(histRes.Messages);
+                }
+            }
+            else
+            {
+                MessagesFilter serverFilter = filterLower switch
+                {
+                    "video" => new InputMessagesFilterVideo(),
+                    "photo" => new InputMessagesFilterPhotos(),
+                    "document" => new InputMessagesFilterDocument(),
+                    "audio" => new InputMessagesFilterMusic(),
+                    "gif" => new InputMessagesFilterGif(),
+                    _ => new InputMessagesFilterVideo()
+                };
+
+                try
+                {
+                    var res = await _client.Messages_Search(peer, q: "", filter: serverFilter, offset_id: offsetId, limit: limit);
+                    totalServerCount = res.Count;
+                    if (res.Messages != null) messagesList.AddRange(res.Messages);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn($"Messages_Search dengan filter '{filterLower}' gagal ({ex.Message}), fallback ke Messages_GetHistory.");
+                    var histRes = await _client.Messages_GetHistory(peer, offset_id: offsetId, limit: limit);
+                    totalServerCount = histRes.Count;
+                    if (histRes.Messages != null) messagesList.AddRange(histRes.Messages);
+                }
             }
 
             LastScanTotalServerCount = totalServerCount;
