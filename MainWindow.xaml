@@ -24,6 +24,23 @@
                 <ResourceDictionary Source="pack://application:,,,/Mdm;component/Styles/AppTheme.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+            <!-- Sidebar Category & Screen Icon Style (Active turns vibrant Electric Blue #3B82F6) -->
+            <Style x:Key="SidebarCategoryIconStyle" TargetType="controls:LucideIcon">
+                <Setter Property="Width" Value="14"/>
+                <Setter Property="Height" Value="14"/>
+                <Setter Property="Margin" Value="0,0,8,0"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="#94A3B8"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                        <Setter Property="Foreground" Value="#CBD5E1"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                        <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -199,7 +216,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="all" IsChecked="{Binding IsAllSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="list_alt" Width="14" Height="14" Foreground="#3B82F6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="list_alt" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="{services:Loc sidebar.statusAll}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Border Background="#11141A" BorderBrush="#232834" BorderThickness="1" CornerRadius="4" Padding="6,1" HorizontalAlignment="Right">
@@ -212,7 +229,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="downloading" IsChecked="{Binding IsDownloadingSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="downloading" Width="14" Height="14" Foreground="#94A3B8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="downloading" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="{services:Loc sidebar.statusDownloading}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Border Background="#161A22" CornerRadius="4" Padding="6,1" HorizontalAlignment="Right">
@@ -225,7 +242,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="paused" IsChecked="{Binding IsPausedSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="pause" Width="14" Height="14" Foreground="#94A3B8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="pause" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="{services:Loc sidebar.statusPaused}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Border Background="#161A22" CornerRadius="4" Padding="6,1" HorizontalAlignment="Right">
@@ -238,7 +255,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="completed" IsChecked="{Binding IsCompletedSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="check" Width="14" Height="14" Foreground="#94A3B8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="check" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="{services:Loc sidebar.statusCompleted}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Border Background="#161A22" CornerRadius="4" Padding="6,1" HorizontalAlignment="Right">
@@ -251,7 +268,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="failed" IsChecked="{Binding IsFailedSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="delete_outline" Width="14" Height="14" Foreground="#64748B" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="delete_outline" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="Sampah" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Border Background="#161A22" CornerRadius="4" Padding="6,1" HorizontalAlignment="Right">
@@ -270,7 +287,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="program" IsChecked="{Binding IsProgramSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="apps" Width="14" Height="14" Foreground="#94A3B8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="apps" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="Aplikasi" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding ProgramCount}" Foreground="#6E7681" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -281,7 +298,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="dokumen" IsChecked="{Binding IsDokumenSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="description" Width="14" Height="14" Foreground="#94A3B8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="description" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="Dokumen" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding DokumenCount}" Foreground="#6E7681" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -292,7 +309,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="video" IsChecked="{Binding IsVideoSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="movie" Width="14" Height="14" Foreground="#94A3B8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="movie" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="Video" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding VideoCount}" Foreground="#6E7681" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -303,7 +320,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="musik" IsChecked="{Binding IsMusikSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="music_note" Width="14" Height="14" Foreground="#94A3B8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="music_note" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="Musik" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding MusikCount}" Foreground="#6E7681" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -314,7 +331,7 @@
                         <RadioButton GroupName="CatGroup" Command="{Binding SelectCategoryCommand}" CommandParameter="kompresi" IsChecked="{Binding IsKompresiSelected, Mode=OneWay}" Style="{StaticResource CategoryRadioStyle}" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="folder_zip" Width="14" Height="14" Foreground="#94A3B8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="folder_zip" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="Arsip ZIP" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding KompresiCount}" Foreground="#6E7681" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -338,17 +355,21 @@
                         </Border>
 
                         <!-- Telegram Grabber -->
-                        <Button Command="{Binding SwitchToTelegramCommand}" Style="{StaticResource SidebarChannelRowButtonStyle}" Padding="8,6" Margin="0,1">
+                        <RadioButton GroupName="CatGroup" 
+                                     Command="{Binding SwitchToTelegramCommand}" 
+                                     IsChecked="{Binding IsTelegramView, Mode=OneWay}" 
+                                     Style="{StaticResource CategoryRadioStyle}" 
+                                     Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="send" Width="14" Height="14" Foreground="#38BDF8" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Telegram Grabber" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="send" Style="{StaticResource SidebarCategoryIconStyle}"/>
+                                    <TextBlock Text="Telegram Grabber" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Border Background="#1A2740" BorderBrush="#254A80" BorderThickness="1" CornerRadius="4" Padding="5,1" HorizontalAlignment="Right">
                                     <TextBlock Text="MTProto" Foreground="#60A5FA" FontSize="9" FontWeight="Medium"/>
                                 </Border>
                             </Grid>
-                        </Button>
+                        </RadioButton>
 
                         <!-- Search Saluran / Chat Telegram (Real-time Filter) -->
                         <Border Background="#090E16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Height="26" Margin="0,4,0,4" Padding="6,0">

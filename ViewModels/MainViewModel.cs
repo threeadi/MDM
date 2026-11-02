@@ -39,6 +39,16 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 OnPropertyChanged(nameof(IsDownloadsView));
                 OnPropertyChanged(nameof(IsTelegramView));
+                OnPropertyChanged(nameof(IsAllSelected));
+                OnPropertyChanged(nameof(IsDownloadingSelected));
+                OnPropertyChanged(nameof(IsCompletedSelected));
+                OnPropertyChanged(nameof(IsPausedSelected));
+                OnPropertyChanged(nameof(IsFailedSelected));
+                OnPropertyChanged(nameof(IsKompresiSelected));
+                OnPropertyChanged(nameof(IsDokumenSelected));
+                OnPropertyChanged(nameof(IsVideoSelected));
+                OnPropertyChanged(nameof(IsMusikSelected));
+                OnPropertyChanged(nameof(IsProgramSelected));
             }
         }
     }
@@ -98,16 +108,16 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool IsAllSelected => ActiveCategory == "all";
-    public bool IsDownloadingSelected => ActiveCategory == "downloading";
-    public bool IsCompletedSelected => ActiveCategory == "completed";
-    public bool IsPausedSelected => ActiveCategory == "paused";
-    public bool IsFailedSelected => ActiveCategory == "failed";
-    public bool IsKompresiSelected => ActiveCategory == "kompresi";
-    public bool IsDokumenSelected => ActiveCategory == "dokumen";
-    public bool IsVideoSelected => ActiveCategory == "video";
-    public bool IsMusikSelected => ActiveCategory == "musik";
-    public bool IsProgramSelected => ActiveCategory == "program";
+    public bool IsAllSelected => IsDownloadsView && (ActiveCategory == "all" || string.IsNullOrEmpty(ActiveCategory));
+    public bool IsDownloadingSelected => IsDownloadsView && ActiveCategory == "downloading";
+    public bool IsCompletedSelected => IsDownloadsView && ActiveCategory == "completed";
+    public bool IsPausedSelected => IsDownloadsView && ActiveCategory == "paused";
+    public bool IsFailedSelected => IsDownloadsView && ActiveCategory == "failed";
+    public bool IsKompresiSelected => IsDownloadsView && (ActiveCategory == "kompresi" || ActiveCategory == "compressed" || ActiveCategory == "arsip");
+    public bool IsDokumenSelected => IsDownloadsView && (ActiveCategory == "dokumen" || ActiveCategory == "document" || ActiveCategory == "documents");
+    public bool IsVideoSelected => IsDownloadsView && (ActiveCategory == "video" || ActiveCategory == "videos");
+    public bool IsMusikSelected => IsDownloadsView && (ActiveCategory == "musik" || ActiveCategory == "music" || ActiveCategory == "audio");
+    public bool IsProgramSelected => IsDownloadsView && (ActiveCategory == "program" || ActiveCategory == "aplikasi" || ActiveCategory == "programs");
 
     public string SearchQuery
     {
