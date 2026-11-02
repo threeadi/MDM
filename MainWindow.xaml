@@ -338,11 +338,11 @@
                         </Border>
 
                         <!-- Telegram Grabber -->
-                        <Button Command="{Binding SwitchToTelegramCommand}" Style="{StaticResource FlatActionButton}" HorizontalContentAlignment="Stretch" Padding="10,6" Margin="0,1">
+                        <Button Command="{Binding SwitchToTelegramCommand}" Style="{StaticResource SidebarChannelRowButtonStyle}" Padding="8,6" Margin="0,1">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="send" Width="14" Height="14" Foreground="#3B82F6" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Telegram Grabber" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                    <controls:LucideIcon Kind="send" Width="14" Height="14" Foreground="#38BDF8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Telegram Grabber" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Border Background="#1A2740" BorderBrush="#254A80" BorderThickness="1" CornerRadius="4" Padding="5,1" HorizontalAlignment="Right">
                                     <TextBlock Text="MTProto" Foreground="#60A5FA" FontSize="9" FontWeight="Medium"/>
@@ -350,21 +350,96 @@
                             </Grid>
                         </Button>
 
-                        <!-- Telegram Vault Channels List (1:1 with my-own-idm) -->
-                        <ItemsControl ItemsSource="{Binding TelegramChannels}" Margin="6,2,0,0">
+                        <!-- Search Saluran / Chat Telegram (Real-time Filter) -->
+                        <Border Background="#090E16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Height="26" Margin="0,4,0,4" Padding="6,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <controls:LucideIcon Kind="search" Width="11" Height="11" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                
+                                <TextBox Grid.Column="1" 
+                                         Text="{Binding TelegramSearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                         Background="Transparent" BorderThickness="0" 
+                                         Foreground="{StaticResource TextPrimaryBrush}" FontSize="10.5" 
+                                         VerticalContentAlignment="Center" 
+                                         CaretBrush="{StaticResource AccentCyanBrush}"/>
+                                
+                                <!-- Watermark placeholder -->
+                                <TextBlock Grid.Column="1" 
+                                           Text="Cari saluran / chat..." 
+                                           Foreground="#475569" FontSize="10.5" 
+                                           VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0"
+                                           Visibility="{Binding IsTelegramSearchEmpty, Converter={StaticResource BoolToVis}}"/>
+
+                                <!-- Clear search button -->
+                                <Button Grid.Column="2" 
+                                        Command="{Binding ClearTelegramSearchCommand}" 
+                                        Visibility="{Binding HasTelegramSearchQuery, Converter={StaticResource BoolToVis}}" 
+                                        Width="14" Height="14" Padding="0" 
+                                        Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Hapus pencarian">
+                                    <controls:LucideIcon Kind="x" Width="10" Height="10" Foreground="#94A3B8"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- Empty search query notice -->
+                        <TextBlock Text="Tidak ada saluran yang cocok" FontSize="10" Foreground="#64748B" FontStyle="Italic" Margin="6,4,0,4" 
+                                   Visibility="{Binding HasNoFilteredTelegramChannels, Converter={StaticResource BoolToVis}}"/>
+
+                        <!-- Telegram Vault Channels List (Left-Aligned, Real-time Filtered) -->
+                        <ItemsControl ItemsSource="{Binding FilteredTelegramChannels}" Margin="0,1,0,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Command="{Binding DataContext.SelectTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource FlatActionButton}" HorizontalContentAlignment="Stretch" Padding="6,3" Margin="0,1">
+                                    <Button Command="{Binding DataContext.SelectTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                            CommandParameter="{Binding}" 
+                                            Style="{StaticResource SidebarChannelRowButtonStyle}" 
+                                            HorizontalContentAlignment="Stretch" 
+                                            Padding="6,4" Margin="0,1">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <controls:LucideIcon Kind="send" Width="11" Height="11" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding Title}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                            <Button Grid.Column="2" Command="{Binding DataContext.DeleteTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource FlatActionButton}" Width="16" Height="16" Padding="0" Opacity="0.5" ToolTip="Hapus dari daftar">
-                                                <controls:LucideIcon Kind="x" Width="10" Height="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                            
+                                            <!-- Chat Type Icon (Left) -->
+                                            <controls:LucideIcon Kind="{Binding ChatIconKind}" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                            
+                                            <!-- Channel / Contact Title (Left-Aligned) -->
+                                            <TextBlock Grid.Column="1" Text="{Binding FormattedTitle}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            
+                                            <!-- Unread Count Capsule (Right) -->
+                                            <Border Grid.Column="2" Visibility="{Binding HasUnread, Converter={StaticResource BoolToVis}}" Background="#0E2A3A" BorderBrush="{StaticResource AccentCyanBrush}" BorderThickness="0.5" CornerRadius="8" Padding="5,0.5" Margin="4,0,4,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding UnreadCount}" Foreground="{StaticResource AccentCyanBrush}" FontSize="9" FontWeight="SemiBold"/>
+                                            </Border>
+                                            
+                                            <!-- Delete from Vault Button (Rightmost) -->
+                                            <Button Grid.Column="3" Command="{Binding DataContext.DeleteTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Width="16" Height="16" Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Hapus dari daftar">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Opacity" Value="0.3"/>
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border x:Name="bdIco" Background="Transparent" CornerRadius="3">
+                                                                        <controls:LucideIcon x:Name="ico" Kind="x" Width="10" Height="10" Foreground="#94A3B8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter Property="Opacity" Value="1.0"/>
+                                                                            <Setter TargetName="bdIco" Property="Background" Value="#2A1518"/>
+                                                                            <Setter TargetName="ico" Property="Foreground" Value="#EF4444"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Button.Style>
                                             </Button>
                                         </Grid>
                                     </Button>
@@ -373,7 +448,7 @@
                         </ItemsControl>
 
                         <!-- + Tambah Saluran / Chat Button -->
-                        <Button Command="{Binding AddTelegramChannelCommand}" Style="{StaticResource SecondaryGlassButton}" Height="24" Margin="6,4,0,8" Padding="6,0" HorizontalAlignment="Stretch">
+                        <Button Command="{Binding AddTelegramChannelCommand}" Style="{StaticResource SecondaryGlassButton}" Height="24" Margin="0,4,0,8" Padding="6,0" HorizontalAlignment="Stretch">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <controls:LucideIcon Kind="plus" Width="11" Height="11" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Tambah Saluran / Chat" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>

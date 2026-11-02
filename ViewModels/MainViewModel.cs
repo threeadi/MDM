@@ -160,8 +160,31 @@ public class MainViewModel : INotifyPropertyChanged
 
     // Telegram Workspace & Vault State
     public ObservableCollection<TelegramChannelInfo> TelegramChannels { get; } = [];
+    public ObservableCollection<TelegramChannelInfo> FilteredTelegramChannels { get; } = [];
     public ObservableCollection<TelegramMediaItem> TelegramMediaItems { get; } = [];
     public ObservableCollection<TelegramMediaItem> DisplayedTelegramMedia { get; } = [];
+
+    public ICommand ClearTelegramSearchCommand { get; }
+
+    private string _telegramSearchQuery = string.Empty;
+    public string TelegramSearchQuery
+    {
+        get => _telegramSearchQuery;
+        set
+        {
+            if (SetField(ref _telegramSearchQuery, value))
+            {
+                FilterTelegramChannels();
+                OnPropertyChanged(nameof(HasTelegramSearchQuery));
+                OnPropertyChanged(nameof(IsTelegramSearchEmpty));
+                OnPropertyChanged(nameof(HasNoFilteredTelegramChannels));
+            }
+        }
+    }
+
+    public bool HasTelegramSearchQuery => !string.IsNullOrWhiteSpace(TelegramSearchQuery);
+    public bool IsTelegramSearchEmpty => string.IsNullOrWhiteSpace(TelegramSearchQuery);
+    public bool HasNoFilteredTelegramChannels => FilteredTelegramChannels.Count == 0 && TelegramChannels.Count > 0;
 
     private string _telegramChatInput = string.Empty;
     public string TelegramChatInput
@@ -357,6 +380,7 @@ public class MainViewModel : INotifyPropertyChanged
             SwitchToDownloadsCommand = new RelayCommand(() => { });
             SwitchToTelegramCommand = new RelayCommand(() => { });
 
+            ClearTelegramSearchCommand = new RelayCommand(() => TelegramSearchQuery = string.Empty);
             ScanTelegramCommand = new RelayCommand(_ => { });
             SelectTelegramChannelCommand = new RelayCommand(_ => { });
             DeleteTelegramChannelCommand = new RelayCommand(_ => { });
@@ -611,6 +635,8 @@ public class MainViewModel : INotifyPropertyChanged
         LoadInitialTasks();
 
         // Telegram Commands
+        ClearTelegramSearchCommand = new RelayCommand(() => TelegramSearchQuery = string.Empty);
+
         ScanTelegramCommand = new RelayCommand(p =>
         {
             string? param = p?.ToString();
@@ -912,6 +938,7 @@ public class MainViewModel : INotifyPropertyChanged
                     {
                         TelegramChannels.Add(d);
                     }
+                    FilterTelegramChannels();
                     return;
                 }
             }
@@ -932,6 +959,23 @@ public class MainViewModel : INotifyPropertyChanged
         {
             TelegramChannels.Add(ch);
         }
+        FilterTelegramChannels();
+    }
+
+    public void FilterTelegramChannels()
+    {
+        FilteredTelegramChannels.Clear();
+        var q = _telegramSearchQuery?.Trim().ToLowerInvariant() ?? string.Empty;
+        foreach (var ch in TelegramChannels)
+        {
+            if (string.IsNullOrEmpty(q) ||
+                (!string.IsNullOrEmpty(ch.Title) && ch.Title.ToLowerInvariant().Contains(q)) ||
+                (!string.IsNullOrEmpty(ch.Username) && ch.Username.ToLowerInvariant().Contains(q)))
+            {
+                FilteredTelegramChannels.Add(ch);
+            }
+        }
+        OnPropertyChanged(nameof(HasNoFilteredTelegramChannels));
     }
 
     public void SelectTelegramChannel(TelegramChannelInfo channel)
@@ -945,6 +989,8 @@ public class MainViewModel : INotifyPropertyChanged
     {
         _database.DeleteTelegramChannel(channel.Id);
         TelegramChannels.Remove(channel);
+        FilteredTelegramChannels.Remove(channel);
+        OnPropertyChanged(nameof(HasNoFilteredTelegramChannels));
     }
 
     public void RefreshTelegramDisplayedMedia()

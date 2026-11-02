@@ -28,10 +28,15 @@ public class TelegramChannelInfo
 
     public string ChatIconKind => ChatType switch
     {
-        "channel" => "globe",
+        "channel" => "radio",
+        "group" or "supergroup" => "users",
         "user" => "user",
-        _ => "message-square"
+        "saved_messages" => "bookmark",
+        "bot" => "bot",
+        _ => "send"
     };
+
+    public bool HasUnread => UnreadCount > 0;
 
     public string FormattedTitle => !string.IsNullOrWhiteSpace(Title)
         ? Title
