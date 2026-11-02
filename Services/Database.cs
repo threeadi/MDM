@@ -70,6 +70,9 @@ public class Database
                 chat_type TEXT NOT NULL,
                 unread_count INTEGER DEFAULT 0
             );
+
+            -- Clean up any legacy dummy / mock channels
+            DELETE FROM telegram_channels WHERE title LIKE '%Cinema%' OR title LIKE '%Master Audio%' OR title LIKE '%OpenSource Software%';
         ";
         cmd.ExecuteNonQuery();
     }
@@ -288,23 +291,6 @@ public class Database
                 ChatType = reader.GetString(3),
                 UnreadCount = reader.GetInt32(4)
             });
-        }
-
-        if (list.Count == 0)
-        {
-            // Seed default initial channels matching my-own-idm
-            var seedChannels = new List<TelegramChannelInfo>
-            {
-                new() { Id = 1001849204912, Title = "Cinema 4K Archive", Username = "cinema_4k", ChatType = "channel", UnreadCount = 12 },
-                new() { Id = 1001928472910, Title = "Master Audio FLAC", Username = "flac_vault", ChatType = "channel", UnreadCount = 8 },
-                new() { Id = 1001739281920, Title = "OpenSource Software Vault", Username = "foss_repo", ChatType = "group", UnreadCount = 5 }
-            };
-
-            foreach (var ch in seedChannels)
-            {
-                SaveTelegramChannel(ch);
-                list.Add(ch);
-            }
         }
 
         return list;

@@ -163,7 +163,7 @@ public class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<TelegramMediaItem> TelegramMediaItems { get; } = [];
     public ObservableCollection<TelegramMediaItem> DisplayedTelegramMedia { get; } = [];
 
-    private string _telegramChatInput = "Cinema 4K Archive";
+    private string _telegramChatInput = string.Empty;
     public string TelegramChatInput
     {
         get => _telegramChatInput;
@@ -709,7 +709,6 @@ public class MainViewModel : INotifyPropertyChanged
         });
 
         RefreshTelegramChannels();
-        _ = ScanTelegramAsync(TelegramChatInput);
     }
 
     private void UpdateSpeedMetrics(long speedBps)
@@ -838,6 +837,13 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (!string.IsNullOrEmpty(input)) TelegramChatInput = input;
         if (!string.IsNullOrEmpty(filter)) TelegramMediaFilter = filter;
+        if (string.IsNullOrWhiteSpace(TelegramChatInput))
+        {
+            if (!loadMore) TelegramMediaItems.Clear();
+            RefreshTelegramDisplayedMedia();
+            UpdateTelegramCounts();
+            return;
+        }
         TelegramIsScanning = true;
 
         try
