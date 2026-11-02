@@ -1104,9 +1104,14 @@ public class MainViewModel : INotifyPropertyChanged
 
             var items = await _engine.TelegramService.ScanChatMediaAsync(TelegramChatInput, TelegramMediaFilter, limit: 100, offsetId: offsetId);
 
+            int serverTotal = _engine.TelegramService.LastScanTotalServerCount;
             if (items.Count == 0)
             {
                 HasMoreTelegramMedia = false;
+            }
+            else
+            {
+                HasMoreTelegramMedia = (serverTotal > 0 && (TelegramMediaItems.Count + items.Count) < serverTotal) || items.Count >= 100;
             }
 
             foreach (var item in items)
@@ -1150,8 +1155,9 @@ public class MainViewModel : INotifyPropertyChanged
 
             if (SelectedTelegramChannel != null)
             {
-                SelectedTelegramChannel.MediaCount = TelegramMediaItems.Count;
-                _database.UpdateTelegramChannelMediaCount(SelectedTelegramChannel.Id, TelegramMediaItems.Count);
+                int displayCount = serverTotal > 0 ? serverTotal : TelegramMediaItems.Count;
+                SelectedTelegramChannel.MediaCount = displayCount;
+                _database.UpdateTelegramChannelMediaCount(SelectedTelegramChannel.Id, displayCount);
             }
 
             RefreshTelegramDisplayedMedia();

@@ -26,6 +26,8 @@ public class TelegramService
 
     public TelegramAuthStatus AuthStatus { get; private set; } = new();
 
+    public int LastScanTotalServerCount { get; private set; }
+
     public TelegramService(Database database, string? customSessionDir = null)
     {
         _database = database;
@@ -616,36 +618,58 @@ public class TelegramService
                 ChatType = peer is InputPeerUser ? "user" : "channel"
             });
 
-            // Retrieve messages with server-side media filter if specific filter requested (parity with my-own-idm)
+            // Retrieve messages with server-side media filter (parity with Telegram Shared Media)
             Messages_MessagesBase messagesResult;
             string filterLower = (mediaFilter ?? "all").ToLowerInvariant();
-            MessagesFilter? serverFilter = filterLower switch
+            MessagesFilter serverFilter = filterLower switch
             {
                 "video" => new InputMessagesFilterVideo(),
                 "photo" => new InputMessagesFilterPhotos(),
                 "document" => new InputMessagesFilterDocument(),
                 "audio" => new InputMessagesFilterMusic(),
                 "gif" => new InputMessagesFilterGif(),
-                _ => null
+                _ => new InputMessagesFilterPhotoVideo() // default "all" searches photos & videos directly from server
             };
 
-            if (serverFilter != null)
+            int totalServerCount = 0;
+            try
+            {
+                messagesResult = await _client.Messages_Search(peer, q: "", filter: serverFilter, offset_id: offsetId, limit: limit);
+                totalServerCount = messagesResult.Count;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn($"Messages_Search dengan filter '{filterLower}' gagal ({ex.Message}), fallback ke Messages_GetHistory.");
+                messagesResult = await _client.Messages_GetHistory(peer, offset_id: offsetId, limit: limit);
+                totalServerCount = messagesResult.Count;
+            }
+
+            var messagesList = new List<MessageBase>(messagesResult.Messages);
+
+            // If "all" filter and initial scan, also fetch documents so files are included
+            if (filterLower == "all" && offsetId == 0)
             {
                 try
                 {
-                    messagesResult = await _client.Messages_Search(peer, q: "", filter: serverFilter, offset_id: offsetId, limit: limit);
+                    var docResult = await _client.Messages_Search(peer, q: "", filter: new InputMessagesFilterDocument(), offset_id: 0, limit: 30);
+                    if (docResult != null && docResult.Messages != null && docResult.Messages.Length > 0)
+                    {
+                        totalServerCount += docResult.Count;
+                        foreach (var docMsg in docResult.Messages)
+                        {
+                            if (!messagesList.Any(m => m.ID == docMsg.ID))
+                            {
+                                messagesList.Add(docMsg);
+                            }
+                        }
+                    }
                 }
-                catch
-                {
-                    messagesResult = await _client.Messages_GetHistory(peer, offset_id: offsetId, limit: limit);
-                }
-            }
-            else
-            {
-                messagesResult = await _client.Messages_GetHistory(peer, offset_id: offsetId, limit: limit);
+                catch { }
             }
 
-            foreach (var msgBase in messagesResult.Messages)
+            LastScanTotalServerCount = totalServerCount;
+
+            foreach (var msgBase in messagesList)
             {
                 if (msgBase is not Message msg) continue;
 
