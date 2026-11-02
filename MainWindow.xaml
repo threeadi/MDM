@@ -1097,7 +1097,7 @@
 
                                         <!-- Left Selection Controls -->
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <CheckBox Command="{Binding SelectOnlyUncompletedTelegramCommand}" VerticalAlignment="Center" Margin="0,0,8,0">
+                                            <CheckBox IsChecked="{Binding IsAllUncompletedTelegramSelected, Mode=OneWay}" Command="{Binding SelectOnlyUncompletedTelegramCommand}" VerticalAlignment="Center" Margin="0,0,8,0">
                                                 <TextBlock Text="Pilih Belum Diunduh" FontSize="11" FontWeight="Medium" Foreground="#CBD5E1" VerticalAlignment="Center"/>
                                             </CheckBox>
 

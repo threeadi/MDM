@@ -423,6 +423,10 @@ public class MainViewModel : INotifyPropertyChanged
     public int TelegramUncompletedSelectedCount => TelegramMediaItems.Count(m => m.IsSelected && !m.IsCompleted);
     public string TelegramUncompletedSelectedText => $"{TelegramUncompletedSelectedCount} berkas belum diunduh dipilih";
 
+    public bool IsAllUncompletedTelegramSelected => 
+        DisplayedTelegramMedia.Any(m => !m.IsCompleted) && 
+        DisplayedTelegramMedia.Where(m => !m.IsCompleted).All(m => m.IsSelected);
+
     public string TelegramDisplayTelemetryText => 
         $"Menampilkan {DisplayedTelegramMedia.Count} dari {TelegramMediaCount} berkas ({TelegramCompletedCount} diunduh)";
 
@@ -1351,6 +1355,7 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(TelegramUncompletedSelectedCount));
         OnPropertyChanged(nameof(TelegramUncompletedSelectedText));
         OnPropertyChanged(nameof(TelegramDisplayTelemetryText));
+        OnPropertyChanged(nameof(IsAllUncompletedTelegramSelected));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

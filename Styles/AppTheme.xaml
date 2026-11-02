@@ -757,39 +757,74 @@
         </Setter>
     </Style>
 
-    <!-- Dark CheckBox Style with Kinetic Telemetry checkmark -->
-    <Style x:Key="DarkCheckBox" TargetType="CheckBox">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="FontSize" Value="12"/>
+    <!-- Stitch & Modern Dark CheckBox Style (Matching Stitch 1:1) -->
+    <Style TargetType="CheckBox">
+        <Setter Property="Foreground" Value="#CBD5E1"/>
+        <Setter Property="FontSize" Value="11.5"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
-                    <Grid Margin="0,1">
+                    <Grid VerticalAlignment="Center">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Border x:Name="BoxBorder" Width="16" Height="16" Background="#090E16" BorderBrush="#30353E" BorderThickness="1.5" CornerRadius="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,2,0,0">
-                            <Path x:Name="CheckMark" Data="M3 8L6.5 11.5L13 4" Stroke="{StaticResource AccentCyanBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="BoxBorder" Width="15" Height="15" 
+                                Background="#11141A" BorderBrush="#2D3748" BorderThickness="1" 
+                                CornerRadius="3" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Path x:Name="CheckMark" 
+                                  Data="M3.5 7.5 L6 10 L11.5 4.5" 
+                                  Stroke="#FFFFFF" 
+                                  StrokeThickness="1.8" 
+                                  StrokeStartLineCap="Round" 
+                                  StrokeEndLineCap="Round" 
+                                  StrokeLineJoin="Round" 
+                                  Visibility="Collapsed" 
+                                  HorizontalAlignment="Center" 
+                                  VerticalAlignment="Center"/>
                         </Border>
-                        <ContentPresenter Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                        <ContentPresenter x:Name="content" Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0" RecognizesAccessKey="True"/>
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="HasContent" Value="False">
+                            <Setter TargetName="content" Property="Visibility" Value="Collapsed"/>
+                            <Setter TargetName="content" Property="Margin" Value="0"/>
+                        </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
-                            <Setter TargetName="BoxBorder" Property="BorderBrush" Value="{StaticResource AccentCyanBrush}"/>
-                            <Setter TargetName="BoxBorder" Property="Background" Value="#0F2B38"/>
+                            <Setter TargetName="BoxBorder" Property="Background" Value="#2563EB"/>
+                            <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3B82F6"/>
                         </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="BoxBorder" Property="BorderBrush" Value="{StaticResource AccentSecondaryCyanBrush}"/>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="False"/>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="BoxBorder" Property="Background" Value="#1E2430"/>
+                            <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#4B5563"/>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="True"/>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="BoxBorder" Property="Background" Value="#1D4ED8"/>
+                            <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#60A5FA"/>
+                        </MultiTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style x:Key="DarkCheckBox" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}"/>
+    <Style x:Key="StitchCheckBox" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}"/>
 
     <!-- Dark ComboBox Toggle Button Template -->
     <ControlTemplate x:Key="DarkComboBoxToggleButtonTemplate" TargetType="ToggleButton">
