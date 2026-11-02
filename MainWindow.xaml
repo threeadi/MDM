@@ -370,111 +370,6 @@
                                 </Border>
                             </Grid>
                         </RadioButton>
-
-                        <!-- Search Saluran / Chat Telegram (Real-time Filter) -->
-                        <Border Background="#090E16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Height="26" Margin="0,4,0,4" Padding="6,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <controls:LucideIcon Kind="search" Width="11" Height="11" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                
-                                <TextBox Grid.Column="1" 
-                                         Text="{Binding TelegramSearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                                         Background="Transparent" BorderThickness="0" 
-                                         Foreground="{StaticResource TextPrimaryBrush}" FontSize="10.5" 
-                                         VerticalContentAlignment="Center" 
-                                         CaretBrush="{StaticResource AccentCyanBrush}"/>
-                                
-                                <!-- Watermark placeholder -->
-                                <TextBlock Grid.Column="1" 
-                                           Text="Cari saluran / chat..." 
-                                           Foreground="#475569" FontSize="10.5" 
-                                           VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0"
-                                           Visibility="{Binding IsTelegramSearchEmpty, Converter={StaticResource BoolToVis}}"/>
-
-                                <!-- Clear search button -->
-                                <Button Grid.Column="2" 
-                                        Command="{Binding ClearTelegramSearchCommand}" 
-                                        Visibility="{Binding HasTelegramSearchQuery, Converter={StaticResource BoolToVis}}" 
-                                        Width="14" Height="14" Padding="0" 
-                                        Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Hapus pencarian">
-                                    <controls:LucideIcon Kind="x" Width="10" Height="10" Foreground="#94A3B8"/>
-                                </Button>
-                            </Grid>
-                        </Border>
-
-                        <!-- Empty search query notice -->
-                        <TextBlock Text="Tidak ada saluran yang cocok" FontSize="10" Foreground="#64748B" FontStyle="Italic" Margin="6,4,0,4" 
-                                   Visibility="{Binding HasNoFilteredTelegramChannels, Converter={StaticResource BoolToVis}}"/>
-
-                        <!-- Telegram Vault Channels List (Left-Aligned, Real-time Filtered) -->
-                        <ItemsControl ItemsSource="{Binding FilteredTelegramChannels}" Margin="0,1,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Button Command="{Binding DataContext.SelectTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                            CommandParameter="{Binding}" 
-                                            Style="{StaticResource SidebarChannelRowButtonStyle}" 
-                                            HorizontalContentAlignment="Stretch" 
-                                            Padding="6,4" Margin="0,1">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            
-                                            <!-- Chat Type Icon (Left) -->
-                                            <controls:LucideIcon Kind="{Binding ChatIconKind}" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,7,0" VerticalAlignment="Center"/>
-                                            
-                                            <!-- Channel / Contact Title (Left-Aligned) -->
-                                            <TextBlock Grid.Column="1" Text="{Binding FormattedTitle}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" HorizontalAlignment="Left" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                            
-                                            <!-- Unread Count Capsule (Right) -->
-                                            <Border Grid.Column="2" Visibility="{Binding HasUnread, Converter={StaticResource BoolToVis}}" Background="#0E2A3A" BorderBrush="{StaticResource AccentCyanBrush}" BorderThickness="0.5" CornerRadius="8" Padding="5,0.5" Margin="4,0,4,0" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding UnreadCount}" Foreground="{StaticResource AccentCyanBrush}" FontSize="9" FontWeight="SemiBold"/>
-                                            </Border>
-                                            
-                                            <!-- Delete from Vault Button (Rightmost) -->
-                                            <Button Grid.Column="3" Command="{Binding DataContext.DeleteTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Width="16" Height="16" Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Hapus dari daftar">
-                                                <Button.Style>
-                                                    <Style TargetType="Button">
-                                                        <Setter Property="Opacity" Value="0.3"/>
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="Button">
-                                                                    <Border x:Name="bdIco" Background="Transparent" CornerRadius="3">
-                                                                        <controls:LucideIcon x:Name="ico" Kind="x" Width="10" Height="10" Foreground="#94A3B8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                    </Border>
-                                                                    <ControlTemplate.Triggers>
-                                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter Property="Opacity" Value="1.0"/>
-                                                                            <Setter TargetName="bdIco" Property="Background" Value="#2A1518"/>
-                                                                            <Setter TargetName="ico" Property="Foreground" Value="#EF4444"/>
-                                                                        </Trigger>
-                                                                    </ControlTemplate.Triggers>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </Style>
-                                                </Button.Style>
-                                            </Button>
-                                        </Grid>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- + Tambah Saluran / Chat Button -->
-                        <Button Command="{Binding AddTelegramChannelCommand}" Style="{StaticResource SecondaryGlassButton}" Height="24" Margin="0,4,0,8" Padding="6,0" HorizontalAlignment="Stretch">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <controls:LucideIcon Kind="plus" Width="11" Height="11" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Tambah Saluran / Chat" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -855,360 +750,433 @@
                 </Grid>
 
                 <!-- ========================================================= -->
-                <!-- VIEWPORT: IN-PLACE TELEGRAM WORKSPACE (When IsTelegramView)-->
+                <!-- VIEWPORT: DUAL-PANE TELEGRAM WORKSPACE (When IsTelegramView) -->
                 <!-- ========================================================= -->
-                <Grid Visibility="{Binding IsTelegramView, Converter={StaticResource BoolToVis}}">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                        <StackPanel Margin="0,0,0,16">
-                            
-                            <!-- 1. TOP HEADER BANNER & ACCOUNT STATUS -->
-                            <Border Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,12">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,14">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
+                <Grid Visibility="{Binding IsTelegramView, Converter={StaticResource BoolToVis}}" Margin="0,2,0,0">
+                    <Grid.ColumnDefinitions>
+                        <!-- Column 0: Left Sub-Pane (Channel Explorer & Account Vault) -->
+                        <ColumnDefinition Width="310"/>
+                        <!-- Column 1: Gap / Spacer -->
+                        <ColumnDefinition Width="12"/>
+                        <!-- Column 2: Right Sub-Pane (Active Channel Media Browser & Data Grid) -->
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                                        <!-- Title & Auth Badge -->
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Border Width="40" Height="40" Background="#264CD7F6" CornerRadius="12" Margin="0,0,12,0">
-                                                <controls:LucideIcon Kind="send" Width="20" Height="20" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel VerticalAlignment="Center">
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="{services:Loc telegram.title}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                    <!-- Connected Badge -->
-                                                    <Border Visibility="{Binding IsTelegramAuthenticated, Converter={StaticResource BoolToVis}}" Background="#2610B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <Ellipse Width="6" Height="6" Fill="{StaticResource AccentEmeraldBrush}" Margin="0,0,5,0"/>
-                                                            <TextBlock Text="{services:Loc telegram.connected}" FontSize="10" FontWeight="SemiBold" Foreground="#4EDEA3"/>
-                                                        </StackPanel>
-                                                    </Border>
-                                                    <!-- Not Connected Badge -->
-                                                    <Border Visibility="{Binding IsTelegramNotAuthenticated, Converter={StaticResource BoolToVis}}" Background="#26F59E0B" BorderBrush="#4DF59E0B" BorderThickness="1" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <Ellipse Width="6" Height="6" Fill="{StaticResource AccentAmberBrush}" Margin="0,0,5,0"/>
-                                                            <TextBlock Text="{services:Loc telegram.notLoggedIn}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentAmberBrush}"/>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </StackPanel>
-                                                <TextBlock Text="{services:Loc telegram.subtitle}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,3,0,0"/>
-                                            </StackPanel>
-                                        </StackPanel>
+                    <!-- ==================================================== -->
+                    <!-- LEFT SUB-PANE: CHANNEL EXPLORER & ACCOUNT VAULT      -->
+                    <!-- ==================================================== -->
+                    <Border Grid.Column="0" Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/> <!-- Row 0: Account Header Card -->
+                                <RowDefinition Height="Auto"/> <!-- Row 1: Search Channels Input -->
+                                <RowDefinition Height="*"/>    <!-- Row 2: Scrollable Channels List -->
+                                <RowDefinition Height="Auto"/> <!-- Row 3: Add Channel CTA -->
+                            </Grid.RowDefinitions>
 
-                                        <!-- Active Account Box & Sesi Button -->
-                                        <Border Grid.Column="1" Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12,6" VerticalAlignment="Center">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <controls:LucideIcon Kind="shield-check" Width="16" Height="16" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
-                                                    <TextBlock Text="{services:Loc telegram.activeAccount}" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
-                                                    <TextBlock Text="{Binding TelegramAccountDisplay}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}"/>
-                                                </StackPanel>
-                                                <Border Width="1" Background="{StaticResource BorderBrush}" Margin="0,2,10,2"/>
-                                                <Button Style="{StaticResource FlatActionButton}" Click="TelegramGrabber_Click" Padding="8,4" VerticalAlignment="Center">
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <controls:LucideIcon Kind="user-check" Width="13" Height="13" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                        <TextBlock Text="{services:Loc telegram.manageAccounts}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
-                                                    </StackPanel>
-                                                </Button>
-                                            </StackPanel>
-                                        </Border>
-                                    </Grid>
+                            <!-- Row 0: Account Header Card -->
+                            <Border Grid.Row="0" Background="#11151F" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                                    <!-- Search & Target Folder Row -->
-                                    <Grid Margin="0,0,0,14">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="12"/>
-                                            <ColumnDefinition Width="380"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <!-- Channel / Chat Input -->
-                                        <Grid Grid.Column="0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Border Background="#090E16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="10,0">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <controls:LucideIcon Kind="user" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBox Grid.Column="1" Text="{Binding TelegramChatInput, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" BorderThickness="0" FontSize="12" VerticalContentAlignment="Center" Height="36">
-                                                        <TextBox.InputBindings>
-                                                            <KeyBinding Key="Return" Command="{Binding ScanTelegramCommand}"/>
-                                                        </TextBox.InputBindings>
-                                                    </TextBox>
-                                                </Grid>
-                                            </Border>
-                                            <Button Grid.Column="1" Command="{Binding ScanTelegramCommand}" Style="{StaticResource PrimaryCyanButton}" Height="38" Margin="8,0,0,0" Padding="16,0">
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <controls:LucideIcon Kind="search" Width="14" Height="14" Foreground="#090E16" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="{services:Loc telegram.btnScanMedia}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </Grid>
-
-                                        <!-- Target Save Directory Card -->
-                                        <Border Grid.Column="2" Background="#252A33" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12,6">
-                                            <StackPanel>
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
-                                                        <TextBlock Text="{services:Loc telegram.targetSaveDir}" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
-                                                        <TextBlock Text="{Binding EffectiveTelegramTargetDir}" FontSize="11" Foreground="#ADC6FF" TextTrimming="CharacterEllipsis" ToolTip="{Binding EffectiveTelegramTargetDir}"/>
-                                                    </StackPanel>
-                                                    <Button Grid.Column="1" Command="{Binding ChangeTelegramDirCommand}" Style="{StaticResource SecondaryGlassButton}" Padding="8,4" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <controls:LucideIcon Kind="folder-open" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{services:Loc telegram.changeFolder}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                    </Button>
-                                                </Grid>
-                                                <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,4,0,4"/>
-                                                <CheckBox IsChecked="{Binding TelegramUseSubfolder}" VerticalAlignment="Center">
-                                                    <TextBlock Text="{services:Loc telegram.createSubfolder}" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                                                </CheckBox>
-                                            </StackPanel>
-                                        </Border>
-                                    </Grid>
-
-                                    <!-- Filter Pills & Anti-Flood Bar -->
-                                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <!-- Media Filter Chips -->
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="{services:Loc telegram.filterType}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                
-                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="all" Tag="{Binding IsTgFilterAll}" Content="{services:Loc telegram.filterAll}" Margin="0,0,5,0"/>
-                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="video" Tag="{Binding IsTgFilterVideo}" Content="{services:Loc telegram.filterVideo}" Margin="0,0,5,0"/>
-                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="gif" Tag="{Binding IsTgFilterGif}" Content="{services:Loc telegram.filterGif}" Margin="0,0,5,0"/>
-                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="photo" Tag="{Binding IsTgFilterPhoto}" Content="{services:Loc telegram.filterPhoto}" Margin="0,0,5,0"/>
-                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="document" Tag="{Binding IsTgFilterDoc}" Content="{services:Loc telegram.filterDoc}" Margin="0,0,5,0"/>
-                                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="audio" Tag="{Binding IsTgFilterAudio}" Content="{services:Loc telegram.filterAudio}"/>
-                                            </StackPanel>
-
-                                            <!-- Anti-Flood Indicator -->
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <controls:LucideIcon Kind="shield" Width="13" Height="13" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{services:Loc telegram.antiFloodActive}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                <TextBlock Text="•" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                                <TextBlock Text="{services:Loc telegram.antiFloodMetrics}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Grid>
+                                    <!-- Initials Avatar -->
+                                    <Border Width="34" Height="34" CornerRadius="17" Background="#1E3A8A" BorderBrush="#3B82F6" BorderThickness="1" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding TelegramAccountInitials}" Foreground="#60A5FA" FontWeight="Bold" FontSize="12.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                </StackPanel>
+
+                                    <!-- User Info -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding TelegramAuthStatus.DisplayName, FallbackValue='Telegram User'}" FontWeight="Bold" FontSize="11.5" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="120" Margin="0,0,6,0"/>
+                                            <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="4,0.5">
+                                                <TextBlock Text="MTProto" Foreground="#94A3B8" FontSize="8.5" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,2,0,0">
+                                            <Ellipse Width="6" Height="6" Fill="{StaticResource AccentEmeraldBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding TelegramAccountDisplay}" FontSize="10" Foreground="{StaticResource AccentEmeraldBrush}" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Account Settings Button -->
+                                    <Button Grid.Column="2" Click="TelegramGrabber_Click" Style="{StaticResource SecondaryGlassButton}" Width="28" Height="28" Padding="0" ToolTip="Kelola Akun Telegram" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <controls:LucideIcon Kind="settings" Width="13" Height="13" Foreground="#94A3B8"/>
+                                    </Button>
+                                </Grid>
                             </Border>
 
-                            <!-- 2. QUEUE HEADER & ACTIONS -->
-                            <Grid Margin="4,0,4,10">
+                            <!-- Row 1: Search Channels Input -->
+                            <Border Grid.Row="1" Background="#090E16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Height="32" Margin="0,0,0,10" Padding="8,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <controls:LucideIcon Kind="search" Width="12" Height="12" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,7,0"/>
+
+                                    <TextBox Grid.Column="1" 
+                                             Text="{Binding TelegramSearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                             Background="Transparent" BorderThickness="0" 
+                                             Foreground="{StaticResource TextPrimaryBrush}" FontSize="11" 
+                                             VerticalContentAlignment="Center" 
+                                             CaretBrush="{StaticResource AccentCyanBrush}"/>
+
+                                    <TextBlock Grid.Column="1" 
+                                               Text="Cari percakapan, kanal, grup..." 
+                                               Foreground="#475569" FontSize="11" 
+                                               VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0"
+                                               Visibility="{Binding IsTelegramSearchEmpty, Converter={StaticResource BoolToVis}}"/>
+
+                                    <Button Grid.Column="2" 
+                                            Command="{Binding ClearTelegramSearchCommand}" 
+                                            Visibility="{Binding HasTelegramSearchQuery, Converter={StaticResource BoolToVis}}" 
+                                            Width="16" Height="16" Padding="0" 
+                                            Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Hapus pencarian">
+                                        <controls:LucideIcon Kind="x" Width="10" Height="10" Foreground="#94A3B8"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+
+                            <!-- Row 2: Scrollable Channels List -->
+                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel>
+                                    <TextBlock Text="Tidak ada saluran yang cocok" FontSize="11" Foreground="#64748B" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,20,0,0" 
+                                               Visibility="{Binding HasNoFilteredTelegramChannels, Converter={StaticResource BoolToVis}}"/>
+
+                                    <ItemsControl ItemsSource="{Binding FilteredTelegramChannels}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.SelectTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                        CommandParameter="{Binding}" 
+                                                        Style="{StaticResource TelegramChannelCardButtonStyle}" 
+                                                        HorizontalContentAlignment="Stretch" 
+                                                        Margin="0,0,0,6">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <!-- Chat Type Icon -->
+                                                        <Border Width="32" Height="32" CornerRadius="16" Background="#161B26" Margin="0,0,10,0" VerticalAlignment="Center">
+                                                            <controls:LucideIcon Kind="{Binding ChatIconKind}" Width="15" Height="15" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+
+                                                        <!-- Channel Info -->
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding FormattedTitle}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                                            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                                <TextBlock Text="{Binding FormattedUsername}" FontSize="10" Foreground="#60A5FA" TextTrimming="CharacterEllipsis" MaxWidth="110" Margin="0,0,6,0"/>
+                                                                <Border Background="#1C2333" CornerRadius="4" Padding="4,0.5">
+                                                                    <TextBlock Text="{Binding ChatTypeBadge}" FontSize="8.5" FontWeight="SemiBold" Foreground="#94A3B8"/>
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </StackPanel>
+
+                                                        <!-- Right: Unread & Delete -->
+                                                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <Border Visibility="{Binding HasUnread, Converter={StaticResource BoolToVis}}" Background="#0E2A3A" BorderBrush="{StaticResource AccentCyanBrush}" BorderThickness="0.5" CornerRadius="8" Padding="5,1" Margin="4,0,0,0">
+                                                                <TextBlock Text="{Binding UnreadCount}" Foreground="{StaticResource AccentCyanBrush}" FontSize="9" FontWeight="Bold"/>
+                                                            </Border>
+                                                            <Button Command="{Binding DataContext.DeleteTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                                    CommandParameter="{Binding}" 
+                                                                    Width="18" Height="18" Background="Transparent" BorderThickness="0" Margin="4,0,0,0" Cursor="Hand" ToolTip="Hapus dari daftar">
+                                                                <controls:LucideIcon Kind="x" Width="10" Height="10" Foreground="#64748B"/>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!-- Row 3: Add Channel CTA Button -->
+                            <Button Grid.Row="3" Command="{Binding AddTelegramChannelCommand}" Click="TelegramGrabber_Click" Style="{StaticResource SecondaryGlassButton}" Height="34" Margin="0,10,0,0" HorizontalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <controls:LucideIcon Kind="plus" Width="13" Height="13" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Tambah Kanal / Sesi Baru" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- ==================================================== -->
+                    <!-- RIGHT SUB-PANE: MEDIA BROWSER & DATA GRID           -->
+                    <!-- ==================================================== -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Row 0: Active Channel Header -->
+                            <RowDefinition Height="Auto"/> <!-- Row 1: Filter Chips & Sort -->
+                            <RowDefinition Height="Auto"/> <!-- Row 2: Table Quick Bar -->
+                            <RowDefinition Height="*"/>    <!-- Row 3: Media Data Grid -->
+                            <RowDefinition Height="Auto"/> <!-- Row 4: Sticky Bottom Action Dock -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Row 0: Active Channel Header Bar -->
+                        <Border Grid.Row="0" Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,10">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Title & Counts -->
+                                <!-- Left: Active Channel Details -->
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="{services:Loc telegram.queueTitle}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <Border Background="#252A33" CornerRadius="6" Padding="6,2" VerticalAlignment="Center" Margin="0,0,6,0">
-                                        <TextBlock FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}">
-                                            <Run Text="{Binding DisplayedTelegramMediaCount, Mode=OneWay}"/>
-                                            <Run Text=" / "/>
-                                            <Run Text="{Binding TelegramMediaCount, Mode=OneWay}"/>
-                                        </TextBlock>
+                                    <Border Width="38" Height="38" Background="#1A2D4C" BorderBrush="#2563EB" BorderThickness="1" CornerRadius="10" Margin="0,0,12,0" VerticalAlignment="Center">
+                                        <controls:LucideIcon Kind="{Binding ActiveTelegramChannelIconKind}" Width="18" Height="18" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <Border Visibility="{Binding HasCompletedTelegramItems, Converter={StaticResource BoolToVis}}" Background="#2610B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
-                                        <TextBlock FontSize="10" FontWeight="SemiBold" Foreground="#4EDEA3">
-                                            <Run Text="{Binding TelegramCompletedCount, Mode=OneWay}"/>
-                                            <Run Text=" "/>
-                                            <Run Text="{services:Loc telegram.downloadedBadge}"/>
-                                        </TextBlock>
-                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding ActiveTelegramChannelTitle}" FontSize="14.5" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <TextBlock Text="{Binding ActiveTelegramChannelUsername}" FontSize="11" Foreground="#60A5FA" Margin="0,0,8,0"/>
+                                            <TextBlock Text="•" FontSize="11" Foreground="#475569" Margin="0,0,8,0"/>
+                                            <TextBlock FontSize="11" Foreground="{StaticResource TextMutedBrush}">
+                                                <Run Text="{Binding TelegramMediaCount, Mode=OneWay}"/><Run Text=" Berkas Media Terdeteksi"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </StackPanel>
                                 </StackPanel>
 
-                                <!-- Right Filter Tabs & Download Button -->
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="3" Margin="0,0,8,0">
-                                        <StackPanel Orientation="Horizontal">
-                                            <Button Style="{StaticResource StatusTabButton}" Command="{Binding SetTelegramStatusFilterCommand}" CommandParameter="all" Tag="{Binding IsTgStatusAll}" Margin="0,0,3,0">
-                                                <TextBlock>
-                                                    <Run Text="{services:Loc telegram.filterStatusAll}"/>
-                                                    <Run Text=" ("/><Run Text="{Binding TelegramMediaCount, Mode=OneWay}"/><Run Text=")"/>
-                                                </TextBlock>
-                                            </Button>
-                                            <Button Style="{StaticResource StatusTabButton}" Command="{Binding SetTelegramStatusFilterCommand}" CommandParameter="uncompleted" Tag="{Binding IsTgStatusUncompleted}" Margin="0,0,3,0">
-                                                <TextBlock>
-                                                    <Run Text="{services:Loc telegram.filterNotDownloaded}"/>
-                                                    <Run Text=" ("/><Run Text="{Binding TelegramUncompletedCount, Mode=OneWay}"/><Run Text=")"/>
-                                                </TextBlock>
-                                            </Button>
-                                            <Button Style="{StaticResource StatusTabButton}" Command="{Binding SetTelegramStatusFilterCommand}" CommandParameter="completed" Tag="{Binding IsTgStatusCompleted}">
-                                                <TextBlock>
-                                                    <Run Text="{services:Loc telegram.filterDownloaded}"/>
-                                                    <Run Text=" ("/><Run Text="{Binding TelegramCompletedCount, Mode=OneWay}"/><Run Text=")"/>
-                                                </TextBlock>
-                                            </Button>
-                                        </StackPanel>
-                                    </Border>
+                                <!-- Right: Sinkronkan Button -->
+                                <Button Grid.Column="1" Command="{Binding SyncCurrentTelegramChannelCommand}" Style="{StaticResource PrimaryCyanButton}" Height="34" Padding="14,0" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <controls:LucideIcon Kind="refresh-cw" Width="13" Height="13" Foreground="#090E16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Sinkronkan" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
 
-                                    <!-- Pilih Semua Button -->
-                                    <Button Command="{Binding ToggleSelectAllTelegramCommand}" Style="{StaticResource SecondaryGlassButton}" Height="30" Padding="10,0" Margin="0,0,8,0">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <controls:LucideIcon Kind="check-square" Width="13" Height="13" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{services:Loc telegram.selectAll}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
+                        <!-- Row 1: Filter Chips, Status Tabs & Sort Dropdown -->
+                        <Grid Grid.Row="1" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                                    <!-- Unduh Berkas Terpilih Button -->
-                                    <Button Command="{Binding DownloadSelectedTelegramCommand}" Style="{StaticResource PrimaryEmeraldButton}" Height="30" Padding="14,0">
+                            <!-- Media Type Chips -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="all" Tag="{Binding IsTgFilterAll}" Content="Semua" Margin="0,0,5,0"/>
+                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="video" Tag="{Binding IsTgFilterVideo}" Content="Video" Margin="0,0,5,0"/>
+                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="document" Tag="{Binding IsTgFilterDoc}" Content="Dokumen" Margin="0,0,5,0"/>
+                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="audio" Tag="{Binding IsTgFilterAudio}" Content="Musik" Margin="0,0,5,0"/>
+                                <Button Style="{StaticResource FilterChipButton}" Command="{Binding SetTelegramFilterCommand}" CommandParameter="photo" Tag="{Binding IsTgFilterPhoto}" Content="Foto"/>
+                            </StackPanel>
+
+                            <!-- Status Tabs & Sort ComboBox -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Background="#1B2028" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="3" Margin="0,0,10,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource StatusTabButton}" Command="{Binding SetTelegramStatusFilterCommand}" CommandParameter="all" Tag="{Binding IsTgStatusAll}" Margin="0,0,3,0">
+                                            <TextBlock>
+                                                <Run Text="Semua"/><Run Text=" ("/><Run Text="{Binding TelegramMediaCount, Mode=OneWay}"/><Run Text=")"/>
+                                            </TextBlock>
+                                        </Button>
+                                        <Button Style="{StaticResource StatusTabButton}" Command="{Binding SetTelegramStatusFilterCommand}" CommandParameter="uncompleted" Tag="{Binding IsTgStatusUncompleted}" Margin="0,0,3,0">
+                                            <TextBlock>
+                                                <Run Text="Belum Diunduh"/><Run Text=" ("/><Run Text="{Binding TelegramUncompletedCount, Mode=OneWay}"/><Run Text=")"/>
+                                            </TextBlock>
+                                        </Button>
+                                        <Button Style="{StaticResource StatusTabButton}" Command="{Binding SetTelegramStatusFilterCommand}" CommandParameter="completed" Tag="{Binding IsTgStatusCompleted}">
+                                            <TextBlock>
+                                                <Run Text="Sudah Diunduh"/><Run Text=" ("/><Run Text="{Binding TelegramCompletedCount, Mode=OneWay}"/><Run Text=")"/>
+                                            </TextBlock>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Sort Dropdown -->
+                                <ComboBox ItemsSource="{Binding TelegramSortOptions}" SelectedItem="{Binding TelegramSortOption}" Width="135" Height="28" VerticalAlignment="Center" Style="{StaticResource DarkComboBox}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Row 2: Table Quick Bar -->
+                        <Border Grid.Row="2" Background="#141822" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,7" Margin="0,0,0,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <CheckBox Command="{Binding SelectOnlyUncompletedTelegramCommand}" VerticalAlignment="Center">
+                                    <TextBlock Text="Pilih Belum Diunduh" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                </CheckBox>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TelegramSelectedCount}" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}" FontSize="11"/>
+                                    <TextBlock Text=" Berkas Terpilih  •  Total Ukuran: " Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+                                    <TextBlock Text="{Binding TelegramSelectedSizeText}" FontWeight="Bold" Foreground="#60A5FA" FontSize="11"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Row 3: Media Data Table / High Density List -->
+                        <Border Grid.Row="3" Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Table Header Row -->
+                                <Border Grid.Row="0" Background="#0C1017" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="12,7">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="34"/>
+                                            <ColumnDefinition Width="34"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="130"/>
+                                            <ColumnDefinition Width="80"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="2" Text="NAMA BERKAS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="UKURAN" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="4" Text="TANGGAL" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="5" Text="AKSI" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Table Rows ScrollViewer -->
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <StackPanel>
+                                        <!-- Empty Media State -->
+                                        <Border Visibility="{Binding HasNoTelegramMedia, Converter={StaticResource BoolToVis}}" Padding="32,48">
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <Border Width="52" Height="52" Background="#141924" CornerRadius="26" Margin="0,0,0,12" HorizontalAlignment="Center">
+                                                    <controls:LucideIcon Kind="send" Width="22" Height="22" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock Text="Belum ada berkas media dipindai" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                                <TextBlock Text="Pilih saluran di panel kiri atau klik 'Sinkronkan' untuk memindai pesan." FontSize="11" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Media Item Rows -->
+                                        <ItemsControl ItemsSource="{Binding DisplayedTelegramMedia}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="Transparent" BorderBrush="#1C212D" BorderThickness="0,0,0,1" Padding="12,8">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="34"/>
+                                                                <ColumnDefinition Width="34"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="100"/>
+                                                                <ColumnDefinition Width="130"/>
+                                                                <ColumnDefinition Width="80"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <!-- Checkbox -->
+                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center"/>
+
+                                                            <!-- Media Icon -->
+                                                            <Border Grid.Column="1" Width="26" Height="26" Background="{Binding LucideMediaTypeBg}" CornerRadius="6" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                                <controls:LucideIcon Kind="{Binding LucideMediaTypeIcon}" Width="13" Height="13" Foreground="{Binding LucideMediaTypeColor}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+
+                                                            <!-- Filename & Details -->
+                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding Filename}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="320" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                                                                    <!-- Completed Badge -->
+                                                                    <Border Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" Background="#1A10B981" BorderBrush="#3310B981" BorderThickness="1" CornerRadius="4" Padding="5,1" VerticalAlignment="Center">
+                                                                        <TextBlock Text="✓ Selesai" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentEmeraldBrush}"/>
+                                                                    </Border>
+
+                                                                    <!-- Downloading Badge -->
+                                                                    <Border Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVis}}" Background="#1A00E5FF" BorderBrush="#3300E5FF" BorderThickness="1" CornerRadius="4" Padding="5,1" VerticalAlignment="Center">
+                                                                        <TextBlock Text="{Binding ProgressPercentText}" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}"/>
+                                                                    </Border>
+                                                                </StackPanel>
+
+                                                                <!-- Secondary info: Msg ID & Resolution -->
+                                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                                    <TextBlock Text="Msg ID: #" FontSize="9.5" Foreground="{StaticResource TextMutedBrush}"/>
+                                                                    <TextBlock Text="{Binding MessageId}" FontSize="9.5" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,8,0"/>
+                                                                    <TextBlock Text="{Binding Resolution}" FontSize="9.5" Foreground="#64748B"/>
+                                                                </StackPanel>
+                                                            </StackPanel>
+
+                                                            <!-- Size -->
+                                                            <TextBlock Grid.Column="3" Text="{Binding SizeFormatted}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
+
+                                                            <!-- Date -->
+                                                            <TextBlock Grid.Column="4" Text="{Binding DateFormatted}" FontSize="10.5" Foreground="#94A3B8" VerticalAlignment="Center"/>
+
+                                                            <!-- Action Button -->
+                                                            <StackPanel Grid.Column="5" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                <!-- Buka if Completed -->
+                                                                <Button Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" 
+                                                                        Command="{Binding DataContext.OpenFileTelegramCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                                        CommandParameter="{Binding}" 
+                                                                        Style="{StaticResource SecondaryGlassButton}" Height="26" Padding="8,0">
+                                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                        <controls:LucideIcon Kind="folder-open" Width="11" Height="11" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,4,0"/>
+                                                                        <TextBlock Text="Buka" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentEmeraldBrush}"/>
+                                                                    </StackPanel>
+                                                                </Button>
+
+                                                                <!-- Unduh if Not Completed -->
+                                                                <Button Visibility="{Binding IsReady, Converter={StaticResource BoolToVis}}" 
+                                                                        Command="{Binding DataContext.DownloadSingleTelegramItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                                        CommandParameter="{Binding}" 
+                                                                        Style="{StaticResource PrimaryCyanButton}" Height="26" Padding="10,0">
+                                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                        <controls:LucideIcon Kind="download" Width="11" Height="11" Foreground="#090E16" Margin="0,0,4,0"/>
+                                                                        <TextBlock Text="Unduh" FontSize="10" FontWeight="Bold"/>
+                                                                    </StackPanel>
+                                                                </Button>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+
+                        <!-- Row 4: Sticky Bottom Action Dock -->
+                        <Border Grid.Row="4" Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,10,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Unduh Terpilih Button -->
+                                <Button Command="{Binding DownloadSelectedTelegramCommand}" Style="{StaticResource PrimaryEmeraldButton}" Height="34" Padding="16,0">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <controls:LucideIcon Kind="download" Width="13" Height="13" Foreground="#FFFFFF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding TelegramDownloadButtonText}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Target Save Dir Picker -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Simpan di: " FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding EffectiveTelegramTargetDir}" FontSize="11" Foreground="#ADC6FF" TextTrimming="CharacterEllipsis" MaxWidth="280" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip="{Binding EffectiveTelegramTargetDir}"/>
+                                    <Button Command="{Binding ChangeTelegramDirCommand}" Style="{StaticResource SecondaryGlassButton}" Height="28" Padding="8,0" VerticalAlignment="Center" ToolTip="Ubah folder tujuan">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <controls:LucideIcon Kind="download" Width="13" Height="13" Foreground="#FFFFFF" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding TelegramDownloadButtonText}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                            <controls:LucideIcon Kind="folder-open" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,4,0"/>
+                                            <TextBlock Text="Ubah" FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
                             </Grid>
-
-                            <!-- 3. MEDIA CARDS STREAM LIST -->
-                            <ItemsControl ItemsSource="{Binding DisplayedTelegramMedia}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,8">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-
-                                                <!-- Select CheckBox -->
-                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-
-                                                <!-- Media Icon Container -->
-                                                <Border Grid.Column="1" Width="38" Height="38" Background="{Binding LucideMediaTypeBg}" CornerRadius="10" Margin="0,0,12,0" VerticalAlignment="Center">
-                                                    <controls:LucideIcon Kind="{Binding LucideMediaTypeIcon}" Width="18" Height="18" Foreground="{Binding LucideMediaTypeColor}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-
-                                                <!-- Middle File Details -->
-                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,12,0">
-                                                    <!-- Top Line: Filename & Badges -->
-                                                    <WrapPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Filename}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,8,2" VerticalAlignment="Center"/>
-                                                        
-                                                        <!-- Completed Badge -->
-                                                        <Border Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" Background="#2610B981" BorderBrush="#4D10B981" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="0,0,6,2" VerticalAlignment="Center">
-                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                <controls:LucideIcon Kind="circle-check-big" Width="10" Height="10" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,4,0"/>
-                                                                <TextBlock Text="{services:Loc telegram.downloadedBadge}" FontSize="9" FontWeight="Bold" Foreground="#4EDEA3"/>
-                                                            </StackPanel>
-                                                        </Border>
-
-                                                        <!-- Downloading Badge -->
-                                                        <Border Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVis}}" Background="#264CD7F6" BorderBrush="#4D4CD7F6" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="0,0,6,2" VerticalAlignment="Center">
-                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                <controls:LucideIcon Kind="activity" Width="10" Height="10" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,4,0"/>
-                                                                <TextBlock Text="{Binding ProgressPercentText}" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}"/>
-                                                            </StackPanel>
-                                                        </Border>
-
-                                                        <!-- Sender / Chat Title Badge -->
-                                                        <Border Background="#1F4D8EFF" BorderBrush="#334D8EFF" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="0,0,6,2" VerticalAlignment="Center">
-                                                            <TextBlock Text="{Binding ChatTitle}" FontSize="9" Foreground="#4CD7F6"/>
-                                                        </Border>
-
-                                                        <!-- Resolution Badge -->
-                                                        <Border Background="#252A33" CornerRadius="4" Padding="5,1" Margin="0,0,6,2" VerticalAlignment="Center">
-                                                            <TextBlock Text="{Binding Resolution}" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
-                                                        </Border>
-                                                    </WrapPanel>
-
-                                                    <!-- Bottom Line: File Size, Sender, Msg ID, Date -->
-                                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                                        <TextBlock Text="{Binding SizeFormatted}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,12,0"/>
-                                                        <TextBlock Text="{Binding SenderName}" FontSize="10" Foreground="#ADC6FF" Margin="0,0,12,0"/>
-                                                        <TextBlock Text="Msg ID: #" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
-                                                        <TextBlock Text="{Binding MessageId}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,12,0"/>
-                                                        <TextBlock Text="{Binding DateFormatted}" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
-                                                    </StackPanel>
-                                                </StackPanel>
-
-                                                <!-- Right Action Buttons -->
-                                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <!-- Open File (If Completed) -->
-                                                    <Button Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" Command="{Binding DataContext.OpenFileTelegramCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryGlassButton}" Height="30" Padding="10,0" Margin="0,0,6,0">
-                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <controls:LucideIcon Kind="folder-open" Width="12" Height="12" Foreground="{StaticResource AccentEmeraldBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{services:Loc telegram.openFile}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentEmeraldBrush}" VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                    </Button>
-
-                                                    <!-- Redownload (If Completed) -->
-                                                    <Button Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVis}}" Command="{Binding DataContext.DownloadSingleTelegramItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryGlassButton}" Width="30" Height="30" Padding="0">
-                                                        <controls:LucideIcon Kind="refresh-cw" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Button>
-
-                                                    <!-- Monitor (If Downloading) -->
-                                                    <Button Visibility="{Binding IsDownloading, Converter={StaticResource BoolToVis}}" Command="{Binding DataContext.SwitchToDownloadsCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource SecondaryGlassButton}" Height="30" Padding="10,0">
-                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <controls:LucideIcon Kind="activity" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{services:Loc telegram.monitor}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                    </Button>
-
-                                                    <!-- Single Download Button (If Ready) -->
-                                                    <Button Visibility="{Binding IsReady, Converter={StaticResource BoolToVis}}" Command="{Binding DataContext.DownloadSingleTelegramItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryGlassButton}" Height="30" Padding="12,0">
-                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <controls:LucideIcon Kind="download" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{services:Loc telegram.singleDownload}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                    </Button>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <!-- 4. EMPTY MEDIA STATE (When Count == 0) -->
-                            <Border Visibility="{Binding HasNoTelegramMedia, Converter={StaticResource BoolToVis}}" Background="#14171E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="32" Margin="0,8,0,12">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Border Width="56" Height="56" Background="#1D2A3D" CornerRadius="16" Margin="0,0,0,14" HorizontalAlignment="Center">
-                                        <controls:LucideIcon Kind="send" Width="26" Height="26" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="{services:Loc telegram.emptyMedia}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" MaxWidth="480"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- 5. LOAD MORE (PAGINATION) BUTTON -->
-                            <Button Visibility="{Binding HasTelegramMedia, Converter={StaticResource BoolToVis}}" Command="{Binding ScanTelegramCommand}" CommandParameter="loadMore" Style="{StaticResource SecondaryGlassButton}" Height="34" Padding="20,0" HorizontalAlignment="Center" Margin="0,12,0,16">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="chevron-down" Width="14" Height="14" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{services:Loc telegram.loadMore}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-
-                            <!-- 6. BACK TO DOWNLOADS BUTTON -->
-                            <Button Command="{Binding SwitchToDownloadsCommand}" Style="{StaticResource FlatActionButton}" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <controls:LucideIcon Kind="arrow-down" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{services:Loc telegram.backToQueue}" FontSize="11" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-
-                        </StackPanel>
-                    </ScrollViewer>
+                        </Border>
+                    </Grid>
                 </Grid>
             </Grid>
         </Grid>

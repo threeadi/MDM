@@ -366,6 +366,60 @@ public class MainViewModel : INotifyPropertyChanged
     public int TelegramUncompletedCount => TelegramMediaItems.Count - TelegramCompletedCount;
     public bool HasCompletedTelegramItems => TelegramCompletedCount > 0;
 
+    public long TelegramSelectedSizeBytes => TelegramMediaItems.Where(m => m.IsSelected).Sum(m => m.FileSize);
+    public string TelegramSelectedSizeText => DownloadItemViewModel.FormatBytes(TelegramSelectedSizeBytes);
+
+    public string TelegramAccountInitials => TelegramAuthStatus.Initials;
+
+    private TelegramChannelInfo? _selectedTelegramChannel;
+    public TelegramChannelInfo? SelectedTelegramChannel
+    {
+        get => _selectedTelegramChannel;
+        set
+        {
+            if (SetField(ref _selectedTelegramChannel, value))
+            {
+                foreach (var ch in TelegramChannels)
+                {
+                    ch.IsSelected = (ch == value);
+                }
+                OnPropertyChanged(nameof(ActiveTelegramChannelTitle));
+                OnPropertyChanged(nameof(ActiveTelegramChannelUsername));
+                OnPropertyChanged(nameof(ActiveTelegramChannelIconKind));
+                OnPropertyChanged(nameof(HasSelectedTelegramChannel));
+                if (value != null)
+                {
+                    TelegramChatInput = !string.IsNullOrEmpty(value.Username) ? $"@{value.Username.TrimStart('@')}" : value.Title;
+                    _ = ScanTelegramAsync(TelegramChatInput);
+                }
+            }
+        }
+    }
+
+    public bool HasSelectedTelegramChannel => SelectedTelegramChannel != null;
+
+    public string ActiveTelegramChannelTitle => SelectedTelegramChannel?.FormattedTitle 
+        ?? (!string.IsNullOrWhiteSpace(TelegramChatInput) ? TelegramChatInput : "Pilih Saluran Telegram");
+
+    public string ActiveTelegramChannelUsername => SelectedTelegramChannel?.FormattedUsername 
+        ?? (!string.IsNullOrWhiteSpace(TelegramChatInput) ? TelegramChatInput : "");
+
+    public string ActiveTelegramChannelIconKind => SelectedTelegramChannel?.ChatIconKind ?? "radio";
+
+    private string _telegramSortOption = "Terbaru";
+    public string TelegramSortOption
+    {
+        get => _telegramSortOption;
+        set
+        {
+            if (SetField(ref _telegramSortOption, value))
+            {
+                RefreshTelegramDisplayedMedia();
+            }
+        }
+    }
+    public IReadOnlyList<string> TelegramSortOptions { get; } = ["Terbaru", "Terlama", "Ukuran Terbesar", "Ukuran Terkecil"];
+
     public string TelegramSelectedSummaryText => string.Format(
         I18n.Tr("telegram.filesFound", "{0} Berkas Terpilih"),
         TelegramSelectedCount > 0 ? TelegramSelectedCount : DisplayedTelegramMedia.Count
@@ -384,6 +438,8 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand SetTelegramStatusFilterCommand { get; }
     public ICommand ToggleSelectAllTelegramCommand { get; }
     public ICommand ToggleSelectTelegramItemCommand { get; }
+    public ICommand SelectOnlyUncompletedTelegramCommand { get; }
+    public ICommand SyncCurrentTelegramChannelCommand { get; }
     public ICommand DownloadSelectedTelegramCommand { get; }
     public ICommand DownloadSingleTelegramItemCommand { get; }
     public ICommand OpenFileTelegramCommand { get; }
@@ -447,10 +503,10 @@ public class MainViewModel : INotifyPropertyChanged
             SetTelegramStatusFilterCommand = new RelayCommand(_ => { });
             ToggleSelectAllTelegramCommand = new RelayCommand(() => { });
             ToggleSelectTelegramItemCommand = new RelayCommand(_ => { });
+            SelectOnlyUncompletedTelegramCommand = new RelayCommand(() => { });
+            SyncCurrentTelegramChannelCommand = new RelayCommand(() => { });
             DownloadSelectedTelegramCommand = new RelayCommand(() => { });
             DownloadSingleTelegramItemCommand = new RelayCommand(_ => { });
-            OpenFileTelegramCommand = new RelayCommand(_ => { });
-            ChangeTelegramDirCommand = new RelayCommand(() => { });
             OpenFileTelegramCommand = new RelayCommand(_ => { });
             ChangeTelegramDirCommand = new RelayCommand(() => { });
             return;
@@ -791,6 +847,37 @@ public class MainViewModel : INotifyPropertyChanged
             }
         });
 
+        SelectOnlyUncompletedTelegramCommand = new RelayCommand(() =>
+        {
+            var uncompleted = DisplayedTelegramMedia.Where(m => !m.IsCompleted).ToList();
+            if (uncompleted.Count == 0) return;
+            bool allUncompletedSelected = uncompleted.All(m => m.IsSelected);
+            foreach (var m in DisplayedTelegramMedia)
+            {
+                if (!m.IsCompleted)
+                {
+                    m.IsSelected = !allUncompletedSelected;
+                }
+                else
+                {
+                    m.IsSelected = false;
+                }
+            }
+            UpdateTelegramCounts();
+        });
+
+        SyncCurrentTelegramChannelCommand = new RelayCommand(() =>
+        {
+            if (!string.IsNullOrWhiteSpace(TelegramChatInput))
+            {
+                _ = ScanTelegramAsync(TelegramChatInput);
+            }
+            else if (SelectedTelegramChannel != null)
+            {
+                SelectTelegramChannel(SelectedTelegramChannel);
+            }
+        });
+
         DownloadSelectedTelegramCommand = new RelayCommand(() =>
         {
             DownloadSelectedTelegram();
@@ -1071,6 +1158,19 @@ public class MainViewModel : INotifyPropertyChanged
             TelegramChannels.Add(ch);
         }
         FilterTelegramChannels();
+
+        if (_selectedTelegramChannel == null && FilteredTelegramChannels.Count > 0)
+        {
+            SelectedTelegramChannel = FilteredTelegramChannels[0];
+        }
+        else if (_selectedTelegramChannel != null)
+        {
+            var match = FilteredTelegramChannels.FirstOrDefault(c => c.Id == _selectedTelegramChannel.Id);
+            if (match != null)
+            {
+                match.IsSelected = true;
+            }
+        }
     }
 
     public void FilterTelegramChannels()
@@ -1092,8 +1192,7 @@ public class MainViewModel : INotifyPropertyChanged
     public void SelectTelegramChannel(TelegramChannelInfo channel)
     {
         ActiveView = "telegram";
-        TelegramChatInput = !string.IsNullOrEmpty(channel.Username) ? $"@{channel.Username.TrimStart('@')}" : channel.Title;
-        _ = ScanTelegramAsync(TelegramChatInput);
+        SelectedTelegramChannel = channel;
     }
 
     public void DeleteTelegramChannel(TelegramChannelInfo channel)
@@ -1101,22 +1200,40 @@ public class MainViewModel : INotifyPropertyChanged
         _database.DeleteTelegramChannel(channel.Id);
         TelegramChannels.Remove(channel);
         FilteredTelegramChannels.Remove(channel);
+        if (_selectedTelegramChannel == channel)
+        {
+            SelectedTelegramChannel = FilteredTelegramChannels.FirstOrDefault();
+        }
         OnPropertyChanged(nameof(HasNoFilteredTelegramChannels));
     }
 
     public void RefreshTelegramDisplayedMedia()
     {
-        DisplayedTelegramMedia.Clear();
-        foreach (var m in TelegramMediaItems)
+        var filtered = TelegramMediaItems.Where(m =>
         {
             // Status filter
-            if (TelegramStatusFilter == "completed" && !m.IsCompleted) continue;
-            if (TelegramStatusFilter == "uncompleted" && m.IsCompleted) continue;
+            if (TelegramStatusFilter == "completed" && !m.IsCompleted) return false;
+            if (TelegramStatusFilter == "uncompleted" && m.IsCompleted) return false;
 
             // Type filter
-            if (TelegramMediaFilter != "all" && !string.Equals(m.MediaType, TelegramMediaFilter, StringComparison.OrdinalIgnoreCase)) continue;
+            if (TelegramMediaFilter != "all" && !string.Equals(m.MediaType, TelegramMediaFilter, StringComparison.OrdinalIgnoreCase)) return false;
 
-            DisplayedTelegramMedia.Add(m);
+            return true;
+        });
+
+        // Sorting
+        IEnumerable<TelegramMediaItem> sorted = TelegramSortOption switch
+        {
+            "Terlama" => filtered.OrderBy(m => m.CreatedAt).ThenBy(m => m.MessageId),
+            "Ukuran Terbesar" => filtered.OrderByDescending(m => m.FileSize),
+            "Ukuran Terkecil" => filtered.OrderBy(m => m.FileSize),
+            _ => filtered.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.MessageId) // "Terbaru"
+        };
+
+        DisplayedTelegramMedia.Clear();
+        foreach (var item in sorted)
+        {
+            DisplayedTelegramMedia.Add(item);
         }
         UpdateTelegramCounts();
     }
@@ -1208,9 +1325,16 @@ public class MainViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(TelegramCompletedCount));
         OnPropertyChanged(nameof(TelegramUncompletedCount));
         OnPropertyChanged(nameof(HasCompletedTelegramItems));
+        OnPropertyChanged(nameof(TelegramSelectedSizeBytes));
+        OnPropertyChanged(nameof(TelegramSelectedSizeText));
         OnPropertyChanged(nameof(TelegramSelectedSummaryText));
         OnPropertyChanged(nameof(TelegramDownloadButtonText));
         OnPropertyChanged(nameof(TelegramAuthStatus));
+        OnPropertyChanged(nameof(TelegramAccountInitials));
+        OnPropertyChanged(nameof(ActiveTelegramChannelTitle));
+        OnPropertyChanged(nameof(ActiveTelegramChannelUsername));
+        OnPropertyChanged(nameof(ActiveTelegramChannelIconKind));
+        OnPropertyChanged(nameof(HasSelectedTelegramChannel));
         OnPropertyChanged(nameof(IsTelegramAuthenticated));
         OnPropertyChanged(nameof(IsTelegramNotAuthenticated));
         OnPropertyChanged(nameof(HasTelegramMedia));

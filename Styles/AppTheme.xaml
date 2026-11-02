@@ -115,6 +115,47 @@
         </Setter>
     </Style>
 
+    <!-- Dual-Pane Telegram Channel Card Button Style (Reactive Active Highlight & Hover) -->
+    <Style x:Key="TelegramChannelCardButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="#11151F"/>
+        <Setter Property="Foreground" Value="#C2C6D6"/>
+        <Setter Property="BorderBrush" Value="#1C222E"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" 
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#152A4A"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="#2563EB"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </DataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsSelected}" Value="False"/>
+                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True"/>
+                            </MultiDataTrigger.Conditions>
+                            <Setter TargetName="bd" Property="Background" Value="#1B2230"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="#252D3D"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </MultiDataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Danger / Batal Action Button Style (Stitch Clean Muted Red) -->
     <Style x:Key="DangerCancelButton" TargetType="Button">
         <Setter Property="Background" Value="#1E222B"/>

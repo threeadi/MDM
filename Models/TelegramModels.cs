@@ -16,15 +16,47 @@ public class TelegramAuthStatus
     public bool NeedsPassword { get; set; }
     public bool NeedsOtp { get; set; }
     public string? ErrorMessage { get; set; }
+
+    public string Initials
+    {
+        get
+        {
+            string name = !string.IsNullOrWhiteSpace(DisplayName)
+                ? DisplayName.Trim()
+                : (!string.IsNullOrWhiteSpace(Username) ? Username.Trim().TrimStart('@') : "TG");
+
+            var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length >= 2 && parts[0].Length > 0 && parts[1].Length > 0)
+            {
+                return $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant();
+            }
+            return name.Length >= 2 ? name[..2].ToUpperInvariant() : name.ToUpperInvariant();
+        }
+    }
 }
 
-public class TelegramChannelInfo
+public class TelegramChannelInfo : INotifyPropertyChanged
 {
+    private bool _isSelected;
+
     public long Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Username { get; set; }
     public string ChatType { get; set; } = "channel"; // "channel", "group", "user", "saved_messages"
     public int UnreadCount { get; set; }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected != value)
+            {
+                _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     public string ChatIconKind => ChatType switch
     {
@@ -36,11 +68,28 @@ public class TelegramChannelInfo
         _ => "send"
     };
 
+    public string ChatTypeBadge => ChatType switch
+    {
+        "channel" => "Kanal",
+        "group" or "supergroup" => "Grup",
+        "saved_messages" => "Pribadi",
+        "user" => "Kontak",
+        _ => "Chat"
+    };
+
+    public string FormattedUsername => !string.IsNullOrWhiteSpace(Username)
+        ? $"@{Username.TrimStart('@')}"
+        : (ChatType == "saved_messages" ? "Cloud Storage" : "");
+
     public bool HasUnread => UnreadCount > 0;
 
     public string FormattedTitle => !string.IsNullOrWhiteSpace(Title)
         ? Title
         : (!string.IsNullOrWhiteSpace(Username) ? $"@{Username.TrimStart('@')}" : Id.ToString());
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string? name = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
 public class TelegramMediaItem : INotifyPropertyChanged
