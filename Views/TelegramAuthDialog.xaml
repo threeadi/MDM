@@ -1,60 +1,268 @@
 <Window x:Class="Mdm.Views.TelegramAuthDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Mdm.Controls"
+        xmlns:services="clr-namespace:Mdm.Services"
         Title="Login Telegram MTProto - MDM"
         Icon="pack://application:,,,/Mdm;component/Assets/app.ico"
-        Width="480" Height="440"
+        Width="460" Height="470"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="{StaticResource CanvasBrush}">
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent">
 
-    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource SurfaceLowBrush}" CornerRadius="8" Margin="12" Padding="16">
+    <!-- Acrylic Obsidian Glass Shell Container -->
+    <Border Background="{StaticResource SurfaceLowBrush}" 
+            BorderBrush="{StaticResource BorderBrush}" 
+            BorderThickness="1" 
+            CornerRadius="14" 
+            Margin="8"
+            ClipToBounds="True">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="8" Opacity="0.6"/>
+        </Border.Effect>
+
         <Grid>
             <Grid.RowDefinitions>
+                <!-- 0: Frameless Title Bar (Draggable) -->
+                <RowDefinition Height="38"/>
+                <!-- 1: Stepper Indicator -->
                 <RowDefinition Height="Auto"/>
+                <!-- 2: Step Content Viewport -->
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Title -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,14">
-                <TextBlock Text="Login Akun Telegram" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                <TextBlock Text="Hubungkan sesi Telegram MTProto resmi untuk mengunduh media dari channel, grup, dan obrolan pribadi tanpa batas bot." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-            </StackPanel>
-
-            <!-- Form -->
-            <StackPanel Grid.Row="1">
-                <!-- Phone Number -->
-                <TextBlock Text="Nomor Telepon Telegram (dengan kode negara, contoh: +628123456789):" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
-                <Grid Margin="0,0,0,10">
+            <!-- 0: Frameless Title Bar -->
+            <Border Grid.Row="0" Background="#1E232B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid Margin="14,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="PhoneTextBox" Text="+62" Style="{StaticResource FlatTextBox}"/>
-                    <Button Grid.Column="1" x:Name="SendOtpBtn" Content="Kirim OTP" Style="{StaticResource PrimaryCyanButton}" Height="28" Margin="6,0,0,0" Padding="12,4" Click="SendOtp_Click"/>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="20" Height="20" Background="#1D2A3D" CornerRadius="5" Margin="0,0,8,0">
+                            <controls:LucideIcon Kind="send" Width="11" Height="11" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Otentikasi Telegram MTProto" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Style="{StaticResource FlatActionButton}" Width="24" Height="24" Padding="0" Click="Close_Click" ToolTip="Tutup">
+                        <controls:LucideIcon Kind="x" Width="12" Height="12" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
                 </Grid>
+            </Border>
 
-                <!-- OTP Code -->
-                <TextBlock Text="Kode Verifikasi (OTP dari aplikasi Telegram):" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
-                <TextBox x:Name="OtpTextBox" Style="{StaticResource FlatTextBox}" Margin="0,0,0,10"/>
+            <!-- 1: Visual Stepper Header -->
+            <Border Grid.Row="1" Background="#14171E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="16,8">
+                <Grid HorizontalAlignment="Center" Width="360">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <!-- 2FA Password -->
-                <TextBlock Text="Password Verifikasi Dua Langkah / 2FA (jika aktif):" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
-                <PasswordBox x:Name="PasswordBox" Height="28" Background="#171C24" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="#2E3340" Padding="6,4" Margin="0,0,0,10"/>
+                    <!-- Step 1: Telepon -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border x:Name="Step1Badge" Width="18" Height="18" CornerRadius="9" Background="{StaticResource AccentCyanBrush}" Margin="0,0,5,0">
+                            <TextBlock x:Name="Step1Number" Text="1" FontSize="10" FontWeight="Bold" Foreground="#090E16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock x:Name="Step1Label" Text="Nomor Telepon" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
 
-                <!-- Status / Error Notification -->
-                <Border x:Name="StatusBadge" Background="#1D2432" BorderBrush="#2F3B52" BorderThickness="1" CornerRadius="4" Padding="8,6" Margin="0,0,0,6" Visibility="Collapsed">
-                    <TextBlock x:Name="StatusText" Text="" FontSize="11" Foreground="{StaticResource AccentCyanBrush}" TextWrapping="Wrap"/>
+                    <!-- Line 1 -->
+                    <Border Grid.Column="1" x:Name="StepLine1" Height="1" Background="{StaticResource BorderBrush}" Margin="8,0" VerticalAlignment="Center"/>
+
+                    <!-- Step 2: OTP -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border x:Name="Step2Badge" Width="18" Height="18" CornerRadius="9" Background="#252A33" Margin="0,0,5,0">
+                            <TextBlock x:Name="Step2Number" Text="2" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock x:Name="Step2Label" Text="Kode OTP" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Line 2 -->
+                    <Border Grid.Column="3" x:Name="StepLine2" Height="1" Background="{StaticResource BorderBrush}" Margin="8,0" VerticalAlignment="Center"/>
+
+                    <!-- Step 3: Selesai / 2FA -->
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border x:Name="Step3Badge" Width="18" Height="18" CornerRadius="9" Background="#252A33" Margin="0,0,5,0">
+                            <TextBlock x:Name="Step3Number" Text="3" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock x:Name="Step3Label" Text="Selesai" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 2: Step Content Viewport -->
+            <Grid Grid.Row="2" Margin="20,16">
+
+                <!-- STEP 1: Phone Number Input -->
+                <StackPanel x:Name="PanelStep1Phone" Visibility="Visible">
+                    <StackPanel HorizontalAlignment="Center" Margin="0,4,0,16">
+                        <Border Width="48" Height="48" Background="#1D2A3D" CornerRadius="14" HorizontalAlignment="Center" Margin="0,0,0,10">
+                            <controls:LucideIcon Kind="send" Width="22" Height="22" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Hubungkan Akun Telegram" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Masuk langsung dengan MTProto resmi. Unduh media chat, grup, dan channel tanpa batasan bot." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextAlignment="Center" MaxWidth="380" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Phone Number Input Form -->
+                    <TextBlock Text="Nomor Telepon Telegram (Format Internasional):" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                    <Grid Margin="0,0,0,4">
+                        <TextBox x:Name="PhoneTextBox" Text="+62" Style="{StaticResource FlatTextBox}" FontSize="13" Padding="10,6" KeyDown="Phone_KeyDown"/>
+                    </Grid>
+                    <TextBlock Text="Contoh: +6281234567890 (Pastikan gunakan kode negara)" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="2,0,0,14"/>
+
+                    <!-- Action Button -->
+                    <Button x:Name="SendOtpBtn" Style="{StaticResource PrimaryCyanButton}" Height="34" Margin="0,0,0,12" Click="SendOtp_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="arrow-right" Width="14" Height="14" Foreground="#090E16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="SendOtpBtnText" Text="Kirim Kode OTP Verifikasi" FontSize="11" FontWeight="Bold" Foreground="#090E16" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Collapsible Advanced API Settings -->
+                    <Button Style="{StaticResource FlatActionButton}" HorizontalAlignment="Center" Click="ToggleAdvancedApi_Click" Padding="6,2" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon x:Name="AdvancedChevronIcon" Kind="chevron-down" Width="12" Height="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Pengaturan API Khusus (Opsional / Tingkat Lanjut)" FontSize="10" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <StackPanel x:Name="AdvancedApiPanel" Visibility="Collapsed" Margin="0,6,0,0">
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="2*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="CustomApiIdTextBox" Style="{StaticResource FlatTextBox}" Tag="Default: 2040"/>
+                            <TextBox Grid.Column="2" x:Name="CustomApiHashTextBox" Style="{StaticResource FlatTextBox}" Tag="Default MTProto Hash"/>
+                        </Grid>
+                        <TextBlock Text="Kosongkan untuk menggunakan kredensial client bawaan." FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- STEP 2: OTP Verification Code Input -->
+                <StackPanel x:Name="PanelStep2Otp" Visibility="Collapsed">
+                    <StackPanel HorizontalAlignment="Center" Margin="0,4,0,14">
+                        <Border Width="48" Height="48" Background="#16332A" CornerRadius="14" HorizontalAlignment="Center" Margin="0,0,0,10">
+                            <controls:LucideIcon Kind="message-square" Width="22" Height="22" Foreground="{StaticResource AccentEmeraldBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Masukkan Kode OTP" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Kode verifikasi 5-digit telah dikirimkan ke aplikasi Telegram Anda untuk nomor:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextAlignment="Center" Margin="0,3,0,0"/>
+
+                        <!-- Phone Display + Back Link -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0">
+                            <Border Background="#1D2A3D" BorderBrush="#2F3B52" BorderThickness="1" CornerRadius="6" Padding="8,2" Margin="0,0,8,0">
+                                <TextBlock x:Name="PhoneSentDisplay" Text="+628..." FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}"/>
+                            </Border>
+                            <Button Style="{StaticResource FlatActionButton}" Click="BackToPhone_Click" Padding="4,2">
+                                <TextBlock Text="Ubah Nomor" FontSize="10" Foreground="{StaticResource AccentCyanBrush}" TextDecorations="Underline"/>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- OTP Code Input -->
+                    <StackPanel HorizontalAlignment="Center" Margin="0,4,0,16">
+                        <TextBox x:Name="OtpTextBox" Style="{StaticResource FlatTextBox}" Width="200" Height="40" FontSize="20" FontWeight="Bold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLength="6" KeyDown="Otp_KeyDown"/>
+                        <TextBlock Text="Ketik 5 digit kode yang dikirim akun resmi Telegram" FontSize="10" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Action Button -->
+                    <Button x:Name="VerifyOtpBtn" Style="{StaticResource PrimaryEmeraldButton}" Height="34" Margin="0,0,0,10" Click="VerifyOtp_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="check" Width="14" Height="14" Foreground="#FFFFFF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="VerifyOtpBtnText" Text="Verifikasi &amp; Masuk" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource FlatActionButton}" HorizontalAlignment="Center" Click="ResendOtp_Click" Padding="6,2">
+                        <TextBlock Text="Kirim Ulang Kode OTP" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </Button>
+                </StackPanel>
+
+                <!-- STEP 3: 2FA Password Input (When Required) -->
+                <StackPanel x:Name="PanelStep3Password" Visibility="Collapsed">
+                    <StackPanel HorizontalAlignment="Center" Margin="0,4,0,14">
+                        <Border Width="48" Height="48" Background="#331A1E" CornerRadius="14" HorizontalAlignment="Center" Margin="0,0,0,10">
+                            <controls:LucideIcon Kind="shield" Width="22" Height="22" Foreground="{StaticResource AccentRoseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Verifikasi Dua Langkah (2FA)" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Akun Telegram Anda dilindungi oleh kata sandi cloud (2FA). Silakan masukkan kata sandi akun Anda:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextAlignment="Center" MaxWidth="380" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Password Field with Peek Eye -->
+                    <TextBlock Text="Kata Sandi 2FA Akun Telegram:" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                    <Grid Margin="0,0,0,16">
+                        <PasswordBox x:Name="PasswordBox" Background="#090E16" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="10,6,32,6" FontSize="13" KeyDown="Password_KeyDown"/>
+                        <TextBox x:Name="PasswordVisibleTextBox" Style="{StaticResource FlatTextBox}" Padding="10,6,32,6" FontSize="13" Visibility="Collapsed" KeyDown="Password_KeyDown"/>
+                        <Button Style="{StaticResource FlatActionButton}" Width="28" Height="28" Padding="0" HorizontalAlignment="Right" Margin="0,0,4,0" Click="TogglePassword_Click" ToolTip="Lihat Password">
+                            <controls:LucideIcon x:Name="EyeIcon" Kind="eye" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
+
+                    <Button x:Name="VerifyPasswordBtn" Style="{StaticResource PrimaryCyanButton}" Height="34" Margin="0,0,0,10" Click="VerifyPassword_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="check" Width="14" Height="14" Foreground="#090E16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="VerifyPasswordBtnText" Text="Konfirmasi Kata Sandi" FontSize="11" FontWeight="Bold" Foreground="#090E16" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- STEP 4: Success View -->
+                <StackPanel x:Name="PanelStep4Success" Visibility="Collapsed">
+                    <StackPanel HorizontalAlignment="Center" Margin="0,10,0,16">
+                        <Border Width="56" Height="56" Background="#16332A" CornerRadius="18" HorizontalAlignment="Center" Margin="0,0,0,12">
+                            <controls:LucideIcon Kind="check-circle" Width="28" Height="28" Foreground="{StaticResource AccentEmeraldBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Berhasil Terhubung!" FontSize="16" FontWeight="Bold" Foreground="{StaticResource AccentEmeraldBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Akun Telegram Anda kini aktif dan siap digunakan." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                    </StackPanel>
+
+                    <!-- Profile Info Card -->
+                    <Border Background="#14171E" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,18">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="40" Height="40" Background="#264CD7F6" CornerRadius="10" Margin="0,0,12,0">
+                                <controls:LucideIcon Kind="user-check" Width="20" Height="20" Foreground="{StaticResource AccentCyanBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="SuccessDisplayNameText" Text="ASDAD" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock x:Name="SuccessUsernameText" Text="@repusid" FontSize="11" Foreground="{StaticResource AccentCyanBrush}" Margin="0,1,0,0"/>
+                                <TextBlock x:Name="SuccessPhoneText" Text="+628..." FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Button Style="{StaticResource PrimaryEmeraldButton}" Height="36" Click="FinishSuccess_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <controls:LucideIcon Kind="arrow-right" Width="14" Height="14" Foreground="#FFFFFF" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Buka Telegram Grabber &amp; Pindai" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Global Error Banner (Bottom Floating) -->
+                <Border x:Name="ErrorBanner" Background="#26FF5252" BorderBrush="#66FF5252" BorderThickness="1" CornerRadius="6" Padding="10,8" VerticalAlignment="Bottom" Margin="0,0,0,2" Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <controls:LucideIcon Kind="alert-circle" Width="14" Height="14" Foreground="{StaticResource AccentRoseBrush}" Margin="0,1,8,0" VerticalAlignment="Top"/>
+                        <TextBlock Grid.Column="1" x:Name="ErrorText" Text="" FontSize="11" Foreground="{StaticResource AccentRoseBrush}" TextWrapping="Wrap" LineHeight="16"/>
+                    </Grid>
                 </Border>
-            </StackPanel>
 
-            <!-- Action Buttons -->
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-                <Button Content="Batal" Style="{StaticResource FlatActionButton}" Width="80" Margin="0,0,8,0" Click="Cancel_Click"/>
-                <Button x:Name="LoginBtn" Content="Masuk Akun" Style="{StaticResource PrimaryEmeraldButton}" Width="120" Click="Login_Click"/>
-            </StackPanel>
+            </Grid>
         </Grid>
     </Border>
 </Window>
-

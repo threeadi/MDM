@@ -723,6 +723,14 @@
                                         </Grid>
                                     </Border>
 
+                                    <!-- Quick Launch Interactive Login Wizard -->
+                                    <Button Style="{StaticResource PrimaryCyanButton}" Height="34" Margin="0,0,0,14" Click="OpenInteractiveLogin_Click">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <controls:LucideIcon Kind="send" Width="14" Height="14" Foreground="#090E16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Buka Panduan Login Interaktif (Langkah demi Langkah)" FontSize="11" FontWeight="Bold" Foreground="#090E16" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
                                     <TextBlock Text="{services:Loc settings.tgApiLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                     <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>

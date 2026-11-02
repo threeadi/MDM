@@ -708,7 +708,7 @@ public class MainViewModel : INotifyPropertyChanged
             }
         });
 
-        RefreshTelegramChannels();
+        _ = FetchTelegramDialogsAsync();
     }
 
     private void UpdateSpeedMetrics(long speedBps)
@@ -896,6 +896,32 @@ public class MainViewModel : INotifyPropertyChanged
             TelegramIsScanning = false;
             UpdateTelegramCounts();
         }
+    }
+
+    public async Task FetchTelegramDialogsAsync()
+    {
+        try
+        {
+            if (_engine.TelegramService.AuthStatus.IsAuthenticated)
+            {
+                var dialogs = await _engine.TelegramService.ListDialogsAsync();
+                if (dialogs.Count > 0)
+                {
+                    TelegramChannels.Clear();
+                    foreach (var d in dialogs)
+                    {
+                        TelegramChannels.Add(d);
+                    }
+                    return;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"Fetch Telegram dialogs error: {ex.Message}");
+        }
+
+        RefreshTelegramChannels();
     }
 
     public void RefreshTelegramChannels()

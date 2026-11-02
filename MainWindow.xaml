@@ -349,6 +349,36 @@
                                 </Border>
                             </Grid>
                         </Button>
+
+                        <!-- Telegram Vault Channels List (1:1 with my-own-idm) -->
+                        <ItemsControl ItemsSource="{Binding TelegramChannels}" Margin="6,2,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.SelectTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource FlatActionButton}" HorizontalContentAlignment="Stretch" Padding="6,3" Margin="0,1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <controls:LucideIcon Kind="send" Width="11" Height="11" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Title}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <Button Grid.Column="2" Command="{Binding DataContext.DeleteTelegramChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource FlatActionButton}" Width="16" Height="16" Padding="0" Opacity="0.5" ToolTip="Hapus dari daftar">
+                                                <controls:LucideIcon Kind="x" Width="10" Height="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                            </Button>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- + Tambah Saluran / Chat Button -->
+                        <Button Command="{Binding AddTelegramChannelCommand}" Style="{StaticResource SecondaryGlassButton}" Height="24" Margin="6,4,0,8" Padding="6,0" HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <controls:LucideIcon Kind="plus" Width="11" Height="11" Foreground="{StaticResource AccentCyanBrush}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Tambah Saluran / Chat" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </ScrollViewer>
             </Border>

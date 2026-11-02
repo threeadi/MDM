@@ -461,6 +461,23 @@ public partial class SettingsDialog : Window
         }
     }
 
+    private void OpenInteractiveLogin_Click(object sender, RoutedEventArgs e)
+    {
+        if (_telegramService != null)
+        {
+            var authDlg = new TelegramAuthDialog(_telegramService, _database)
+            {
+                Owner = this
+            };
+            if (authDlg.ShowDialog() == true || authDlg.IsSuccess)
+            {
+                UpdateTelegramSessionStatus();
+                SubTabTgAccounts.IsChecked = true;
+                TgSubTab_Checked(this, new RoutedEventArgs());
+            }
+        }
+    }
+
     private async void TgSendOtp_Click(object sender, RoutedEventArgs e)
     {
         string phone = TgPhoneTextBox.Text.Trim();

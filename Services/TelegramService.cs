@@ -342,15 +342,43 @@ public class TelegramService
         try
         {
             var dialogs = await _client.Messages_GetAllDialogs();
+
+            // 1. Channels & Supergroups / Groups
             foreach (var (peerId, chat) in dialogs.chats)
             {
-                list.Add(new TelegramChannelInfo
+                if (!chat.IsActive) continue;
+
+                bool isChannel = chat is Channel ch && ch.IsChannel;
+                string? username = chat is Channel ch2 ? ch2.username : null;
+
+                var info = new TelegramChannelInfo
                 {
                     Id = peerId,
                     Title = chat.Title ?? "Untitled Chat",
-                    Username = chat is Channel ch ? ch.username : null,
-                    ChatType = chat is Channel ? "channel" : "group"
-                });
+                    Username = username,
+                    ChatType = isChannel ? "channel" : "group"
+                };
+                list.Add(info);
+                _database.SaveTelegramChannel(info);
+            }
+
+            // 2. Personal Chats, Contacts & Saved Messages
+            foreach (var (userId, user) in dialogs.users)
+            {
+                if (!user.IsActive) continue;
+
+                string fullName = $"{user.first_name} {user.last_name}".Trim();
+                if (string.IsNullOrEmpty(fullName)) fullName = user.username ?? $"User {userId}";
+
+                var info = new TelegramChannelInfo
+                {
+                    Id = userId,
+                    Title = user.id == _client.UserId ? "Pesan Tersimpan (Saved Messages)" : fullName,
+                    Username = user.username,
+                    ChatType = user.id == _client.UserId ? "saved" : "user"
+                };
+                list.Add(info);
+                _database.SaveTelegramChannel(info);
             }
         }
         catch (Exception ex)
@@ -376,7 +404,16 @@ public class TelegramService
         {
             InputPeer? peer = null;
 
-            if (long.TryParse(clean, out long numericId))
+            // 0. Saved Messages check
+            if (clean.Equals("me", StringComparison.OrdinalIgnoreCase) || 
+                clean.Equals("saved", StringComparison.OrdinalIgnoreCase) || 
+                clean.Contains("Pesan Tersimpan", StringComparison.OrdinalIgnoreCase))
+            {
+                peer = _client.User;
+                chatTitle = "Pesan Tersimpan (Saved Messages)";
+            }
+            // 1. Numeric ID lookup
+            else if (long.TryParse(clean, out long numericId))
             {
                 var dialogs = await _client.Messages_GetAllDialogs();
                 if (dialogs.chats.TryGetValue(numericId, out var chat))
@@ -384,32 +421,85 @@ public class TelegramService
                     peer = chat;
                     chatTitle = chat.Title;
                 }
+                else if (dialogs.users.TryGetValue(numericId, out var user))
+                {
+                    peer = user;
+                    chatTitle = $"{user.first_name} {user.last_name}".Trim();
+                }
             }
             else
             {
-                try
+                // 2. Username or Link resolution via Contacts_ResolveUsername
+                if (chatQuery.Contains("t.me/") || chatQuery.StartsWith("@"))
                 {
-                    var resolved = await _client.Contacts_ResolveUsername(clean);
-                    if (resolved.Chat != null)
+                    try
                     {
-                        peer = resolved.Chat;
-                        chatTitle = resolved.Chat.Title;
+                        var resolved = await _client.Contacts_ResolveUsername(clean);
+                        if (resolved.Chat != null)
+                        {
+                            peer = resolved.Chat;
+                            chatTitle = resolved.Chat.Title;
+                        }
+                        else if (resolved.User != null)
+                        {
+                            peer = resolved.User;
+                            chatTitle = $"{resolved.User.first_name} {resolved.User.last_name}".Trim();
+                        }
                     }
-                    else if (resolved.User != null)
-                    {
-                        peer = resolved.User;
-                        chatTitle = $"{resolved.User.first_name} {resolved.User.last_name}".Trim();
-                    }
+                    catch { }
                 }
-                catch
+
+                // 3. Search in user's active dialogs (Channels, Groups, Users, Contacts)
+                if (peer == null)
                 {
-                    // Search in dialogs by title match
                     var dialogs = await _client.Messages_GetAllDialogs();
-                    var match = dialogs.chats.Values.FirstOrDefault(c => c.Title.Contains(clean, StringComparison.OrdinalIgnoreCase));
-                    if (match != null)
+
+                    // Search chats (Channels & Groups)
+                    var chatMatch = dialogs.chats.Values.FirstOrDefault(c =>
+                        string.Equals(c.Title, clean, StringComparison.OrdinalIgnoreCase) ||
+                        (c is Channel ch && string.Equals(ch.username, clean, StringComparison.OrdinalIgnoreCase)) ||
+                        c.Title.Contains(clean, StringComparison.OrdinalIgnoreCase));
+
+                    if (chatMatch != null)
                     {
-                        peer = match;
-                        chatTitle = match.Title;
+                        peer = chatMatch;
+                        chatTitle = chatMatch.Title;
+                    }
+                    else
+                    {
+                        // Search users (Contacts & DMs)
+                        var userMatch = dialogs.users.Values.FirstOrDefault(u =>
+                            string.Equals(u.username, clean, StringComparison.OrdinalIgnoreCase) ||
+                            $"{u.first_name} {u.last_name}".Contains(clean, StringComparison.OrdinalIgnoreCase) ||
+                            (u.first_name != null && u.first_name.Contains(clean, StringComparison.OrdinalIgnoreCase)) ||
+                            (u.last_name != null && u.last_name.Contains(clean, StringComparison.OrdinalIgnoreCase)));
+
+                        if (userMatch != null)
+                        {
+                            peer = userMatch;
+                            chatTitle = $"{userMatch.first_name} {userMatch.last_name}".Trim();
+                            if (string.IsNullOrEmpty(chatTitle)) chatTitle = userMatch.username ?? "Contact";
+                        }
+                    }
+
+                    // 4. Fallback to Contacts_ResolveUsername if still not found in dialogs
+                    if (peer == null)
+                    {
+                        try
+                        {
+                            var resolved = await _client.Contacts_ResolveUsername(clean);
+                            if (resolved.Chat != null)
+                            {
+                                peer = resolved.Chat;
+                                chatTitle = resolved.Chat.Title;
+                            }
+                            else if (resolved.User != null)
+                            {
+                                peer = resolved.User;
+                                chatTitle = $"{resolved.User.first_name} {resolved.User.last_name}".Trim();
+                            }
+                        }
+                        catch { }
                     }
                 }
             }
@@ -428,25 +518,112 @@ public class TelegramService
                 ChatType = peer is InputPeerUser ? "user" : "channel"
             });
 
-            var history = await _client.Messages_GetHistory(peer, limit: limit);
+            // Retrieve messages with server-side media filter if specific filter requested (parity with my-own-idm)
+            Messages_MessagesBase messagesResult;
+            string filterLower = (mediaFilter ?? "all").ToLowerInvariant();
+            MessagesFilter? serverFilter = filterLower switch
+            {
+                "video" => new InputMessagesFilterVideo(),
+                "photo" => new InputMessagesFilterPhotos(),
+                "document" => new InputMessagesFilterDocument(),
+                "audio" => new InputMessagesFilterMusic(),
+                "gif" => new InputMessagesFilterGif(),
+                _ => null
+            };
 
-            foreach (var msgBase in history.Messages)
+            if (serverFilter != null)
+            {
+                try
+                {
+                    messagesResult = await _client.Messages_Search(peer, q: "", filter: serverFilter, limit: limit);
+                }
+                catch
+                {
+                    messagesResult = await _client.Messages_GetHistory(peer, limit: limit);
+                }
+            }
+            else
+            {
+                messagesResult = await _client.Messages_GetHistory(peer, limit: limit);
+            }
+
+            foreach (var msgBase in messagesResult.Messages)
             {
                 if (msgBase is not Message msg) continue;
 
                 if (msg.media is MessageMediaDocument docMedia && docMedia.document is Document doc)
                 {
-                    string filename = doc.Filename ?? $"telegram_{msg.id}.dat";
+                    string filename = doc.Filename;
                     string mime = doc.mime_type ?? "application/octet-stream";
-                    string mediaType = "document";
+                    string detectedType = "document";
+                    string? resolution = null;
+                    string? duration = null;
+                    bool isAnimated = false;
 
-                    if (mime.StartsWith("video/", StringComparison.OrdinalIgnoreCase)) mediaType = "video";
-                    else if (mime.StartsWith("audio/", StringComparison.OrdinalIgnoreCase)) mediaType = "audio";
-                    else if (mime.StartsWith("image/", StringComparison.OrdinalIgnoreCase)) mediaType = "photo";
+                    if (doc.attributes != null)
+                    {
+                        foreach (var attr in doc.attributes)
+                        {
+                            if (attr is DocumentAttributeVideo vidAttr)
+                            {
+                                detectedType = "video";
+                                resolution = $"{vidAttr.w}x{vidAttr.h}";
+                                var durSec = (int)vidAttr.duration;
+                                duration = durSec >= 3600
+                                    ? TimeSpan.FromSeconds(durSec).ToString(@"hh\:mm\:ss")
+                                    : TimeSpan.FromSeconds(durSec).ToString(@"mm\:ss");
+                            }
+                            else if (attr is DocumentAttributeAudio audAttr)
+                            {
+                                detectedType = "audio";
+                                var durSec = (int)audAttr.duration;
+                                duration = TimeSpan.FromSeconds(durSec).ToString(@"mm\:ss");
+                            }
+                            else if (attr is DocumentAttributeAnimated)
+                            {
+                                isAnimated = true;
+                                detectedType = "gif";
+                            }
+                            else if (attr is DocumentAttributeFilename fnAttr && string.IsNullOrEmpty(filename))
+                            {
+                                filename = fnAttr.file_name;
+                            }
+                        }
+                    }
 
-                    if (mediaFilter != "all" && !mediaFilter.Equals(mediaType, StringComparison.OrdinalIgnoreCase))
+                    if (isAnimated || mime.Contains("gif", StringComparison.OrdinalIgnoreCase))
+                    {
+                        detectedType = "gif";
+                    }
+                    else if (mime.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        detectedType = "video";
+                    }
+                    else if (mime.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        detectedType = "audio";
+                    }
+                    else if (mime.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        detectedType = "photo";
+                    }
+
+                    if (filterLower != "all" && !filterLower.Equals(detectedType, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
+                    }
+
+                    if (string.IsNullOrEmpty(filename))
+                    {
+                        string ext = detectedType switch
+                        {
+                            "video" => ".mp4",
+                            "gif" => ".mp4",
+                            "audio" => ".mp3",
+                            "photo" => ".jpg",
+                            _ => ".dat"
+                        };
+                        filename = $"telegram_{msg.id}{ext}";
                     }
 
                     results.Add(new TelegramMediaItem
@@ -458,14 +635,42 @@ public class TelegramService
                         Filename = filename,
                         FileSize = doc.size,
                         MimeType = mime,
-                        MediaType = mediaType,
+                        MediaType = detectedType,
+                        Resolution = resolution,
+                        DurationText = duration,
                         CreatedAt = msg.date,
                         TgUrl = $"tg://chat/{peer.ID}/msg/{msg.id}"
                     });
                 }
                 else if (msg.media is MessageMediaPhoto photoMedia && photoMedia.photo is Photo photo)
                 {
-                    if (mediaFilter != "all" && mediaFilter != "photo") continue;
+                    if (filterLower != "all" && filterLower != "photo") continue;
+
+                    long photoSize = 0;
+                    string? resolution = null;
+
+                    if (photo.sizes != null)
+                    {
+                        foreach (var size in photo.sizes)
+                        {
+                            if (size is PhotoSize ps)
+                            {
+                                if (ps.size > photoSize)
+                                {
+                                    photoSize = ps.size;
+                                    resolution = $"{ps.w}x{ps.h}";
+                                }
+                            }
+                            else if (size is PhotoSizeProgressive psp)
+                            {
+                                if (psp.sizes.Length > 0 && psp.sizes[^1] > photoSize)
+                                {
+                                    photoSize = psp.sizes[^1];
+                                    resolution = $"{psp.w}x{psp.h}";
+                                }
+                            }
+                        }
+                    }
 
                     results.Add(new TelegramMediaItem
                     {
@@ -474,9 +679,10 @@ public class TelegramService
                         ChatTitle = chatTitle,
                         SenderName = chatTitle,
                         Filename = $"photo_{msg.id}.jpg",
-                        FileSize = 0,
+                        FileSize = photoSize,
                         MimeType = "image/jpeg",
                         MediaType = "photo",
+                        Resolution = resolution,
                         CreatedAt = msg.date,
                         TgUrl = $"tg://chat/{peer.ID}/msg/{msg.id}"
                     });

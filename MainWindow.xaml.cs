@@ -161,14 +161,30 @@ public partial class MainWindow : Window
         }
     }
 
-    private void TelegramGrabber_Click(object sender, RoutedEventArgs e)
+    private async void TelegramGrabber_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new SettingsDialog(ViewModel.Database, ViewModel.Engine.TelegramService, initialTab: "telegram")
+        if (!ViewModel.TelegramAuthStatus.IsAuthenticated)
         {
-            Owner = this
-        };
-        dlg.ShowDialog();
-        ViewModel.UpdateTelegramCounts();
+            var authDlg = new TelegramAuthDialog(ViewModel.Engine.TelegramService, ViewModel.Database)
+            {
+                Owner = this
+            };
+            if (authDlg.ShowDialog() == true || authDlg.IsSuccess)
+            {
+                await ViewModel.FetchTelegramDialogsAsync();
+                ViewModel.UpdateTelegramCounts();
+            }
+        }
+        else
+        {
+            var dlg = new SettingsDialog(ViewModel.Database, ViewModel.Engine.TelegramService, initialTab: "telegram")
+            {
+                Owner = this
+            };
+            dlg.ShowDialog();
+            await ViewModel.FetchTelegramDialogsAsync();
+            ViewModel.UpdateTelegramCounts();
+        }
     }
 
     private bool HandleDuplicateCheck(ref string filename, string saveDir)
