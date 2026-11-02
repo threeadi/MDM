@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>MDM Turbo - Extension Settings</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background-color: #0b0f16;
+      color: #dee2ee;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 32px 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .settings-container {
+      width: 100%;
+      max-width: 720px;
+      background: #171c24;
+      border: 1px solid #232834;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      height: fit-content;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #232834;
+    }
+    .header-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(37, 99, 235, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      color: #60a5fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.2px;
+    }
+    .header-text p {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* Section Rows */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-row-toggle {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #232834;
+    }
+    .label-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f1f5f9;
+      cursor: pointer;
+    }
+    .label-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    /* Switch Component */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+      cursor: pointer;
+      margin-top: 2px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .slider {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #252d3d;
+      transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 22px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #ffffff;
+      transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    input:checked + .slider {
+      background-color: #2563eb;
+    }
+    input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+
+    /* Tag / Extension Chips Container */
+    .chips-box {
+      background: #10141c;
+      border: 1px solid #232834;
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+    .chips-box:focus-within {
+      border-color: rgba(59, 130, 246, 0.6);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 7px;
+      background: #1f2635;
+      color: #e2e8f0;
+      border: 1px solid #2a3449;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .chip-remove {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      padding: 0 1px;
+      transition: color 0.15s;
+    }
+    .chip-remove:hover {
+      color: #ff5252;
+    }
+    .chip-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-size: 12px;
+      min-width: 90px;
+      flex: 1;
+      padding: 4px;
+    }
+    .chip-input::placeholder {
+      color: #64748b;
+    }
+
+    /* Textarea */
+    .textarea-box {
+      width: 100%;
+      background: #10141c;
+      border: 1px solid #232834;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #e2e8f0;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+      resize: vertical;
+      min-height: 75px;
+      transition: border-color 0.2s;
+    }
+    .textarea-box:focus {
+      border-color: rgba(59, 130, 246, 0.6);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+    }
+
+    /* Two column grid */
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 640px) {
+      .two-col-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .select-box, .text-input {
+      width: 100%;
+      background: #10141c;
+      border: 1px solid #232834;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #e2e8f0;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .select-box:focus, .text-input:focus {
+      border-color: rgba(59, 130, 246, 0.6);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+    }
+
+    /* Checkbox */
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #232834;
+    }
+    .checkbox-custom {
+      width: 16px;
+      height: 16px;
+      accent-color: #2563eb;
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    /* Actions Footer */
+    .actions-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid #232834;
+    }
+    .btn-secondary {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid #232834;
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-secondary:hover {
+      background: #1f2635;
+      color: #ffffff;
+    }
+    .btn-primary {
+      padding: 8px 20px;
+      background: #2563eb;
+      border: none;
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+    .toast {
+      font-size: 12px;
+      color: #10b981;
+      margin-right: auto;
+      display: none;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+</head>
+<body>
+  <main class="settings-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-icon">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>Settings</h1>
+        <p>Konfigurasi integrasi penangkap tautan dan unduhan browser MDM Turbo</p>
+      </div>
+    </header>
+
+    <!-- 1. Auto Capture Links Toggle -->
+    <div class="form-row-toggle">
+      <div>
+        <label class="label-title" for="opt-auto-capture">Auto Capture Links</label>
+        <p class="label-desc">When you click on a link in your browser it will automatically be captured for download by the app.</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="opt-auto-capture" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- 2. File Types to Capture (Chips) -->
+    <div class="form-group">
+      <label class="label-title">File Types to Capture</label>
+      <div class="chips-box" id="chips-container">
+        <span class="chip">zip <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">rar <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">7z <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">iso <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">tar <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">gz <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">exe <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">msi <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">deb <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">jar <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">apk <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">bin <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">mp3 <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">aac <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">pdf <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">mp4 <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">3gp <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">avi <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">mkv <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">wav <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">mpeg <button type="button" class="chip-remove">×</button></span>
+        <span class="chip">srt <button type="button" class="chip-remove">×</button></span>
+        <input type="text" class="chip-input" id="chip-input" placeholder="+ add ext..." />
+      </div>
+      <p class="label-desc">Enter each file extension that you want to be captured then press enter.</p>
+    </div>
+
+    <!-- 3. Ignored Url patterns -->
+    <div class="form-group">
+      <label class="label-title" for="opt-ignored-patterns">Ignored Url patterns</label>
+      <textarea class="textarea-box" id="opt-ignored-patterns" placeholder="*.google.com/recaptcha/*&#10;*.youtube.com/api/*&#10;https://internal-intranet.lan/*" rows="3"></textarea>
+      <p class="label-desc">Enter URLs you don't want to be captured (one per line, wildcards (*) supported).</p>
+    </div>
+
+    <!-- 4. Two columns: Minimum File Size & Bypass Shortcut -->
+    <div class="two-col-grid">
+      <div class="form-group">
+        <label class="label-title" for="opt-min-size">Capture file size minimum (KB)</label>
+        <select class="select-box" id="opt-min-size">
+          <option value="0">0 KB (Custom / No limit)</option>
+          <option value="512">512 KB</option>
+          <option value="1024">1,024 KB (1 MB)</option>
+          <option value="5120">5,120 KB (5 MB)</option>
+          <option value="10240">10,240 KB (10 MB)</option>
+        </select>
+        <p class="label-desc">Minimum content length required to trigger automatic capture.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="label-title" for="opt-bypass-shortcut">Bypass Shortcut</label>
+        <input type="text" class="text-input" id="opt-bypass-shortcut" value="Alt" />
+        <p class="label-desc">When auto-capture is enabled, holding down this shortcut key uses internal browser download.</p>
+      </div>
+    </div>
+
+    <!-- 5. Show Popups Checkbox -->
+    <div class="checkbox-row">
+      <input type="checkbox" class="checkbox-custom" id="opt-show-popups" checked />
+      <div>
+        <label class="label-title" for="opt-show-popups">Show popups</label>
+        <p class="label-desc">Show popup dialog on selections which have links or detectable downloadable media.</p>
+      </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <footer class="actions-footer">
+      <span class="toast" id="toast-msg">Pengaturan berhasil disimpan ✓</span>
+      <button type="button" class="btn-secondary" id="btn-reset">Reset Defaults</button>
+      <button type="button" class="btn-primary" id="btn-save">Save Changes</button>
+    </footer>
+  </main>
+
+  <script src="options.js"></script>
+</body>
+</html>

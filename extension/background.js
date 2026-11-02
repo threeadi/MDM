@@ -298,7 +298,7 @@ if (typeof chrome !== "undefined" && chrome.webRequest?.onResponseStarted) {
         const count = detectedMediaByTab[details.tabId].length;
         try {
           chrome.action?.setBadgeText?.({ tabId: details.tabId, text: String(count) });
-          chrome.action?.setBadgeBackgroundColor?.({ tabId: details.tabId, color: "#00e5ff" });
+          chrome.action?.setBadgeBackgroundColor?.({ tabId: details.tabId, color: "#2563eb" });
         } catch (e) {}
       } else if (contentLength && !existing.contentLength) {
         existing.contentLength = contentLength;

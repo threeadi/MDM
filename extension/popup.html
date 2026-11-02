@@ -4,90 +4,448 @@
   <meta charset="UTF-8">
   <title>MDM Turbo Integration</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { width: 350px; background: #090e16; color: #f1f5f9; padding: 14px; font-size: 12px; }
-    .header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #1e293b; margin-bottom: 10px; }
-    .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #00e5ff; }
-    .badge-group { display: flex; align-items: center; gap: 6px; }
-    .badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-offline { background: rgba(255, 82, 82, 0.15); color: #ff5252; border-color: rgba(255, 82, 82, 0.3); }
-    .toggles-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-    .toggle-row { display: flex; align-items: center; justify-content: space-between; background: #171c24; padding: 8px 10px; border-radius: 8px; border: 1px solid #252a33; }
-    .toggle-info { font-weight: 600; font-size: 11px; }
-    .toggle-sub { font-size: 10px; color: #94a3b8; font-weight: 400; }
-    .switch { position: relative; display: inline-block; width: 34px; height: 18px; flex-shrink: 0; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .25s; border-radius: 18px; }
-    .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .25s; border-radius: 50%; }
-    input:checked + .slider { background-color: #00e5ff; }
-    input:checked + .slider:before { transform: translateX(16px); }
-    .bypass-tip { background: rgba(0, 229, 255, 0.08); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 6px; padding: 6px 10px; font-size: 10px; color: #7dd3fc; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-    .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 8px; }
-    .media-list { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-    .media-item { background: #171c24; border: 1px solid #252a33; padding: 8px 10px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .media-info { min-width: 0; flex: 1; }
-    .media-url { font-size: 11px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .media-tag { font-size: 9px; color: #00e5ff; font-family: monospace; }
-    .btn-dl { background: #00e5ff; color: #090e16; border: none; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
-    .btn-dl:hover { background: #4cd7f6; }
-    .empty-state { text-align: center; padding: 14px 0; color: #475569; font-size: 11px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      width: 365px;
+      background-color: #0f141c;
+      color: #dee2ee;
+      padding: 14px 16px 12px;
+      font-size: 12px;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Header */
+    .popup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1f2634;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .logo-container {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: #171c24;
+      border: 1px solid #252d3d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+      flex-shrink: 0;
+    }
+    .logo-container img {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+    }
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.2px;
+    }
+
+    /* Connection Status Badge */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2.5px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      background: #172030;
+      color: #60a5fa;
+      border: 1px solid rgba(30, 58, 138, 0.4);
+      transition: all 0.2s ease;
+    }
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #60a5fa;
+      flex-shrink: 0;
+    }
+    .badge-status.badge-offline {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .badge-status.badge-offline .badge-dot {
+      background: #ef4444;
+    }
+
+    /* Feature Toggles */
+    .toggles-section {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toggle-card {
+      background: #171c24;
+      border: 1px solid #222938;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: background 0.15s ease, border-color 0.15s ease, opacity 0.2s ease;
+    }
+    .toggle-card:hover {
+      background: #1a202a;
+      border-color: #2b3548;
+    }
+    .toggle-card.disabled-card {
+      opacity: 0.65;
+    }
+    .toggle-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .toggle-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f1f5f9;
+      cursor: pointer;
+    }
+    .toggle-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    /* Switch Component */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .slider {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #262f3e;
+      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #ffffff;
+      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    input:checked + .slider {
+      background-color: #2563eb;
+    }
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Bypass Callout */
+    .bypass-box {
+      margin-top: 10px;
+      background: #141b25;
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      border-radius: 8px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #cbd5e1;
+    }
+    .bypass-icon {
+      color: #60a5fa;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .kbd-alt {
+      display: inline-block;
+      padding: 1px 5px;
+      font-size: 10px;
+      font-weight: 600;
+      background: #202735;
+      color: #bfdbfe;
+      border: 1px solid #2b3548;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      font-family: inherit;
+    }
+
+    /* Media Detector Section */
+    .sniffer-section {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #1f2634;
+    }
+    .sniffer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .sniffer-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+    .rescan-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .rescan-btn:hover {
+      color: #f1f5f9;
+      background: #1c222e;
+    }
+
+    .media-list {
+      max-height: 160px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .media-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .media-list::-webkit-scrollbar-thumb {
+      background: #252d3d;
+      border-radius: 4px;
+    }
+
+    .empty-state {
+      background: #131720;
+      border: 1px solid #1f2634;
+      border-radius: 8px;
+      padding: 16px 12px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .media-item {
+      background: #171c24;
+      border: 1px solid #222938;
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: border-color 0.15s;
+    }
+    .media-item:hover {
+      border-color: #2e384c;
+    }
+    .media-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .media-url {
+      font-size: 11px;
+      color: #f1f5f9;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+    .media-tag {
+      font-size: 9px;
+      color: #60a5fa;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace, sans-serif;
+      margin-top: 2px;
+    }
+    .btn-dl {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      flex-shrink: 0;
+    }
+    .btn-dl:hover {
+      background: #1d4ed8;
+    }
+    .btn-dl.btn-sent {
+      background: #10b981;
+      cursor: default;
+    }
+
+    /* Footer */
+    .popup-footer {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #1f2634;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .footer-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .footer-btn:hover {
+      color: #60a5fa;
+    }
+    .footer-btn-gear:hover {
+      color: #f1f5f9;
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="brand">
-      <img src="icons/icon16.png" width="16" height="16" alt="MDM Turbo" style="border-radius: 4px;" />
-      <span>MDM Turbo</span>
+  <!-- Header Section -->
+  <header class="popup-header">
+    <div class="brand-wrap">
+      <div class="logo-container">
+        <img src="icons/icon16.png" alt="MDM Turbo" />
+      </div>
+      <h1 class="brand-title">MDM Turbo</h1>
     </div>
-    <div class="badge-group">
-      <span class="badge" id="ipc-badge">Memeriksa...</span>
-      <span class="badge" id="status-badge">Aktif</span>
+    <div class="badge-status" id="ipc-badge">
+      <span class="badge-dot"></span>
+      <span id="ipc-text">Memeriksa...</span>
     </div>
-  </div>
+  </header>
 
-  <div class="toggles-group">
-    <div class="toggle-row">
-      <div>
-        <div class="toggle-info">Tangkap Unduhan Otomatis</div>
-        <div class="toggle-sub">Cegat klik unduhan browser secara langsung</div>
+  <!-- Feature Switches Section -->
+  <section class="toggles-section">
+    <div class="toggle-card" id="card-auto-catch">
+      <div class="toggle-text">
+        <label class="toggle-title" for="interceptor-toggle">Tangkap Unduhan Otomatis</label>
+        <p class="toggle-desc">Cegat klik unduhan browser secara langsung</p>
       </div>
       <label class="switch">
-        <input type="checkbox" id="interceptor-toggle" checked>
+        <input type="checkbox" id="interceptor-toggle" checked />
         <span class="slider"></span>
       </label>
     </div>
 
-    <div class="toggle-row">
-      <div>
-        <div class="toggle-info">Tutup Tab Kosong Otomatis</div>
-        <div class="toggle-sub">Tutup tab kosong pemicu unduhan</div>
+    <div class="toggle-card" id="card-auto-close">
+      <div class="toggle-text">
+        <label class="toggle-title" for="autoclose-toggle">Tutup Tab Kosong Otomatis</label>
+        <p class="toggle-desc">Tutup tab kosong pemicu unduhan</p>
       </div>
       <label class="switch">
-        <input type="checkbox" id="autoclose-toggle" checked>
+        <input type="checkbox" id="autoclose-toggle" checked />
         <span class="slider"></span>
       </label>
     </div>
 
-    <div class="toggle-row">
-      <div>
-        <div class="toggle-info">Filter Tipe Berkas</div>
-        <div class="toggle-sub">Hanya tangkap arsip, media, dokumen, dan installer</div>
+    <div class="toggle-card" id="card-whitelist">
+      <div class="toggle-text">
+        <label class="toggle-title" for="whitelist-toggle">Filter Tipe Berkas</label>
+        <p class="toggle-desc">Hanya tangkap arsip, media, dokumen, dan installer</p>
       </div>
       <label class="switch">
-        <input type="checkbox" id="whitelist-toggle" checked>
+        <input type="checkbox" id="whitelist-toggle" checked />
         <span class="slider"></span>
       </label>
     </div>
-  </div>
+  </section>
 
-  <div class="bypass-tip">
-    <span>💡 <b>Bypass:</b> Tahan tombol <b>Alt</b> saat klik tautan untuk mengunduh lewat browser bawaan.</span>
-  </div>
+  <!-- Bypass Tip Callout -->
+  <aside class="bypass-box">
+    <svg class="bypass-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <span style="font-weight: 600; color: #f1f5f9;">Bypass:</span> Tahan tombol 
+      <kbd class="kbd-alt">Alt</kbd> 
+      saat klik tautan untuk mengunduh lewat browser bawaan.
+    </div>
+  </aside>
 
-  <div class="section-title">Media Terdeteksi di Halaman</div>
-  <div class="media-list" id="media-container">
-    <div class="empty-state">Tidak ada video atau audio stream terdeteksi di halaman ini.</div>
-  </div>
+  <!-- Media Sniffer Area -->
+  <section class="sniffer-section">
+    <div class="sniffer-header">
+      <span class="sniffer-title">Media Terdeteksi di Halaman</span>
+      <button class="rescan-btn" id="rescan-btn" title="Pindai Ulang">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Pindai</span>
+      </button>
+    </div>
+    <div class="media-list" id="media-container">
+      <div class="empty-state">Tidak ada video atau audio stream terdeteksi di halaman ini.</div>
+    </div>
+  </section>
+
+  <!-- Quick Access Footer -->
+  <footer class="popup-footer">
+    <button type="button" class="footer-btn" id="btn-open-app">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Buka MDM Turbo</span>
+    </button>
+    <button type="button" class="footer-btn footer-btn-gear" id="btn-open-options">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Pengaturan</span>
+    </button>
+  </footer>
 
   <script src="popup.js"></script>
 </body>
