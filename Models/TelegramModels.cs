@@ -38,12 +38,27 @@ public class TelegramAuthStatus
 public class TelegramChannelInfo : INotifyPropertyChanged
 {
     private bool _isSelected;
+    private int? _mediaCount;
 
     public long Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Username { get; set; }
     public string ChatType { get; set; } = "channel"; // "channel", "group", "user", "saved_messages"
     public int UnreadCount { get; set; }
+
+    public int? MediaCount
+    {
+        get => _mediaCount;
+        set
+        {
+            if (_mediaCount != value)
+            {
+                _mediaCount = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(MediaCountText));
+            }
+        }
+    }
 
     public bool IsSelected
     {
@@ -85,10 +100,21 @@ public class TelegramChannelInfo : INotifyPropertyChanged
     {
         get
         {
-            if (ChatType == "saved_messages") return "87 Berkas";
-            if (ChatType == "channel") return "1.2K Media";
-            if (ChatType == "group" || ChatType == "supergroup") return "412 Berkas";
-            return "198 Berkas";
+            if (_mediaCount.HasValue)
+            {
+                if (_mediaCount.Value >= 1000)
+                {
+                    return (_mediaCount.Value / 1000.0).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + "K Media";
+                }
+                return $"{_mediaCount.Value} Berkas";
+            }
+
+            if (UnreadCount > 0)
+            {
+                return $"{UnreadCount} baru";
+            }
+
+            return string.Empty;
         }
     }
 

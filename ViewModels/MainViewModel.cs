@@ -1148,6 +1148,12 @@ public class MainViewModel : INotifyPropertyChanged
                 TelegramMediaItems.Add(item);
             }
 
+            if (SelectedTelegramChannel != null)
+            {
+                SelectedTelegramChannel.MediaCount = TelegramMediaItems.Count;
+                _database.UpdateTelegramChannelMediaCount(SelectedTelegramChannel.Id, TelegramMediaItems.Count);
+            }
+
             RefreshTelegramDisplayedMedia();
             RefreshTelegramChannels();
         }
@@ -1168,12 +1174,17 @@ public class MainViewModel : INotifyPropertyChanged
         {
             if (_engine.TelegramService.AuthStatus.IsAuthenticated)
             {
+                var existingDb = _database.GetTelegramChannels().ToDictionary(c => c.Id);
                 var dialogs = await _engine.TelegramService.ListDialogsAsync();
                 if (dialogs.Count > 0)
                 {
                     TelegramChannels.Clear();
                     foreach (var d in dialogs)
                     {
+                        if (existingDb.TryGetValue(d.Id, out var saved) && saved.MediaCount.HasValue)
+                        {
+                            d.MediaCount = saved.MediaCount;
+                        }
                         TelegramChannels.Add(d);
                     }
                     FilterTelegramChannels();

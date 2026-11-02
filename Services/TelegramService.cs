@@ -427,6 +427,17 @@ public class TelegramService
         try
         {
             var dialogs = await _client.Messages_GetAllDialogs();
+            var unreadMap = new Dictionary<long, int>();
+            if (dialogs.Dialogs != null)
+            {
+                foreach (var d in dialogs.Dialogs)
+                {
+                    if (d is Dialog dial && dial.Peer != null)
+                    {
+                        unreadMap[dial.Peer.ID] = dial.unread_count;
+                    }
+                }
+            }
 
             // 1. Channels & Supergroups / Groups
             foreach (var (peerId, chat) in dialogs.chats)
@@ -441,7 +452,8 @@ public class TelegramService
                     Id = peerId,
                     Title = chat.Title ?? "Untitled Chat",
                     Username = username,
-                    ChatType = isChannel ? "channel" : "group"
+                    ChatType = isChannel ? "channel" : "group",
+                    UnreadCount = unreadMap.TryGetValue(peerId, out int unread) ? unread : 0
                 };
                 list.Add(info);
                 _database.SaveTelegramChannel(info);
@@ -460,7 +472,8 @@ public class TelegramService
                     Id = userId,
                     Title = user.id == _client.UserId ? "Pesan Tersimpan (Saved Messages)" : fullName,
                     Username = user.username,
-                    ChatType = user.id == _client.UserId ? "saved" : "user"
+                    ChatType = user.id == _client.UserId ? "saved" : "user",
+                    UnreadCount = unreadMap.TryGetValue(userId, out int uUnread) ? uUnread : 0
                 };
                 list.Add(info);
                 _database.SaveTelegramChannel(info);

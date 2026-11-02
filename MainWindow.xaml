@@ -827,9 +827,25 @@
                                         <TextBlock Text="{Binding TelegramAccountDisplay, FallbackValue='@repusid • Terhubung'}" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" MaxWidth="150"/>
                                     </StackPanel>
 
-                                    <!-- Switch Account / Settings Button -->
-                                    <Button Grid.Column="2" Click="TelegramGrabber_Click" Style="{StaticResource SecondaryGlassButton}" Width="28" Height="28" Padding="0" ToolTip="Ganti Profil Akun" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                        <controls:LucideIcon Kind="settings" Width="14" Height="14" Foreground="#94A3B8"/>
+                                    <!-- Switch Account Button (Stitch 1:1) -->
+                                    <Button Grid.Column="2" Click="TelegramGrabber_Click" Width="28" Height="28" Padding="0" ToolTip="Ganti Profil Akun" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4">
+                                                    <controls:LucideIcon x:Name="ic" Kind="switch_account" Width="15" Height="15" Foreground="#94A3B8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#1E2430"/>
+                                                        <Setter TargetName="ic" Property="Foreground" Value="#FFFFFF"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#252D3D"/>
+                                                        <Setter TargetName="ic" Property="Foreground" Value="#93C5FD"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
                                     </Button>
                                 </Grid>
                             </Border>
@@ -975,7 +991,7 @@
                                                                 <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Text="{Binding FormattedUsername}" FontSize="11" Foreground="#94A3B8" TextTrimming="CharacterEllipsis"/>
-                                                            <TextBlock Grid.Column="1" Text="{Binding MediaCountText, FallbackValue='1.2K Media'}" FontSize="11" FontWeight="SemiBold" Foreground="#60A5FA"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding MediaCountText}" FontSize="11" FontWeight="SemiBold" Foreground="#60A5FA"/>
                                                         </Grid>
                                                     </Grid>
                                                 </Button>

@@ -94,6 +94,17 @@ public class Database
                 // Column already exists, safe to ignore
             }
         }
+
+        try
+        {
+            using var alterCmd = conn.CreateCommand();
+            alterCmd.CommandText = "ALTER TABLE telegram_channels ADD COLUMN media_count INTEGER;";
+            alterCmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            // Column already exists, safe to ignore
+        }
     }
 
     public List<DownloadTask> LoadAllTasks()
@@ -358,7 +369,7 @@ public class Database
         conn.Open();
 
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT id, title, username, chat_type, unread_count FROM telegram_channels ORDER BY title ASC";
+        cmd.CommandText = "SELECT id, title, username, chat_type, unread_count, media_count FROM telegram_channels ORDER BY title ASC";
 
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -369,7 +380,8 @@ public class Database
                 Title = reader.GetString(1),
                 Username = reader.IsDBNull(2) ? null : reader.GetString(2),
                 ChatType = reader.GetString(3),
-                UnreadCount = reader.GetInt32(4)
+                UnreadCount = reader.GetInt32(4),
+                MediaCount = reader.IsDBNull(5) ? null : reader.GetInt32(5)
             });
         }
 
@@ -383,19 +395,33 @@ public class Database
 
         using var cmd = conn.CreateCommand();
         cmd.CommandText = @"
-            INSERT INTO telegram_channels (id, title, username, chat_type, unread_count)
-            VALUES (@id, @title, @username, @chat_type, @unread_count)
+            INSERT INTO telegram_channels (id, title, username, chat_type, unread_count, media_count)
+            VALUES (@id, @title, @username, @chat_type, @unread_count, @media_count)
             ON CONFLICT(id) DO UPDATE SET
                 title = excluded.title,
                 username = excluded.username,
                 chat_type = excluded.chat_type,
-                unread_count = excluded.unread_count;
+                unread_count = excluded.unread_count,
+                media_count = COALESCE(excluded.media_count, telegram_channels.media_count);
         ";
         cmd.Parameters.AddWithValue("@id", channel.Id);
         cmd.Parameters.AddWithValue("@title", channel.Title);
         cmd.Parameters.AddWithValue("@username", (object?)channel.Username ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@chat_type", channel.ChatType);
         cmd.Parameters.AddWithValue("@unread_count", channel.UnreadCount);
+        cmd.Parameters.AddWithValue("@media_count", (object?)channel.MediaCount ?? DBNull.Value);
+        cmd.ExecuteNonQuery();
+    }
+
+    public void UpdateTelegramChannelMediaCount(long id, int count)
+    {
+        using var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE telegram_channels SET media_count = @count WHERE id = @id";
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@count", count);
         cmd.ExecuteNonQuery();
     }
 

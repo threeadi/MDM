@@ -711,6 +711,17 @@ public class LucideIcon : Control
             group.Freeze();
             Geometries["lock"] = group;
         }
+        {
+            // switch_account (Material Symbols dual user account card matching Stitch 1:1)
+            var group = new GeometryGroup();
+            group.Children.Add(Geometry.Parse("M3 7v12a2 2 0 0 0 2 2h12"));
+            group.Children.Add(new RectangleGeometry(new Rect(7, 3, 14, 15), 2, 2));
+            group.Children.Add(new EllipseGeometry(new Point(14, 8), 2.5, 2.5));
+            group.Children.Add(Geometry.Parse("M10 15.5c.5-1.5 2-2.3 4-2.3s3.5.8 4 2.3"));
+            group.Freeze();
+            Geometries["switch_account"] = group;
+            Geometries["switch-account"] = group;
+        }
 
         // Aliases matching my-own-idm
         Geometries["sliders"] = Geometries["sliders-horizontal"];
