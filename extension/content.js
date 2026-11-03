@@ -192,6 +192,14 @@
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   }
 
+  function formatEstSize(sec, mbps) {
+    if (!sec || isNaN(sec) || sec <= 0) return "";
+    const mb = (sec * mbps) / 8;
+    if (mb < 0.1) return "";
+    if (mb < 1) return `${Math.round(mb * 1024)} KB`;
+    return `${mb.toFixed(1)} MB`;
+  }
+
   function generateRealMediaItems(video = null, sniffedMedia = [], host = "", rawTitle = "") {
     const safeTitle = cleanFilename(rawTitle, "video");
     const isYouTube = host.includes("youtube.com") || host.includes("youtu.be");
@@ -200,6 +208,7 @@
     const vWidth = video?.videoWidth || 0;
     const vSrc = video?.currentSrc || video?.src || "";
     const res = classifyResolution(vHeight, vWidth, rawTitle || vSrc);
+    const dur = video?.duration || 0;
 
     // Scenario 1: YouTube
     if (isYouTube) {
@@ -207,30 +216,35 @@
       const effectiveMaxHeight = vHeight > 0 ? vHeight : (res.quality === "2160p" ? 2160 : (res.quality === "1440p" ? 1440 : 1080));
       const items = [];
 
+      const s1080 = formatEstSize(dur, 2.5);
+      const s720 = formatEstSize(dur, 1.3);
+      const s480 = formatEstSize(dur, 0.65);
+      const sAudio = formatEstSize(dur, 0.16);
+
       if (effectiveMaxHeight >= 2160) {
+        const s4k = formatEstSize(dur, 8.0);
         items.push({
           id: "4k",
           badge: "4K",
           badgeClass: "myownidm-badge-4k",
-          title: "4K Ultra HD",
-          meta: "MP4 • 2160p 60fps",
+          title: "4K UHD",
+          meta: `MP4 • ${s4k || "2160p 60fps"}`,
           filename: `${safeTitle}_4k.mp4`,
           quality: "2160p",
-          threads: 32,
-          btnClass: ""
+          threads: 32
         });
       }
       if (effectiveMaxHeight >= 1440) {
+        const s1440 = formatEstSize(dur, 4.5);
         items.push({
           id: "1440p",
           badge: "2K",
           badgeClass: "myownidm-badge-4k",
-          title: "2K Quad HD",
-          meta: "MP4 • 1440p",
+          title: "2K QHD",
+          meta: `MP4 • ${s1440 || "1440p"}`,
           filename: `${safeTitle}_1440p.mp4`,
           quality: "1440p",
-          threads: 24,
-          btnClass: ""
+          threads: 24
         });
       }
       if (effectiveMaxHeight >= 1080) {
@@ -238,12 +252,11 @@
           id: "1080p",
           badge: "1080p",
           badgeClass: "myownidm-badge-fhd",
-          title: "Full HD Video",
-          meta: "MP4 • 1920×1080",
+          title: "1080p FHD",
+          meta: `MP4 • ${s1080 || "48.2 MB"}`,
           filename: `${safeTitle}_1080p.mp4`,
           quality: "1080p",
-          threads: 16,
-          btnClass: ""
+          threads: 16
         });
       }
       if (effectiveMaxHeight >= 720) {
@@ -251,24 +264,22 @@
           id: "720p",
           badge: "720p",
           badgeClass: "myownidm-badge-hd",
-          title: "HD Video",
-          meta: "MP4 • 1280×720",
+          title: "720p HD",
+          meta: `MP4 • ${s720 || "26.4 MB"}`,
           filename: `${safeTitle}_720p.mp4`,
           quality: "720p",
-          threads: 8,
-          btnClass: ""
+          threads: 8
         });
       }
       items.push({
         id: "480p",
         badge: "480p",
         badgeClass: "myownidm-badge-sd",
-        title: "SD Video",
-        meta: "MP4 • 854×480",
+        title: "480p SD",
+        meta: `MP4 • ${s480 || "14.1 MB"}`,
         filename: `${safeTitle}_480p.mp4`,
         quality: "480p",
-        threads: 6,
-        btnClass: ""
+        threads: 6
       });
 
       // Audio extraction option
@@ -277,12 +288,11 @@
         badge: "M4A",
         badgeClass: "myownidm-badge-audio",
         title: "Audio Only",
-        meta: "M4A • Suara Jernih (320kbps)",
+        meta: `M4A • ${sAudio || "4.5 MB"}`,
         filename: `${safeTitle}_audio.m4a`,
         quality: "audio",
         is_audio_only: true,
-        threads: 4,
-        btnClass: "myownidm-btn-emerald"
+        threads: 4
       });
 
       // Subtitle: only if caption track exists
@@ -296,11 +306,10 @@
           badge: "SRT",
           badgeClass: "myownidm-badge-sub",
           title: "Subtitle",
-          meta: "SRT • Trek Subtitle",
+          meta: "SRT • Captions",
           filename: `${safeTitle}_sub.srt`,
           quality: "subtitle",
-          threads: 1,
-          btnClass: ""
+          threads: 1
         });
       }
 
@@ -317,33 +326,32 @@
       const items = validSniffed.map((m, idx) => {
         const streamRes = classifyResolution(0, 0, m.url);
         const formatLabel = m.format || (m.type === "stream" ? "M3U8" : "MP4");
-        const sizeStr = m.sizeFormatted ? `${m.sizeFormatted} • ` : "";
+        const sizeStr = m.sizeFormatted ? `${m.sizeFormatted}` : (dur ? formatEstSize(dur, 1.5) : streamRes.label);
         return {
           id: `stream_${idx}`,
           badge: m.type === "stream" ? "HLS" : streamRes.badge,
           badgeClass: streamRes.badgeClass,
-          title: `${formatLabel} Video ${idx + 1}`,
-          meta: `${formatLabel} • ${sizeStr || streamRes.label}`,
+          title: `${streamRes.label || formatLabel + " Video " + (idx + 1)}`,
+          meta: `${formatLabel} • ${sizeStr}`,
           filename: `${safeTitle}_stream${idx + 1}.${formatLabel.toLowerCase()}`,
           quality: streamRes.quality,
           url: m.url,
-          threads: streamRes.threads,
-          btnClass: ""
+          threads: streamRes.threads
         };
       });
 
       // Add audio extraction option
+      const sAudio = formatEstSize(dur, 0.16);
       items.push({
         id: "audio",
         badge: "M4A",
         badgeClass: "myownidm-badge-audio",
         title: "Audio Only",
-        meta: "M4A • Ekstrak Suara",
+        meta: `M4A • ${sAudio || "Ekstrak Suara"}`,
         filename: `${safeTitle}_audio.m4a`,
         quality: "audio",
         is_audio_only: true,
-        threads: 4,
-        btnClass: "myownidm-btn-emerald"
+        threads: 4
       });
 
       return items;
@@ -352,7 +360,7 @@
     // Scenario 3: Single HTML5 Video Element / Generic Web Video (Twitter, TikTok, Instagram, News, etc.)
     const matched = validSniffed.find(m => m.url === vSrc) || validSniffed[0];
     const formatLabel = matched?.format || (vSrc.includes(".webm") ? "WEBM" : (vSrc.includes(".m3u8") ? "M3U8" : "MP4"));
-    const sizeStr = matched?.sizeFormatted ? `${matched.sizeFormatted} • ` : (video?.duration ? `${formatDuration(video.duration)} • ` : "");
+    const sizeStr = matched?.sizeFormatted ? `${matched.sizeFormatted}` : (dur ? formatEstSize(dur, 1.2) : "Video Web");
 
     const items = [
       {
@@ -360,25 +368,23 @@
         badge: res.badge,
         badgeClass: res.badgeClass,
         title: `${res.label}`,
-        meta: `${formatLabel} • ${sizeStr || "Video Web"}`,
+        meta: `${formatLabel} • ${sizeStr}`,
         filename: `${safeTitle}_${res.quality !== 'original' ? res.quality : 'video'}.${formatLabel.toLowerCase()}`,
         quality: res.quality,
         url: matched?.url || vSrc,
-        threads: res.threads,
-        btnClass: ""
+        threads: res.threads
       },
       {
         id: "audio",
         badge: "M4A",
         badgeClass: "myownidm-badge-audio",
         title: "Audio Only",
-        meta: "M4A • Ekstrak Suara",
+        meta: `M4A • ${formatEstSize(dur, 0.16) || "Ekstrak Suara"}`,
         filename: `${safeTitle}_audio.m4a`,
         quality: "audio",
         is_audio_only: true,
         url: matched?.url || vSrc,
-        threads: 4,
-        btnClass: "myownidm-btn-emerald"
+        threads: 4
       }
     ];
 
@@ -392,12 +398,11 @@
           badge: "SRT",
           badgeClass: "myownidm-badge-sub",
           title: `Subtitle (${tr.label || lang})`,
-          meta: "SRT • Trek Subtitle",
+          meta: "SRT • Captions",
           filename: `${safeTitle}_${lang}.srt`,
           quality: "subtitle",
           url: tr.src,
-          threads: 1,
-          btnClass: ""
+          threads: 1
         });
       });
     }
@@ -661,25 +666,26 @@
     const btn = document.createElement("div");
     btn.className = "myownidm-floating-bar";
     btn.innerHTML = `
-      <div class="myownidm-bar-content" title="Pilih resolusi dan unduh video">
-        <div class="myownidm-badge-count">1</div>
-        <div class="myownidm-text-group">
-          <span class="myownidm-title">Unduh dengan MDM Turbo</span>
-          <span class="myownidm-subtitle">Video terdeteksi</span>
-        </div>
-        <div class="myownidm-chevron">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </div>
-      </div>
-      <div class="myownidm-bar-divider"></div>
-      <button type="button" class="myownidm-bar-close" title="Tutup / Sembunyikan tombol unduh ini" aria-label="Tutup tombol unduh">
-        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
+      <div class="myownidm-bar-content" title="Unduh Video">
+        <svg class="myownidm-bar-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
         </svg>
-      </button>
+        <span class="myownidm-title" title="Unduh Video">Unduh Video</span>
+        <span class="myownidm-badge-count">(0)</span>
+      </div>
+      <div class="myownidm-bar-actions">
+        <button type="button" class="myownidm-chevron-btn" title="Pilihan Format" aria-label="Pilihan Format">
+          <svg class="myownidm-chevron-icon" viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+        </button>
+        <button type="button" class="myownidm-bar-close" title="Tutup / Sembunyikan widget unduh ini" aria-label="Tutup widget">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
     `;
 
     btn.style.setProperty("position", "fixed", "important");
@@ -689,20 +695,18 @@
     btn.style.setProperty("display", "none");
 
     // 2. Create Floating Sniffer Popover Panel
-    const panel = document.createElement("div");
+    const panel = document.createElement("section");
     panel.className = "myownidm-sniffer-panel";
+    panel.setAttribute("aria-labelledby", "myownidm-dialog-title");
     panel.style.setProperty("position", "fixed", "important");
     panel.style.setProperty("z-index", "2147483647", "important");
     panel.style.setProperty("display", "none");
 
     panel.innerHTML = `
       <div class="myownidm-sniffer-header">
-        <div class="myownidm-sniffer-title-wrap">
-          <div class="myownidm-status-dot"></div>
-          <div class="myownidm-sniffer-title">Pilih Format Unduhan</div>
-        </div>
-        <button type="button" class="myownidm-close-btn" title="Tutup" aria-label="Tutup">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <h2 class="myownidm-sniffer-title" id="myownidm-dialog-title">PILIH FORMAT UNDUHAN</h2>
+        <button type="button" class="myownidm-close-btn" title="Tutup Dialog" aria-label="Tutup Dialog">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -713,15 +717,12 @@
 
       <div class="myownidm-sniffer-footer">
         <button type="button" class="myownidm-batch-btn">
-          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           <span>Unduh Semua</span>
         </button>
-        <div class="myownidm-desktop-status">
-          <span class="myownidm-pulse-dot"></span>
-          <span>MDM Turbo Siap</span>
-        </div>
+        <span class="myownidm-format-count">0 pilihan format</span>
       </div>
     `;
 
@@ -733,8 +734,7 @@
     panel.addEventListener("mouseleave", () => scheduleHide(1200));
 
     // Toggle dropdown
-    const barContent = btn.querySelector(".myownidm-bar-content");
-    barContent?.addEventListener("click", (e) => {
+    const togglePanel = (e) => {
       e.stopPropagation();
       e.preventDefault();
 
@@ -748,7 +748,13 @@
         btn.classList.add("myownidm-panel-active");
         activePanel = panel;
       }
-    });
+    };
+
+    const barContent = btn.querySelector(".myownidm-bar-content");
+    barContent?.addEventListener("click", togglePanel);
+
+    const chevronBtn = btn.querySelector(".myownidm-chevron-btn");
+    chevronBtn?.addEventListener("click", togglePanel);
 
     // Close button dismisses for current video
     const closeBtn = btn.querySelector(".myownidm-bar-close");
@@ -814,25 +820,35 @@
     const presets = generateRealMediaItems(video, sniffedMedia, host, rawTitle);
     const videoStreamsCount = presets.filter(p => !p.is_audio_only && p.quality !== "subtitle").length;
 
-    if (singletonBtn) {
-      const countEl = singletonBtn.querySelector(".myownidm-badge-count");
-      if (countEl) countEl.textContent = String(videoStreamsCount || presets.length);
+    // Display video title or filename in the floating pill button (Kotak Kuning)
+    const cleanTitle = cleanFilename(rawTitle, "video");
+    const displayTitle = (cleanTitle && cleanTitle !== "video") ? cleanTitle : (presets[0]?.filename || "Unduh Video");
+    const fullFilename = (cleanTitle && cleanTitle !== "video") ? `${cleanTitle}.mp4` : (presets[0]?.filename || "video.mp4");
 
-      const subtitleEl = singletonBtn.querySelector(".myownidm-subtitle");
-      if (subtitleEl) {
-        if (videoStreamsCount === 1) {
-          const firstVid = presets[0];
-          subtitleEl.textContent = `${firstVid.tag || firstVid.badge} terdeteksi`;
-        } else if (videoStreamsCount > 1) {
-          subtitleEl.textContent = `${videoStreamsCount} resolusi terdeteksi`;
-        } else {
-          subtitleEl.textContent = `${presets.length} media terdeteksi`;
-        }
+    if (singletonBtn) {
+      const titleEl = singletonBtn.querySelector(".myownidm-title");
+      if (titleEl) {
+        titleEl.textContent = displayTitle;
+        titleEl.setAttribute("title", fullFilename);
+      }
+      const countEl = singletonBtn.querySelector(".myownidm-badge-count");
+      if (countEl) {
+        countEl.textContent = `(${presets.length})`;
+      }
+      const barContent = singletonBtn.querySelector(".myownidm-bar-content");
+      if (barContent) {
+        barContent.setAttribute("title", fullFilename);
       }
     }
 
     const listEl = singletonPanel.querySelector(".myownidm-quality-list");
     if (!listEl) return;
+
+    // Update footer count text (e.g. "4 pilihan format")
+    const formatCountEl = singletonPanel.querySelector(".myownidm-format-count");
+    if (formatCountEl) {
+      formatCountEl.textContent = `${presets.length} pilihan format`;
+    }
 
     // Toggle Batch Download button visibility
     const batchBtn = singletonPanel.querySelector(".myownidm-batch-btn");
@@ -841,23 +857,21 @@
     }
 
     let qualityItemsHtml = "";
-    presets.forEach((item) => {
+    presets.forEach((item, idx) => {
+      const isPrimary = idx === 0;
       qualityItemsHtml += `
-        <div class="myownidm-quality-item" data-id="${item.id}">
-          <div class="myownidm-res-badge ${item.badgeClass}">${item.badge}</div>
+        <article class="myownidm-quality-item" data-id="${item.id}">
           <div class="myownidm-item-details">
-            <div class="myownidm-item-name">${item.title}</div>
-            <div class="myownidm-item-meta">${item.meta}</div>
+            <span class="myownidm-item-name">${item.title}</span>
+            <span class="myownidm-item-meta">${item.meta}</span>
           </div>
-          <button type="button" class="myownidm-download-btn ${item.btnClass}" data-quality="${item.quality}" data-audio="${item.is_audio_only ? 'true' : 'false'}" data-filename="${item.filename}" data-url="${item.url || ''}">
-            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
+          <button type="button" class="myownidm-download-btn ${isPrimary ? 'is-primary' : 'is-secondary'}" data-quality="${item.quality}" data-audio="${item.is_audio_only ? 'true' : 'false'}" data-filename="${item.filename}" data-url="${item.url || ''}">
+            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
             </svg>
             <span>Unduh</span>
           </button>
-        </div>
+        </article>
       `;
     });
     listEl.innerHTML = qualityItemsHtml;
