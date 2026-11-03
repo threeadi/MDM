@@ -135,7 +135,7 @@ public static class YtDlpService
         return null;
     }
 
-    public static async Task<ProbeResult> ProbeAsync(string url, CancellationToken ct = default)
+    public static async Task<ProbeResult> ProbeAsync(string url, string? quality = null, CancellationToken ct = default)
     {
         string ytDlp = FindYtDlp() ?? "yt-dlp.exe";
         string? ffmpegDir = FindFfmpegDir();
@@ -149,8 +149,17 @@ public static class YtDlpService
             CreateNoWindow = true
         };
 
+        psi.EnvironmentVariables["PYTHONUNBUFFERED"] = "1";
         psi.ArgumentList.Add("--no-warnings");
         psi.ArgumentList.Add("--no-playlist");
+
+        if (!string.IsNullOrWhiteSpace(quality))
+        {
+            string format = BuildFormatSelector(quality, "");
+            psi.ArgumentList.Add("-f");
+            psi.ArgumentList.Add(format);
+        }
+
         psi.ArgumentList.Add("--print");
         psi.ArgumentList.Add("%(title)s\t%(filesize,filesize_approx)s");
         if (!string.IsNullOrEmpty(ffmpegDir))
@@ -236,7 +245,7 @@ public static class YtDlpService
         psi.ArgumentList.Add("--progress-delta");
         psi.ArgumentList.Add("0.2");
         psi.ArgumentList.Add("--progress-template");
-        psi.ArgumentList.Add("IDM_PROGRESS:%(progress.downloaded_bytes)s");
+        psi.ArgumentList.Add("IDM_PROGRESS:%(progress.downloaded_bytes)s:%(progress.total_bytes,progress.total_bytes_estimate)s");
         psi.ArgumentList.Add("-o");
         psi.ArgumentList.Add(outputFile);
 
@@ -299,7 +308,22 @@ public static class YtDlpService
                 if (line.StartsWith("IDM_PROGRESS:"))
                 {
                     string content = line["IDM_PROGRESS:".Length..].Trim();
-                    if (long.TryParse(content, out long downloaded) && downloaded > 0)
+                    string[] parts = content.Split(':');
+                    long downloaded = 0;
+                    if (parts.Length > 0 && long.TryParse(parts[0], out long d))
+                    {
+                        downloaded = d;
+                    }
+
+                    if (parts.Length > 1 && long.TryParse(parts[1], out long estTotal) && estTotal > 0)
+                    {
+                        if (task.TotalBytes == null || task.TotalBytes <= 0 || task.TotalBytes != estTotal)
+                        {
+                            task.TotalBytes = estTotal;
+                        }
+                    }
+
+                    if (downloaded > 0)
                     {
                         if (downloaded > lastBytes)
                         {

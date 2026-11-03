@@ -92,7 +92,7 @@ public partial class AddDownloadDialog : Window
             try
             {
                 await Task.Delay(350, token);
-                var probe = await DownloadEngine.ProbeUrlAsync(url, Referer, token);
+                var probe = await DownloadEngine.ProbeUrlAsync(url, Referer, Quality, token);
 
                 Dispatcher.Invoke(() =>
                 {
@@ -109,8 +109,9 @@ public partial class AddDownloadDialog : Window
                         : "Ukuran tidak diketahui";
 
                     string rangeStr = probe.SupportsRange ? "Multi-Thread (206 OK)" : "Single Connection";
+                    string qInfo = !string.IsNullOrWhiteSpace(Quality) ? $"  |  Kualitas: {Quality}" : "";
 
-                    ProbeStatusText.Text = $"Ukuran: {sizeStr}  |  Resume: {rangeStr}  |  Kategori: {probe.Category}";
+                    ProbeStatusText.Text = $"Ukuran: {sizeStr}{qInfo}  |  Resume: {rangeStr}  |  Kategori: {probe.Category}";
                     ProbeStatusText.Foreground = (Brush)FindResource("AccentCyanBrush");
                 });
             }

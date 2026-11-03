@@ -148,14 +148,14 @@
   z-index: 2147483647 !important;
   pointer-events: auto !important;
   isolation: isolate !important;
-  width: 410px;
+  width: 350px;
   max-width: calc(100vw - 24px);
   background: rgba(15, 20, 28, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid #232834;
-  border-radius: 14px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.92), 0 0 24px rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 1px rgba(255, 255, 255, 0.1);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -179,9 +179,9 @@
 
 /* Panel Header */
 .myownidm-sniffer-header {
-  padding: 10px 14px;
+  padding: 8px 12px;
   background: rgba(15, 20, 28, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -190,44 +190,38 @@
 .myownidm-sniffer-title-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .myownidm-status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 10px #10b981;
+  background: #00e5ff;
+  box-shadow: 0 0 8px #00e5ff;
   flex-shrink: 0;
   animation: myownidm-pulse 2s infinite ease-in-out;
 }
 
 @keyframes myownidm-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }
 
 .myownidm-sniffer-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.2px;
-}
-
-.myownidm-sniffer-subtitle {
-  font-size: 10px;
-  color: #94a3b8;
-  font-family: 'JetBrains Mono', monospace;
+  color: #f1f5f9;
+  letter-spacing: 0.1px;
 }
 
 .myownidm-close-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+  color: #64748b;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -236,27 +230,27 @@
 }
 
 .myownidm-close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   color: #ff5252;
 }
 
 /* Quality Items List */
 .myownidm-quality-list {
-  padding: 8px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   max-height: 360px;
   overflow-y: auto;
 }
 
 .myownidm-quality-list::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 
 .myownidm-quality-list::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 3px;
+  background: #232834;
+  border-radius: 2px;
 }
 
 /* Quality Item Row */
@@ -264,63 +258,69 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  background: rgba(17, 24, 39, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 9px;
+  background: rgba(23, 28, 36, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   transition: all 0.15s ease;
   box-sizing: border-box;
 }
 
 .myownidm-quality-item:hover {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(59, 130, 246, 0.4);
-  transform: translateX(2px);
+  background: rgba(30, 37, 48, 0.85);
+  border-color: rgba(0, 229, 255, 0.3);
+  transform: translateX(1px);
 }
 
 /* Resolution Badges */
 .myownidm-res-badge {
-  width: 36px;
-  height: 32px;
-  border-radius: 6px;
+  width: 46px;
+  height: 26px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
 .myownidm-badge-4k {
-  background: rgba(37, 99, 235, 0.18);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(0, 229, 255, 0.12);
+  color: #00e5ff;
+  border: 1px solid rgba(0, 229, 255, 0.3);
 }
 
 .myownidm-badge-fhd {
-  background: rgba(37, 99, 235, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(0, 229, 255, 0.1);
+  color: #00e5ff;
+  border: 1px solid rgba(0, 229, 255, 0.25);
 }
 
 .myownidm-badge-hd {
-  background: rgba(100, 116, 139, 0.2);
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.myownidm-badge-sd {
+  background: rgba(148, 163, 184, 0.1);
   color: #94a3b8;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .myownidm-badge-audio {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.12);
   color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .myownidm-badge-sub {
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(245, 158, 11, 0.12);
   color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 /* Quality Details Column */
@@ -332,44 +332,17 @@
   gap: 2px;
 }
 
-.myownidm-item-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow: hidden;
-}
-
 .myownidm-item-name {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   color: #f1f5f9;
   white-space: nowrap;
-}
-
-.myownidm-pill-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
-}
-
-.myownidm-pill-tag-cyan {
-  background: rgba(37, 99, 235, 0.18);
-  color: #60a5fa;
-}
-
-.myownidm-pill-tag-emerald {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
 }
 
 .myownidm-item-meta {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  color: #8c909f;
+  color: #64748b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -377,26 +350,26 @@
 
 /* Download Action Button */
 .myownidm-download-btn {
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
+  background: rgba(0, 229, 255, 0.12);
+  color: #00e5ff;
+  border: 1px solid rgba(0, 229, 255, 0.35);
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 4px 10px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
   flex-shrink: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .myownidm-download-btn:hover {
-  background: #1d4ed8;
-  transform: scale(1.04);
-  box-shadow: 0 0 14px rgba(37, 99, 235, 0.5);
+  background: #00e5ff;
+  color: #090e16;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
 }
 
 .myownidm-download-btn:active {
@@ -404,32 +377,37 @@
 }
 
 .myownidm-download-btn.myownidm-btn-emerald {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 .myownidm-download-btn.myownidm-btn-emerald:hover {
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.6);
+  background: #10b981;
+  color: #090e16;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
 }
 
 /* Button Status States */
 .myownidm-download-btn.is-success {
   background: #10b981 !important;
   color: #090e16 !important;
+  border-color: #10b981 !important;
   pointer-events: none;
 }
 
 .myownidm-download-btn.is-error {
   background: #ff5252 !important;
   color: #ffffff !important;
+  border-color: #ff5252 !important;
   pointer-events: none;
 }
 
 /* Panel Footer */
 .myownidm-sniffer-footer {
-  padding: 8px 12px;
-  background: rgba(15, 20, 28, 0.95);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  background: rgba(15, 20, 28, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -439,32 +417,38 @@
 .myownidm-batch-btn {
   background: transparent;
   border: none;
-  color: #60a5fa;
+  color: #00e5ff;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 3px 5px;
   border-radius: 4px;
   transition: all 0.15s ease;
+  font-size: 11px;
 }
 
 .myownidm-batch-btn:hover {
-  background: rgba(37, 99, 235, 0.12);
+  background: rgba(0, 229, 255, 0.1);
   text-decoration: underline;
 }
 
-.myownidm-desktop-link {
-  color: #94a3b8;
-  text-decoration: none;
+.myownidm-desktop-status {
+  color: #64748b;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  transition: color 0.15s ease;
+  gap: 5px;
+  margin-left: auto;
 }
 
-.myownidm-desktop-link:hover {
-  color: #f1f5f9;
+.myownidm-pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  display: inline-block;
 }

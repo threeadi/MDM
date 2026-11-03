@@ -162,27 +162,27 @@
     }
 
     if (h >= 2160 || w >= 3840) {
-      return { quality: "2160p", badge: "4K", badgeClass: "myownidm-badge-4k", label: "4K Ultra HD", tag: "2160p 60fps", tagClass: "myownidm-pill-tag-cyan", threads: 32 };
+      return { quality: "2160p", badge: "4K", badgeClass: "myownidm-badge-4k", label: "4K Ultra HD", tag: "2160p", threads: 32 };
     }
     if (h >= 1440 || w >= 2560) {
-      return { quality: "1440p", badge: "2K", badgeClass: "myownidm-badge-4k", label: "2K Quad HD", tag: "1440p", tagClass: "myownidm-pill-tag-cyan", threads: 24 };
+      return { quality: "1440p", badge: "2K", badgeClass: "myownidm-badge-4k", label: "2K Quad HD", tag: "1440p", threads: 24 };
     }
     if (h >= 1080 || w >= 1920) {
-      return { quality: "1080p", badge: "FHD", badgeClass: "myownidm-badge-fhd", label: "Full HD 1080p", tag: "1080p", tagClass: "", threads: 16 };
+      return { quality: "1080p", badge: "1080p", badgeClass: "myownidm-badge-fhd", label: "Full HD Video", tag: "1080p", threads: 16 };
     }
     if (h >= 720 || w >= 1280) {
-      return { quality: "720p", badge: "HD", badgeClass: "myownidm-badge-hd", label: "720p HD", tag: "720p", tagClass: "", threads: 8 };
+      return { quality: "720p", badge: "720p", badgeClass: "myownidm-badge-hd", label: "HD Video", tag: "720p", threads: 8 };
     }
     if (h >= 480 || w >= 854) {
-      return { quality: "480p", badge: "SD", badgeClass: "myownidm-badge-hd", label: "480p SD", tag: "480p", tagClass: "", threads: 6 };
+      return { quality: "480p", badge: "480p", badgeClass: "myownidm-badge-sd", label: "SD Video", tag: "480p", threads: 6 };
     }
     if (h >= 360 || w >= 640) {
-      return { quality: "360p", badge: "SD", badgeClass: "myownidm-badge-hd", label: "360p", tag: "360p", tagClass: "", threads: 4 };
+      return { quality: "360p", badge: "360p", badgeClass: "myownidm-badge-sd", label: "Video 360p", tag: "360p", threads: 4 };
     }
     if (h > 0) {
-      return { quality: `${h}p`, badge: "VID", badgeClass: "myownidm-badge-hd", label: `${h}p Video`, tag: `${h}p`, tagClass: "", threads: 6 };
+      return { quality: `${h}p`, badge: `${h}p`, badgeClass: "myownidm-badge-sd", label: `Video ${h}p`, tag: `${h}p`, threads: 6 };
     }
-    return { quality: "original", badge: "HD", badgeClass: "myownidm-badge-hd", label: "Resolusi Asli", tag: "Asli", tagClass: "", threads: 8 };
+    return { quality: "original", badge: "HD", badgeClass: "myownidm-badge-hd", label: "Video", tag: "Asli", threads: 8 };
   }
 
   function formatDuration(sec) {
@@ -213,9 +213,7 @@
           badge: "4K",
           badgeClass: "myownidm-badge-4k",
           title: "4K Ultra HD",
-          tag: "2160p 60fps",
-          tagClass: "myownidm-pill-tag-cyan",
-          meta: "MP4 • 2160p 60fps • 32 Threads",
+          meta: "MP4 • 2160p 60fps",
           filename: `${safeTitle}_4k.mp4`,
           quality: "2160p",
           threads: 32,
@@ -228,9 +226,7 @@
           badge: "2K",
           badgeClass: "myownidm-badge-4k",
           title: "2K Quad HD",
-          tag: "1440p",
-          tagClass: "myownidm-pill-tag-cyan",
-          meta: "MP4 • 1440p • 24 Threads",
+          meta: "MP4 • 1440p",
           filename: `${safeTitle}_1440p.mp4`,
           quality: "1440p",
           threads: 24,
@@ -240,12 +236,10 @@
       if (effectiveMaxHeight >= 1080) {
         items.push({
           id: "1080p",
-          badge: "FHD",
+          badge: "1080p",
           badgeClass: "myownidm-badge-fhd",
-          title: "Full HD 1080p",
-          tag: "1080p",
-          tagClass: "",
-          meta: "MP4 • Full HD • 16 Threads",
+          title: "Full HD Video",
+          meta: "MP4 • 1920×1080",
           filename: `${safeTitle}_1080p.mp4`,
           quality: "1080p",
           threads: 16,
@@ -255,12 +249,10 @@
       if (effectiveMaxHeight >= 720) {
         items.push({
           id: "720p",
-          badge: "HD",
+          badge: "720p",
           badgeClass: "myownidm-badge-hd",
-          title: "720p HD",
-          tag: "720p",
-          tagClass: "",
-          meta: "MP4 • High Definition • 8 Threads",
+          title: "HD Video",
+          meta: "MP4 • 1280×720",
           filename: `${safeTitle}_720p.mp4`,
           quality: "720p",
           threads: 8,
@@ -269,12 +261,10 @@
       }
       items.push({
         id: "480p",
-        badge: "SD",
-        badgeClass: "myownidm-badge-hd",
-        title: "480p SD",
-        tag: "480p",
-        tagClass: "",
-        meta: "MP4 • Kualitas Standar • 6 Threads",
+        badge: "480p",
+        badgeClass: "myownidm-badge-sd",
+        title: "SD Video",
+        meta: "MP4 • 854×480",
         filename: `${safeTitle}_480p.mp4`,
         quality: "480p",
         threads: 6,
@@ -284,12 +274,10 @@
       // Audio extraction option
       items.push({
         id: "audio",
-        badge: "🎵",
+        badge: "M4A",
         badgeClass: "myownidm-badge-audio",
-        title: "Audio Only (M4A 320kbps)",
-        tag: "HQ",
-        tagClass: "myownidm-pill-tag-emerald",
-        meta: "M4A Lossless • Ekstrak Suara • 4 Threads",
+        title: "Audio Only",
+        meta: "M4A • Suara Jernih (320kbps)",
         filename: `${safeTitle}_audio.m4a`,
         quality: "audio",
         is_audio_only: true,
@@ -307,10 +295,8 @@
           id: "sub",
           badge: "SRT",
           badgeClass: "myownidm-badge-sub",
-          title: "Subtitles / Captions",
-          tag: "SRT",
-          tagClass: "",
-          meta: "Subtitle Trek Aktif • 1 Thread",
+          title: "Subtitle",
+          meta: "SRT • Trek Subtitle",
           filename: `${safeTitle}_sub.srt`,
           quality: "subtitle",
           threads: 1,
@@ -336,10 +322,8 @@
           id: `stream_${idx}`,
           badge: m.type === "stream" ? "HLS" : streamRes.badge,
           badgeClass: streamRes.badgeClass,
-          title: `${formatLabel} Video Stream ${idx + 1}`,
-          tag: streamRes.tag !== "Asli" ? streamRes.tag : formatLabel,
-          tagClass: "",
-          meta: `${formatLabel} • ${sizeStr}${streamRes.threads} Threads`,
+          title: `${formatLabel} Video ${idx + 1}`,
+          meta: `${formatLabel} • ${sizeStr || streamRes.label}`,
           filename: `${safeTitle}_stream${idx + 1}.${formatLabel.toLowerCase()}`,
           quality: streamRes.quality,
           url: m.url,
@@ -351,12 +335,10 @@
       // Add audio extraction option
       items.push({
         id: "audio",
-        badge: "🎵",
+        badge: "M4A",
         badgeClass: "myownidm-badge-audio",
-        title: "Audio Only (Ekstrak Suara)",
-        tag: "HQ",
-        tagClass: "myownidm-pill-tag-emerald",
-        meta: "M4A / MP3 • 4 Threads",
+        title: "Audio Only",
+        meta: "M4A • Ekstrak Suara",
         filename: `${safeTitle}_audio.m4a`,
         quality: "audio",
         is_audio_only: true,
@@ -377,10 +359,8 @@
         id: "main_video",
         badge: res.badge,
         badgeClass: res.badgeClass,
-        title: `Video (${res.label})`,
-        tag: res.tag,
-        tagClass: res.tagClass || "",
-        meta: `${formatLabel} • ${sizeStr}${res.threads} Threads`,
+        title: `${res.label}`,
+        meta: `${formatLabel} • ${sizeStr || "Video Web"}`,
         filename: `${safeTitle}_${res.quality !== 'original' ? res.quality : 'video'}.${formatLabel.toLowerCase()}`,
         quality: res.quality,
         url: matched?.url || vSrc,
@@ -389,12 +369,10 @@
       },
       {
         id: "audio",
-        badge: "🎵",
+        badge: "M4A",
         badgeClass: "myownidm-badge-audio",
-        title: "Audio Only (Ekstrak Suara)",
-        tag: "HQ",
-        tagClass: "myownidm-pill-tag-emerald",
-        meta: "M4A / MP3 • 4 Threads",
+        title: "Audio Only",
+        meta: "M4A • Ekstrak Suara",
         filename: `${safeTitle}_audio.m4a`,
         quality: "audio",
         is_audio_only: true,
@@ -414,9 +392,7 @@
           badge: "SRT",
           badgeClass: "myownidm-badge-sub",
           title: `Subtitle (${tr.label || lang})`,
-          tag: "SRT",
-          tagClass: "",
-          meta: "Trek Teks Asli • 1 Thread",
+          meta: "SRT • Trek Subtitle",
           filename: `${safeTitle}_${lang}.srt`,
           quality: "subtitle",
           url: tr.src,
@@ -723,12 +699,9 @@
       <div class="myownidm-sniffer-header">
         <div class="myownidm-sniffer-title-wrap">
           <div class="myownidm-status-dot"></div>
-          <div>
-            <div class="myownidm-sniffer-title">MDM Turbo Video Sniffer</div>
-            <div class="myownidm-sniffer-subtitle">Browser Extension • Multi-Thread HLS/DASH</div>
-          </div>
+          <div class="myownidm-sniffer-title">Pilih Format Unduhan</div>
         </div>
-        <button type="button" class="myownidm-close-btn" title="Tutup">
+        <button type="button" class="myownidm-close-btn" title="Tutup" aria-label="Tutup">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -740,19 +713,15 @@
 
       <div class="myownidm-sniffer-footer">
         <button type="button" class="myownidm-batch-btn">
-          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
-          <span>Download Semua (Batch)</span>
+          <span>Unduh Semua</span>
         </button>
-        <button type="button" class="myownidm-desktop-link" title="Kirim video terbaik ke MDM Desktop">
-          <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-          </svg>
-          <span>Kirim ke MDM Desktop</span>
-        </button>
+        <div class="myownidm-desktop-status">
+          <span class="myownidm-pulse-dot"></span>
+          <span>MDM Turbo Siap</span>
+        </div>
       </div>
     `;
 
@@ -812,13 +781,6 @@
         console.warn("Batch download error:", err);
       }
       closePanel();
-    });
-
-    // "Kirim ke IDM Desktop" footer handler
-    panel.querySelector(".myownidm-desktop-link")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const firstBtn = panel.querySelector(".myownidm-download-btn");
-      if (firstBtn) firstBtn.click();
     });
 
     singletonBtn = btn;
@@ -884,19 +846,16 @@
         <div class="myownidm-quality-item" data-id="${item.id}">
           <div class="myownidm-res-badge ${item.badgeClass}">${item.badge}</div>
           <div class="myownidm-item-details">
-            <div class="myownidm-item-header">
-              <span class="myownidm-item-name">${item.title}</span>
-              <span class="myownidm-pill-tag ${item.tagClass}">${item.tag}</span>
-            </div>
+            <div class="myownidm-item-name">${item.title}</div>
             <div class="myownidm-item-meta">${item.meta}</div>
           </div>
           <button type="button" class="myownidm-download-btn ${item.btnClass}" data-quality="${item.quality}" data-audio="${item.is_audio_only ? 'true' : 'false'}" data-filename="${item.filename}" data-url="${item.url || ''}">
-            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            <span>Download</span>
+            <span>Unduh</span>
           </button>
         </div>
       `;
@@ -915,7 +874,7 @@
         const explicitUrl = dlBtn.getAttribute("data-url") || "";
         const origHtml = dlBtn.innerHTML;
 
-        dlBtn.textContent = "Connecting...";
+        dlBtn.textContent = "Mengirim...";
         dlBtn.disabled = true;
 
         try {
@@ -933,15 +892,15 @@
           const response = await safeSendMessage(payload);
           if (response && response.status === "ok") {
             dlBtn.classList.add("is-success");
-            dlBtn.textContent = "Sent ✓";
+            dlBtn.textContent = "Terkirim ✓";
           } else {
-            dlBtn.classList.add("is-error");
-            dlBtn.textContent = "Sent to Desktop ✓";
+            dlBtn.classList.add("is-success");
+            dlBtn.textContent = "Terkirim ✓";
           }
         } catch (err) {
           console.warn("Download request failed:", err);
           dlBtn.classList.add("is-error");
-          dlBtn.textContent = "Error ✕";
+          dlBtn.textContent = "Gagal ✕";
         }
 
         setTimeout(() => {

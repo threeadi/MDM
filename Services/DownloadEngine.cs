@@ -136,13 +136,19 @@ public class DownloadEngine
         return clean;
     }
 
-    public static async Task<ProbeResult> ProbeUrlAsync(string url, string? referer = null, CancellationToken ct = default)
+    public static Task<ProbeResult> ProbeUrlAsync(string url, string? referer, CancellationToken ct) =>
+        ProbeUrlAsync(url, referer, null, ct);
+
+    public static Task<ProbeResult> ProbeUrlAsync(string url, CancellationToken ct) =>
+        ProbeUrlAsync(url, null, null, ct);
+
+    public static async Task<ProbeResult> ProbeUrlAsync(string url, string? referer = null, string? quality = null, CancellationToken ct = default)
     {
         string effectiveUrl = GetEffectiveUrl(url, referer);
 
         if (YtDlpService.IsVideoPlatformUrl(effectiveUrl) || effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase))
         {
-            var ytProbe = await YtDlpService.ProbeAsync(effectiveUrl, ct);
+            var ytProbe = await YtDlpService.ProbeAsync(effectiveUrl, quality, ct);
             ytProbe.IsHls = true;
             return ytProbe;
         }
@@ -219,7 +225,7 @@ public class DownloadEngine
         string? quality = null)
     {
         string effectiveUrl = GetEffectiveUrl(url, referer);
-        var probe = await ProbeUrlAsync(effectiveUrl, referer);
+        var probe = await ProbeUrlAsync(effectiveUrl, referer, quality);
 
         string finalFilename = !string.IsNullOrWhiteSpace(filename) ? SanitizeFilename(filename) : probe.Filename;
         string filePath = Path.Combine(saveDir, finalFilename);
