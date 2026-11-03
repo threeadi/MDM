@@ -25,6 +25,7 @@ public class ProbeResult
     public bool SupportsRange { get; set; }
     public string Category { get; set; } = "Umum";
     public string? ContentType { get; set; }
+    public bool IsHls { get; set; }
 }
 
 public static class CategoryHelper
@@ -95,9 +96,58 @@ public class DownloadEngine
         _telegramService = new TelegramService(database);
     }
 
+    public static string CleanStreamUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+        if (!url.Contains("bytestart") && !url.Contains("byteend"))
+        {
+            return url;
+        }
+
+        try
+        {
+            var uri = new Uri(url);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            query.Remove("bytestart");
+            query.Remove("byteend");
+            var builder = new UriBuilder(uri)
+            {
+                Query = query.ToString()
+            };
+            return builder.Uri.ToString();
+        }
+        catch
+        {
+            return System.Text.RegularExpressions.Regex.Replace(url, @"[?&]bytestart=\d+", "")
+                        .Replace(@"[?&]byteend=\d+", "");
+        }
+    }
+
+    public static string GetEffectiveUrl(string url, string? referer)
+    {
+        string clean = CleanStreamUrl(url);
+        if (clean.Contains("googlevideo.com", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.IsNullOrEmpty(referer) && (referer.Contains("youtube.com") || referer.Contains("youtu.be")))
+            {
+                return referer;
+            }
+        }
+        return clean;
+    }
+
     public static async Task<ProbeResult> ProbeUrlAsync(string url, string? referer = null, CancellationToken ct = default)
     {
-        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        string effectiveUrl = GetEffectiveUrl(url, referer);
+
+        if (YtDlpService.IsVideoPlatformUrl(effectiveUrl) || effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase))
+        {
+            var ytProbe = await YtDlpService.ProbeAsync(effectiveUrl, ct);
+            ytProbe.IsHls = true;
+            return ytProbe;
+        }
+
+        using var req = new HttpRequestMessage(HttpMethod.Get, effectiveUrl);
         req.Headers.Range = new RangeHeaderValue(0, 0);
         if (!string.IsNullOrEmpty(referer))
         {
@@ -131,7 +181,7 @@ public class DownloadEngine
         {
             try
             {
-                var uri = new Uri(url);
+                var uri = new Uri(effectiveUrl);
                 detectedFilename = Path.GetFileName(uri.LocalPath);
             }
             catch { }
@@ -144,29 +194,42 @@ public class DownloadEngine
 
         detectedFilename = SanitizeFilename(detectedFilename);
 
+        string? mediaType = resp.Content.Headers.ContentType?.MediaType;
+        bool isHls = (mediaType != null && (mediaType.Contains("mpegurl") || mediaType.Contains("m3u8"))) ||
+                     effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase);
+
         return new ProbeResult
         {
             Filename = detectedFilename,
             TotalBytes = totalBytes,
             SupportsRange = supportsRange,
             Category = CategoryHelper.DetectCategory(detectedFilename),
-            ContentType = resp.Content.Headers.ContentType?.MediaType
+            ContentType = mediaType,
+            IsHls = isHls
         };
     }
 
-    public async Task<DownloadTask> ProbeAndCreateTaskAsync(string url, string saveDir, string? filename = null, int connections = 8, string? referer = null, string? category = null)
+    public async Task<DownloadTask> ProbeAndCreateTaskAsync(
+        string url,
+        string saveDir,
+        string? filename = null,
+        int connections = 8,
+        string? referer = null,
+        string? category = null,
+        string? quality = null)
     {
-        var probe = await ProbeUrlAsync(url, referer);
+        string effectiveUrl = GetEffectiveUrl(url, referer);
+        var probe = await ProbeUrlAsync(effectiveUrl, referer);
 
         string finalFilename = !string.IsNullOrWhiteSpace(filename) ? SanitizeFilename(filename) : probe.Filename;
         string filePath = Path.Combine(saveDir, finalFilename);
 
-        int workerCount = (probe.SupportsRange && probe.TotalBytes is > 0) ? Math.Max(1, Math.Min(connections, 32)) : 1;
+        int workerCount = (probe.SupportsRange && !probe.IsHls && probe.TotalBytes is > 0) ? Math.Max(1, Math.Min(connections, 32)) : 1;
         var segments = CalculateSegments(probe.TotalBytes, workerCount);
 
         var task = new DownloadTask
         {
-            Url = url,
+            Url = effectiveUrl,
             Filename = finalFilename,
             SaveDir = saveDir,
             FilePath = filePath,
@@ -177,7 +240,9 @@ public class DownloadEngine
             SupportsRange = probe.SupportsRange,
             Category = category ?? probe.Category,
             Segments = segments,
-            Referer = referer
+            Referer = referer,
+            Quality = quality,
+            IsHls = probe.IsHls
         };
 
         _database.UpsertTask(task);
@@ -255,9 +320,19 @@ public class DownloadEngine
 
     private async Task ExecuteDownloadAsync(DownloadTask task, CancellationToken ct)
     {
-        if (task.Url.StartsWith("tg://", StringComparison.OrdinalIgnoreCase))
+        string effectiveUrl = GetEffectiveUrl(task.Url, task.Referer);
+        task.Url = effectiveUrl;
+
+        if (effectiveUrl.StartsWith("tg://", StringComparison.OrdinalIgnoreCase))
         {
             await ExecuteTelegramDownloadAsync(task, ct);
+            return;
+        }
+
+        bool isStream = YtDlpService.IsVideoPlatformUrl(effectiveUrl) || task.IsHls || effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase);
+        if (isStream)
+        {
+            await ExecuteYtDlpDownloadAsync(task, ct);
             return;
         }
 
@@ -425,6 +500,54 @@ public class DownloadEngine
 
         _database.UpsertTask(task);
         TaskCompleted?.Invoke(this, task.Id);
+    }
+
+    private async Task ExecuteYtDlpDownloadAsync(DownloadTask task, CancellationToken ct)
+    {
+        var taskLimiter = GetOrCreateTaskLimiter(task.Id, task.SpeedLimitBps ?? 0);
+        if (task.SpeedLimitBps.HasValue)
+        {
+            taskLimiter.SetRate(task.SpeedLimitBps.Value);
+        }
+
+        void OnProgress(long downloaded, long? total, long speed, long? eta)
+        {
+            task.DownloadedBytes = downloaded;
+            if (total.HasValue && total.Value > 0)
+            {
+                task.TotalBytes = total.Value;
+            }
+
+            ProgressUpdated?.Invoke(this, new DownloadProgressEventArgs
+            {
+                TaskId = task.Id,
+                DownloadedBytes = downloaded,
+                TotalBytes = task.TotalBytes,
+                SpeedBps = speed,
+                EtaSeconds = eta,
+                Segments = task.Segments
+            });
+        }
+
+        await YtDlpService.DownloadAsync(task, taskLimiter, OnProgress, ct);
+
+        // Synchronize actual file size from disk (1:1 with my-own-idm)
+        long actualLen = File.Exists(task.FilePath) ? new FileInfo(task.FilePath).Length : 0;
+        if (actualLen > 0)
+        {
+            task.DownloadedBytes = actualLen;
+            task.TotalBytes = actualLen;
+            task.Status = DownloadStatus.Completed;
+            task.CompletedAt = DateTime.Now.ToString("o");
+            task.ErrorMessage = null;
+            foreach (var s in task.Segments) s.IsFinished = true;
+            _database.UpsertTask(task);
+            TaskCompleted?.Invoke(this, task.Id);
+        }
+        else
+        {
+            throw new InvalidOperationException("Unduhan stream selesai tetapi berkas hasil akhir tidak ditemukan di disk.");
+        }
     }
 
     private async Task ExecuteTelegramDownloadAsync(DownloadTask task, CancellationToken ct)

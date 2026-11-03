@@ -19,8 +19,9 @@ public partial class AddDownloadDialog : Window
     public string SelectedCategory => (CategoryComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Umum";
     public bool StartImmediately => StartNowCheckBox.IsChecked == true;
     public string? Referer { get; set; }
+    public string? Quality { get; set; }
 
-    public AddDownloadDialog(string? initialUrl = null, string? initialFilename = null, string? referer = null)
+    public AddDownloadDialog(string? initialUrl = null, string? initialFilename = null, string? referer = null, string? quality = null)
     {
         InitializeComponent();
 
@@ -32,6 +33,7 @@ public partial class AddDownloadDialog : Window
 
         SaveDirTextBox.Text = defaultDir;
         Referer = referer;
+        Quality = quality;
 
         if (!string.IsNullOrEmpty(initialUrl))
         {

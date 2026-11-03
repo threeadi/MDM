@@ -77,14 +77,19 @@ public partial class MainWindow : Window
             // Browser extension download requested listener
             ViewModel.OnBrowserDownloadRequested = (req) =>
             {
+                if (WindowState == WindowState.Minimized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+                Show();
                 Activate();
                 Topmost = true;
                 Topmost = false;
                 Focus();
 
-                var dlg = new AddDownloadDialog(req.Url, req.Filename, req.Referer)
+                var dlg = new AddDownloadDialog(req.Url, req.Filename, req.Referer, req.Quality)
                 {
-                    Owner = this
+                    Owner = this.IsVisible ? this : null
                 };
 
                 if (dlg.ShowDialog() == true)
@@ -102,7 +107,8 @@ public partial class MainWindow : Window
                         dlg.ConnectionThreads,
                         dlg.Referer,
                         dlg.SelectedCategory,
-                        dlg.StartImmediately
+                        dlg.StartImmediately,
+                        dlg.Quality
                     );
                 }
             };
@@ -196,7 +202,8 @@ public partial class MainWindow : Window
                 dlg.ConnectionThreads,
                 dlg.Referer,
                 dlg.SelectedCategory,
-                dlg.StartImmediately
+                dlg.StartImmediately,
+                dlg.Quality
             );
         }
     }

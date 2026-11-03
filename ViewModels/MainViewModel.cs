@@ -1061,9 +1061,10 @@ public class MainViewModel : INotifyPropertyChanged
         int threads,
         string? referer = null,
         string? category = null,
-        bool startImmediately = true)
+        bool startImmediately = true,
+        string? quality = null)
     {
-        var task = await _engine.ProbeAndCreateTaskAsync(url, saveDir, filename, threads, referer, category);
+        var task = await _engine.ProbeAndCreateTaskAsync(url, saveDir, filename, threads, referer, category, quality);
         if (!startImmediately)
         {
             task.Status = DownloadStatus.Paused;

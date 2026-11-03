@@ -33,6 +33,8 @@ public class DownloadTask
     public List<DownloadSegment> Segments { get; set; } = [];
     public string? Referer { get; set; }
     public long? SpeedLimitBps { get; set; }
+    public string? Quality { get; set; }
+    public bool IsHls { get; set; }
     public string? Source { get; set; }
     public string? TelegramChannelTitle { get; set; }
 

@@ -13,6 +13,9 @@ public class BrowserDownloadRequest
     public string? Referer { get; set; }
     public string? Cookies { get; set; }
     public string? UserAgent { get; set; }
+    public string? Quality { get; set; }
+    public bool IsAudioOnly { get; set; }
+    public int Threads { get; set; } = 8;
 }
 
 public class IpcServer
@@ -125,6 +128,9 @@ public class IpcServer
                 var json = JsonDocument.Parse(body).RootElement;
                 string? url = json.TryGetProperty("url", out var u) ? u.GetString() : null;
                 string? filename = json.TryGetProperty("filename", out var f) ? f.GetString() : null;
+                string? quality = json.TryGetProperty("quality", out var q) ? q.GetString() : null;
+                bool isAudioOnly = json.TryGetProperty("is_audio_only", out var ao) && ao.GetBoolean();
+                int threads = json.TryGetProperty("threads", out var th) && th.TryGetInt32(out int t) ? t : 8;
                 string? referer = null;
                 string? cookies = null;
                 string? userAgent = null;
@@ -147,13 +153,23 @@ public class IpcServer
 
                 if (!string.IsNullOrEmpty(url))
                 {
-                    DownloadRequested?.Invoke(this, new BrowserDownloadRequest
+                    _ = Task.Run(() =>
                     {
-                        Url = url,
-                        Filename = filename,
-                        Referer = referer,
-                        Cookies = cookies,
-                        UserAgent = userAgent
+                        try
+                        {
+                            DownloadRequested?.Invoke(this, new BrowserDownloadRequest
+                            {
+                                Url = url,
+                                Filename = filename,
+                                Referer = referer,
+                                Cookies = cookies,
+                                UserAgent = userAgent,
+                                Quality = quality,
+                                IsAudioOnly = isAudioOnly,
+                                Threads = threads
+                            });
+                        }
+                        catch { }
                     });
                 }
             }
@@ -205,13 +221,17 @@ public class IpcServer
                                 var json = JsonDocument.Parse(jsonStr).RootElement;
                                 string? url = json.TryGetProperty("url", out var u) ? u.GetString() : null;
                                 string? filename = json.TryGetProperty("filename", out var f) ? f.GetString() : null;
+                                string? quality = json.TryGetProperty("quality", out var q) ? q.GetString() : null;
+                                string? referer = json.TryGetProperty("referer", out var r) ? r.GetString() : null;
 
                                 if (!string.IsNullOrEmpty(url))
                                 {
                                     DownloadRequested?.Invoke(this, new BrowserDownloadRequest
                                     {
                                         Url = url,
-                                        Filename = filename
+                                        Filename = filename,
+                                        Quality = quality,
+                                        Referer = referer
                                     });
                                 }
 

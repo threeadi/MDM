@@ -58,7 +58,9 @@ public class Database
                 segments_json TEXT,
                 category TEXT,
                 source TEXT,
-                telegram_channel_title TEXT
+                telegram_channel_title TEXT,
+                quality TEXT,
+                is_hls INTEGER DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS settings (
@@ -80,7 +82,7 @@ public class Database
         cmd.ExecuteNonQuery();
 
         // Safe migrations for existing databases
-        string[] columnsToAdd = ["category TEXT", "source TEXT", "telegram_channel_title TEXT"];
+        string[] columnsToAdd = ["category TEXT", "source TEXT", "telegram_channel_title TEXT", "quality TEXT", "is_hls INTEGER DEFAULT 0"];
         foreach (var col in columnsToAdd)
         {
             try
@@ -114,7 +116,7 @@ public class Database
         conn.Open();
 
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title FROM downloads ORDER BY created_at DESC";
+        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title, quality, is_hls FROM downloads ORDER BY created_at DESC";
 
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -182,6 +184,16 @@ public class Database
                 task.TelegramChannelTitle = reader.GetString(18);
             }
 
+            if (reader.FieldCount > 19 && !reader.IsDBNull(19))
+            {
+                task.Quality = reader.GetString(19);
+            }
+
+            if (reader.FieldCount > 20 && !reader.IsDBNull(20))
+            {
+                task.IsHls = reader.GetInt32(20) == 1;
+            }
+
             list.Add(task);
         }
 
@@ -195,8 +207,8 @@ public class Database
 
         using var cmd = conn.CreateCommand();
         cmd.CommandText = @"
-            INSERT INTO downloads (id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title)
-            VALUES (@id, @url, @filename, @save_dir, @file_path, @total_bytes, @downloaded_bytes, @status, @connections, @supports_range, @created_at, @completed_at, @error_message, @referer, @speed_limit_bps, @segments_json, @category, @source, @telegram_channel_title)
+            INSERT INTO downloads (id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title, quality, is_hls)
+            VALUES (@id, @url, @filename, @save_dir, @file_path, @total_bytes, @downloaded_bytes, @status, @connections, @supports_range, @created_at, @completed_at, @error_message, @referer, @speed_limit_bps, @segments_json, @category, @source, @telegram_channel_title, @quality, @is_hls)
             ON CONFLICT(id) DO UPDATE SET
                 url = excluded.url,
                 filename = excluded.filename,
@@ -214,7 +226,9 @@ public class Database
                 segments_json = excluded.segments_json,
                 category = excluded.category,
                 source = excluded.source,
-                telegram_channel_title = excluded.telegram_channel_title;
+                telegram_channel_title = excluded.telegram_channel_title,
+                quality = excluded.quality,
+                is_hls = excluded.is_hls;
         ";
 
         cmd.Parameters.AddWithValue("@id", task.Id);
@@ -236,6 +250,8 @@ public class Database
         cmd.Parameters.AddWithValue("@category", (object?)task.Category ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@source", (object?)task.Source ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@telegram_channel_title", (object?)task.TelegramChannelTitle ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@quality", (object?)task.Quality ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@is_hls", task.IsHls ? 1 : 0);
 
         cmd.ExecuteNonQuery();
     }
