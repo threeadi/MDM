@@ -256,15 +256,30 @@ if (typeof chrome !== "undefined" && chrome.webRequest?.onResponseStarted) {
         detectedMediaByTab[details.tabId] = [];
       }
 
-      // Parse content-length if available
-      const contentLengthHeader = details.responseHeaders?.find(
-        h => h.name.toLowerCase() === "content-length"
-      );
+      // Parse content-length or total size from content-range if available
       let contentLength = null;
-      if (contentLengthHeader?.value) {
-        const parsedLen = parseInt(contentLengthHeader.value, 10);
-        if (!isNaN(parsedLen) && parsedLen > 0) {
-          contentLength = parsedLen;
+      const contentRangeHeader = details.responseHeaders?.find(
+        h => h.name.toLowerCase() === "content-range"
+      );
+      if (contentRangeHeader?.value) {
+        const rangeMatch = contentRangeHeader.value.match(/\/(\d+)/);
+        if (rangeMatch && rangeMatch[1]) {
+          const totalFromRange = parseInt(rangeMatch[1], 10);
+          if (!isNaN(totalFromRange) && totalFromRange > 0) {
+            contentLength = totalFromRange;
+          }
+        }
+      }
+
+      if (!contentLength) {
+        const contentLengthHeader = details.responseHeaders?.find(
+          h => h.name.toLowerCase() === "content-length"
+        );
+        if (contentLengthHeader?.value) {
+          const parsedLen = parseInt(contentLengthHeader.value, 10);
+          if (!isNaN(parsedLen) && parsedLen > 0) {
+            contentLength = parsedLen;
+          }
         }
       }
 
@@ -300,7 +315,7 @@ if (typeof chrome !== "undefined" && chrome.webRequest?.onResponseStarted) {
           chrome.action?.setBadgeText?.({ tabId: details.tabId, text: String(count) });
           chrome.action?.setBadgeBackgroundColor?.({ tabId: details.tabId, color: "#2563eb" });
         } catch (e) {}
-      } else if (contentLength && !existing.contentLength) {
+      } else if (contentLength && (!existing.contentLength || contentLength > existing.contentLength)) {
         existing.contentLength = contentLength;
         existing.sizeFormatted = formatBytes(contentLength);
       }

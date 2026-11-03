@@ -9,7 +9,7 @@
       if (window.innerWidth > 0 && window.innerWidth < 160 && window.innerHeight > 0 && window.innerHeight < 120) {
         return;
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const dismissedVideos = new WeakSet();
@@ -213,12 +213,46 @@
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   }
 
-  function formatEstSize(sec, mbps) {
-    if (!sec || isNaN(sec) || sec <= 0) return "";
-    const mb = (sec * mbps) / 8;
-    if (mb < 0.1) return "";
-    if (mb < 1) return `${Math.round(mb * 1024)} KB`;
-    return `${mb.toFixed(1)} MB`;
+  function formatBytes(bytes) {
+    if (!bytes || bytes <= 0 || isNaN(bytes)) return "";
+    const units = ["B", "KB", "MB", "GB"];
+    let i = 0;
+    let val = Number(bytes);
+    while (val >= 1024 && i < units.length - 1) {
+      val /= 1024;
+      i++;
+    }
+    return `${val.toFixed(val >= 100 || i === 0 ? 0 : 1)} ${units[i]}`;
+  }
+
+  function getResourceSize(url) {
+    if (!url || typeof performance === "undefined" || !performance.getEntriesByName) return "";
+    try {
+      const entries = performance.getEntriesByName(url);
+      if (entries && entries.length > 0) {
+        const entry = entries[entries.length - 1];
+        const bytes = entry.encodedBodySize || entry.decodedBodySize || entry.transferSize;
+        if (bytes && bytes > 1024) {
+          return formatBytes(bytes);
+        }
+      }
+    } catch (e) { }
+    return "";
+  }
+
+  function getResourceSize(url) {
+    if (!url || typeof performance === "undefined" || !performance.getEntriesByName) return "";
+    try {
+      const entries = performance.getEntriesByName(url);
+      if (entries && entries.length > 0) {
+        const entry = entries[entries.length - 1];
+        const bytes = entry.encodedBodySize || entry.decodedBodySize || entry.transferSize;
+        if (bytes && bytes > 1024) {
+          return formatBytes(bytes);
+        }
+      }
+    } catch (e) {}
+    return "";
   }
 
   function generateRealMediaItems(video = null, sniffedMedia = [], host = "", rawTitle = "") {
@@ -229,7 +263,6 @@
     const vWidth = video?.videoWidth || 0;
     const vSrc = video?.currentSrc || video?.src || "";
     const res = classifyResolution(vHeight, vWidth, rawTitle || vSrc);
-    const dur = video?.duration || 0;
 
     // Scenario 1: YouTube
     if (isYouTube) {
@@ -237,36 +270,29 @@
       const effectiveMaxHeight = vHeight > 0 ? vHeight : (res.quality === "2160p" ? 2160 : (res.quality === "1440p" ? 1440 : 1080));
       const items = [];
 
-      const s1080 = formatEstSize(dur, 2.5);
-      const s720 = formatEstSize(dur, 1.3);
-      const s480 = formatEstSize(dur, 0.65);
-      const sAudio = formatEstSize(dur, 0.16);
-
       // Check if 4K or 2K is present or indicated
       const is4K = effectiveMaxHeight >= 2160 || (rawTitle && (rawTitle.includes("4K") || rawTitle.includes("2160p")));
       const is2K = effectiveMaxHeight >= 1440 || (rawTitle && (rawTitle.includes("2K") || rawTitle.includes("1440p")));
 
       if (is4K) {
-        const s4k = formatEstSize(dur, 8.0);
         items.push({
           id: "4k",
           badge: "4K",
           badgeClass: "myownidm-badge-4k",
           title: "4K UHD",
-          meta: `MP4 • ${s4k || "128.0 MB"}`,
+          meta: "MP4 • 2160p",
           filename: `${safeTitle}_4k.mp4`,
           quality: "2160p",
           threads: 32
         });
       }
       if (is2K) {
-        const s1440 = formatEstSize(dur, 4.5);
         items.push({
           id: "1440p",
           badge: "2K",
           badgeClass: "myownidm-badge-4k",
           title: "2K QHD",
-          meta: `MP4 • ${s1440 || "78.5 MB"}`,
+          meta: "MP4 • 1440p",
           filename: `${safeTitle}_1440p.mp4`,
           quality: "1440p",
           threads: 24
@@ -279,7 +305,7 @@
         badge: "1080p",
         badgeClass: "myownidm-badge-fhd",
         title: "1080p FHD",
-        meta: `MP4 • ${s1080 || "48.2 MB"}`,
+        meta: "MP4 • FHD",
         filename: `${safeTitle}_1080p.mp4`,
         quality: "1080p",
         threads: 16
@@ -291,29 +317,31 @@
         badge: "720p",
         badgeClass: "myownidm-badge-hd",
         title: "720p HD",
-        meta: `MP4 • ${s720 || "26.4 MB"}`,
+        meta: "MP4 • HD",
         filename: `${safeTitle}_720p.mp4`,
         quality: "720p",
         threads: 8
       });
+
+      // 480p SD
       items.push({
         id: "480p",
         badge: "480p",
         badgeClass: "myownidm-badge-sd",
         title: "480p SD",
-        meta: `MP4 • ${s480 || "14.1 MB"}`,
+        meta: "MP4 • SD",
         filename: `${safeTitle}_480p.mp4`,
         quality: "480p",
         threads: 6
       });
 
-      // Audio extraction option
+      // Audio Only
       items.push({
         id: "audio",
         badge: "M4A",
         badgeClass: "myownidm-badge-audio",
         title: "Audio Only",
-        meta: `M4A • ${sAudio || "4.5 MB"}`,
+        meta: "M4A • Audio",
         filename: `${safeTitle}_audio.m4a`,
         quality: "audio",
         is_audio_only: true,
@@ -351,13 +379,14 @@
       const items = validSniffed.map((m, idx) => {
         const streamRes = classifyResolution(0, 0, m.url);
         const formatLabel = m.format || (m.type === "stream" ? "M3U8" : "MP4");
-        const sizeStr = m.sizeFormatted ? `${m.sizeFormatted}` : (dur ? formatEstSize(dur, 1.5) : streamRes.label);
+        const realSize = m.sizeFormatted || (m.contentLength ? formatBytes(m.contentLength) : "") || getResourceSize(m.url);
+        const metaStr = realSize ? `${formatLabel} • ${realSize}` : `${formatLabel} • ${streamRes.tag || streamRes.quality || "Stream"}`;
         return {
           id: `stream_${idx}`,
           badge: m.type === "stream" ? "HLS" : streamRes.badge,
           badgeClass: streamRes.badgeClass,
           title: `${streamRes.label || formatLabel + " Video " + (idx + 1)}`,
-          meta: `${formatLabel} • ${sizeStr}`,
+          meta: metaStr,
           filename: `${safeTitle}_stream${idx + 1}.${formatLabel.toLowerCase()}`,
           quality: streamRes.quality,
           url: m.url,
@@ -366,13 +395,14 @@
       });
 
       // Add audio extraction option
-      const sAudio = formatEstSize(dur, 0.16);
+      const sniffedAudio = validSniffed.find(m => m.format === "MP3" || m.format === "M4A" || (m.url && m.url.includes("audio")));
+      const audioSize = sniffedAudio?.sizeFormatted || (sniffedAudio?.contentLength ? formatBytes(sniffedAudio.contentLength) : "");
       items.push({
         id: "audio",
         badge: "M4A",
         badgeClass: "myownidm-badge-audio",
         title: "Audio Only",
-        meta: `M4A • ${sAudio || "Ekstrak Suara"}`,
+        meta: audioSize ? `M4A • ${audioSize}` : "M4A • Audio",
         filename: `${safeTitle}_audio.m4a`,
         quality: "audio",
         is_audio_only: true,
@@ -383,9 +413,10 @@
     }
 
     // Scenario 3: Single HTML5 Video Element / Generic Web Video (Twitter, TikTok, Instagram, News, etc.)
-    const matched = validSniffed.find(m => m.url === vSrc) || validSniffed[0];
+    const matched = validSniffed.find(m => m.url === vSrc) || validSniffed.find(m => vSrc && vSrc.includes(m.url)) || validSniffed[0];
     const formatLabel = matched?.format || (vSrc.includes(".webm") ? "WEBM" : (vSrc.includes(".m3u8") ? "M3U8" : "MP4"));
-    const sizeStr = matched?.sizeFormatted ? `${matched.sizeFormatted}` : (dur ? formatEstSize(dur, 1.2) : "Video Web");
+    const realSize = matched?.sizeFormatted || (matched?.contentLength ? formatBytes(matched.contentLength) : "") || getResourceSize(vSrc);
+    const metaStr = realSize ? `${formatLabel} • ${realSize}` : `${formatLabel} • ${res.tag || res.quality || "Video"}`;
 
     const items = [
       {
@@ -393,7 +424,7 @@
         badge: res.badge,
         badgeClass: res.badgeClass,
         title: `${res.label}`,
-        meta: `${formatLabel} • ${sizeStr}`,
+        meta: metaStr,
         filename: `${safeTitle}_${res.quality !== 'original' ? res.quality : 'video'}.${formatLabel.toLowerCase()}`,
         quality: res.quality,
         url: matched?.url || vSrc,
@@ -404,7 +435,7 @@
         badge: "M4A",
         badgeClass: "myownidm-badge-audio",
         title: "Audio Only",
-        meta: `M4A • ${formatEstSize(dur, 0.16) || "Ekstrak Suara"}`,
+        meta: "M4A • Audio",
         filename: `${safeTitle}_audio.m4a`,
         quality: "audio",
         is_audio_only: true,
@@ -447,7 +478,7 @@
         if (resp && resp.tabTitle && !isGenericTitle(resp.tabTitle)) {
           cachedTabTitle = resp.tabTitle;
         }
-      }).catch(() => {});
+      }).catch(() => { });
     }
   }
   fetchTabTitleIfIframe();
@@ -844,7 +875,7 @@
       if (resp?.media && Array.isArray(resp.media)) {
         sniffedMedia = resp.media;
       }
-    } catch (e) {}
+    } catch (e) { }
 
     const presets = generateRealMediaItems(video, sniffedMedia, host, rawTitle);
     const videoStreamsCount = presets.filter(p => !p.is_audio_only && p.quality !== "subtitle").length;
@@ -1116,7 +1147,7 @@
       const video = target.tagName === "VIDEO"
         ? target
         : (typeof target.querySelector === "function" && target.querySelector("video")) ||
-          (typeof target.closest === "function" && (target.closest("video") || target.closest("#movie_player, .html5-video-player, [data-player]")?.querySelector("video")));
+        (typeof target.closest === "function" && (target.closest("video") || target.closest("#movie_player, .html5-video-player, [data-player]")?.querySelector("video")));
 
       if (video && isEligiblePlayerVideo(video)) {
         showForVideo(video);

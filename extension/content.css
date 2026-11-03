@@ -224,11 +224,11 @@
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 8px !important;
+  gap: 6px !important;
   background: #12161f !important;
   border: 1px solid #232834 !important;
   border-radius: 6px !important;
-  padding: 6px 9px !important;
+  padding: 5px 8px !important;
   transition: border-color 0.15s ease, background 0.15s ease !important;
   box-sizing: border-box !important;
 }
@@ -248,7 +248,7 @@
 }
 
 .myownidm-item-name {
-  font-size: 11.5px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
   color: #f1f5f9 !important;
   white-space: nowrap !important;
@@ -268,9 +268,9 @@
   display: flex !important;
   align-items: center !important;
   gap: 4px !important;
-  padding: 3px 9px !important;
+  padding: 3px 8px !important;
   border-radius: 5px !important;
-  font-size: 11px !important;
+  font-size: 10.5px !important;
   font-weight: 500 !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
