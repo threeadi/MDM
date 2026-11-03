@@ -1,18 +1,18 @@
-/* MDM Turbo Floating Video Downloader Bar & Format Selector - Stitch Kinetic Telemetry Design System */
+/* MDM Turbo Floating Video Downloader Bar & Format Selector - Stitch Kinetic Telemetry Design System (Compact Edition) */
 
-/* 1. Main Floating Pill Button (Kotak Judul Video / Nama File) */
+/* 1. Main Floating Pill Button (Kotak Judul Video / Nama File - Compact) */
 .myownidm-floating-bar {
   position: fixed !important;
   z-index: 2147483647 !important;
   pointer-events: auto !important;
   isolation: isolate !important;
-  display: flex !important;
+  display: none;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 6px !important;
   background: #171c24 !important;
   border: 1px solid #232834 !important;
-  border-radius: 8px !important;
-  padding: 6px 8px 6px 12px !important;
+  border-radius: 7px !important;
+  padding: 4px 6px 4px 10px !important;
   box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(35, 40, 52, 0.9) !important;
   cursor: pointer !important;
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -23,7 +23,7 @@
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   opacity: 1 !important;
   box-sizing: border-box !important;
-  max-width: 380px !important;
+  max-width: 270px !important;
 }
 
 .myownidm-floating-bar:hover {
@@ -40,7 +40,7 @@
 .myownidm-bar-content {
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 6px !important;
   cursor: pointer !important;
   min-width: 0 !important;
   flex: 1 1 auto !important;
@@ -50,31 +50,31 @@
 .myownidm-bar-icon {
   color: #60a5fa !important;
   flex-shrink: 0 !important;
-  width: 14px !important;
-  height: 14px !important;
+  width: 13px !important;
+  height: 13px !important;
 }
 
-/* Title / Filename Label */
+/* Title / Filename Label - Compact */
 .myownidm-title {
-  font-size: 12px !important;
+  font-size: 11.5px !important;
   font-weight: 600 !important;
   color: #f1f5f9 !important;
   letter-spacing: 0.1px !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  max-width: 220px !important;
+  max-width: 145px !important;
 }
 
 /* Badge Counter `(4)` */
 .myownidm-badge-count {
-  font-size: 11px !important;
+  font-size: 10.5px !important;
   font-weight: 500 !important;
   color: #94a3b8 !important;
   background: #12161f !important;
   border: 1px solid #232834 !important;
-  padding: 1px 6px !important;
-  border-radius: 4px !important;
+  padding: 0 5px !important;
+  border-radius: 3px !important;
   line-height: 1.3 !important;
   flex-shrink: 0 !important;
   font-family: 'JetBrains Mono', monospace !important;
@@ -84,8 +84,8 @@
 .myownidm-bar-actions {
   display: flex !important;
   align-items: center !important;
-  gap: 2px !important;
-  padding-left: 6px !important;
+  gap: 1px !important;
+  padding-left: 4px !important;
   border-left: 1px solid #232834 !important;
   flex-shrink: 0 !important;
 }
@@ -95,8 +95,8 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 22px !important;
-  height: 22px !important;
+  width: 20px !important;
+  height: 20px !important;
   border-radius: 4px !important;
   background: transparent !important;
   border: none !important;
@@ -127,32 +127,32 @@
   color: #60a5fa !important;
 }
 
-/* 2. Format Selector Dialog (Floating Sniffer Popover Panel) */
+/* 2. Format Selector Dialog (Floating Sniffer Popover Panel - Compact) */
 .myownidm-sniffer-panel {
   position: fixed !important;
   z-index: 2147483647 !important;
   pointer-events: auto !important;
   isolation: isolate !important;
-  width: 340px !important;
-  max-width: calc(100vw - 24px) !important;
+  width: 280px !important;
+  max-width: calc(100vw - 20px) !important;
   background: #171c24 !important;
   border: 1px solid #232834 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(35, 40, 52, 0.8) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(35, 40, 52, 0.8) !important;
   overflow: hidden !important;
-  display: flex !important;
+  display: none;
   flex-direction: column !important;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   color: #dee2ee !important;
   user-select: none !important;
   box-sizing: border-box !important;
-  animation: myownidm-slide-down 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation: myownidm-slide-down 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 @keyframes myownidm-slide-down {
   from {
     opacity: 0;
-    transform: translateY(-6px) scale(0.98);
+    transform: translateY(-5px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -162,7 +162,7 @@
 
 /* Dialog Header */
 .myownidm-sniffer-header {
-  padding: 12px 14px !important;
+  padding: 9px 12px !important;
   background: #141921 !important;
   border-bottom: 1px solid #232834 !important;
   display: flex !important;
@@ -171,10 +171,10 @@
 }
 
 .myownidm-sniffer-title {
-  font-size: 11px !important;
+  font-size: 10.5px !important;
   font-weight: 700 !important;
   color: #cbd5e1 !important;
-  letter-spacing: 0.6px !important;
+  letter-spacing: 0.5px !important;
   text-transform: uppercase !important;
   margin: 0 !important;
 }
@@ -183,8 +183,8 @@
   background: transparent !important;
   border: none !important;
   color: #94a3b8 !important;
-  width: 22px !important;
-  height: 22px !important;
+  width: 20px !important;
+  height: 20px !important;
   border-radius: 4px !important;
   display: flex !important;
   align-items: center !important;
@@ -199,13 +199,13 @@
   color: #f1f5f9 !important;
 }
 
-/* Quality Items List Container */
+/* Quality Items List Container - Compact */
 .myownidm-quality-list {
-  padding: 10px !important;
+  padding: 7px 8px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px !important;
-  max-height: 340px !important;
+  gap: 5px !important;
+  max-height: 320px !important;
   overflow-y: auto !important;
   box-sizing: border-box !important;
 }
@@ -219,16 +219,16 @@
   border-radius: 2px !important;
 }
 
-/* Quality Item Row Card */
+/* Quality Item Row Card - Compact */
 .myownidm-quality-item {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 12px !important;
+  gap: 8px !important;
   background: #12161f !important;
   border: 1px solid #232834 !important;
-  border-radius: 8px !important;
-  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  padding: 6px 9px !important;
   transition: border-color 0.15s ease, background 0.15s ease !important;
   box-sizing: border-box !important;
 }
@@ -242,13 +242,13 @@
 .myownidm-item-details {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 6px !important;
   min-width: 0 !important;
   flex: 1 1 auto !important;
 }
 
 .myownidm-item-name {
-  font-size: 12px !important;
+  font-size: 11.5px !important;
   font-weight: 600 !important;
   color: #f1f5f9 !important;
   white-space: nowrap !important;
@@ -256,21 +256,21 @@
 
 .myownidm-item-meta {
   font-family: 'JetBrains Mono', monospace !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   color: #94a3b8 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
 
-/* Download Action Button */
+/* Download Action Button - Compact */
 .myownidm-download-btn {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  padding: 4px 12px !important;
-  border-radius: 6px !important;
-  font-size: 12px !important;
+  gap: 4px !important;
+  padding: 3px 9px !important;
+  border-radius: 5px !important;
+  font-size: 11px !important;
   font-weight: 500 !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
@@ -284,7 +284,7 @@
 .myownidm-download-btn.is-primary {
   background: #2563eb !important;
   color: #ffffff !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
 .myownidm-download-btn.is-primary:hover {
@@ -326,29 +326,29 @@
   pointer-events: none !important;
 }
 
-/* Dialog Footer / Quick Actions */
+/* Dialog Footer / Quick Actions - Compact */
 .myownidm-sniffer-footer {
-  padding: 10px 14px !important;
+  padding: 8px 12px !important;
   background: #131720 !important;
   border-top: 1px solid #232834 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  font-size: 11px !important;
+  font-size: 10.5px !important;
 }
 
 .myownidm-batch-btn {
   background: transparent !important;
   border: none !important;
   color: #60a5fa !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   font-weight: 500 !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 4px !important;
   cursor: pointer !important;
-  padding: 2px 4px !important;
-  border-radius: 4px !important;
+  padding: 1px 3px !important;
+  border-radius: 3px !important;
   transition: color 0.15s ease !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
 }
@@ -360,6 +360,6 @@
 
 .myownidm-format-count {
   color: #64748b !important;
-  font-size: 11px !important;
+  font-size: 10.5px !important;
   font-family: 'JetBrains Mono', monospace !important;
 }

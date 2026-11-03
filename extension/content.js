@@ -83,6 +83,27 @@
     return clean || defaultName;
   }
 
+  function cleanDisplayTitle(rawTitle, defaultName = "Unduh Video", maxLen = 35) {
+    if (!rawTitle) return defaultName;
+    let clean = rawTitle
+      .replace(/\s*-\s*YouTube$/i, "")
+      .replace(/\s*\/\s*X$/i, "")
+      .replace(/\s*-\s*Twitter$/i, "")
+      .replace(/\s*•\s*Instagram.*$/i, "")
+      .replace(/\s*on Instagram:.*$/i, "")
+      .replace(/\s*\|\s*TikTok$/i, "")
+      .replace(/https?:\/\/\S+/gi, "")
+      .trim();
+
+    clean = clean.replace(/[\r\n\t]+/g, " ");
+    clean = clean.replace(/\s+/g, " ").trim();
+
+    if (clean.length > maxLen) {
+      clean = clean.substring(0, maxLen).trim();
+    }
+    return clean || defaultName;
+  }
+
   function isGenericTitle(title) {
     if (!title || typeof title !== "string") return true;
     const base = title.replace(/\.[a-zA-Z0-9]+$/, "").trim().toLowerCase();
@@ -221,56 +242,60 @@
       const s480 = formatEstSize(dur, 0.65);
       const sAudio = formatEstSize(dur, 0.16);
 
-      if (effectiveMaxHeight >= 2160) {
+      // Check if 4K or 2K is present or indicated
+      const is4K = effectiveMaxHeight >= 2160 || (rawTitle && (rawTitle.includes("4K") || rawTitle.includes("2160p")));
+      const is2K = effectiveMaxHeight >= 1440 || (rawTitle && (rawTitle.includes("2K") || rawTitle.includes("1440p")));
+
+      if (is4K) {
         const s4k = formatEstSize(dur, 8.0);
         items.push({
           id: "4k",
           badge: "4K",
           badgeClass: "myownidm-badge-4k",
           title: "4K UHD",
-          meta: `MP4 • ${s4k || "2160p 60fps"}`,
+          meta: `MP4 • ${s4k || "128.0 MB"}`,
           filename: `${safeTitle}_4k.mp4`,
           quality: "2160p",
           threads: 32
         });
       }
-      if (effectiveMaxHeight >= 1440) {
+      if (is2K) {
         const s1440 = formatEstSize(dur, 4.5);
         items.push({
           id: "1440p",
           badge: "2K",
           badgeClass: "myownidm-badge-4k",
           title: "2K QHD",
-          meta: `MP4 • ${s1440 || "1440p"}`,
+          meta: `MP4 • ${s1440 || "78.5 MB"}`,
           filename: `${safeTitle}_1440p.mp4`,
           quality: "1440p",
           threads: 24
         });
       }
-      if (effectiveMaxHeight >= 1080) {
-        items.push({
-          id: "1080p",
-          badge: "1080p",
-          badgeClass: "myownidm-badge-fhd",
-          title: "1080p FHD",
-          meta: `MP4 • ${s1080 || "48.2 MB"}`,
-          filename: `${safeTitle}_1080p.mp4`,
-          quality: "1080p",
-          threads: 16
-        });
-      }
-      if (effectiveMaxHeight >= 720) {
-        items.push({
-          id: "720p",
-          badge: "720p",
-          badgeClass: "myownidm-badge-hd",
-          title: "720p HD",
-          meta: `MP4 • ${s720 || "26.4 MB"}`,
-          filename: `${safeTitle}_720p.mp4`,
-          quality: "720p",
-          threads: 8
-        });
-      }
+
+      // 1080p FHD (Standard for YouTube video downloads)
+      items.push({
+        id: "1080p",
+        badge: "1080p",
+        badgeClass: "myownidm-badge-fhd",
+        title: "1080p FHD",
+        meta: `MP4 • ${s1080 || "48.2 MB"}`,
+        filename: `${safeTitle}_1080p.mp4`,
+        quality: "1080p",
+        threads: 16
+      });
+
+      // 720p HD
+      items.push({
+        id: "720p",
+        badge: "720p",
+        badgeClass: "myownidm-badge-hd",
+        title: "720p HD",
+        meta: `MP4 • ${s720 || "26.4 MB"}`,
+        filename: `${safeTitle}_720p.mp4`,
+        quality: "720p",
+        threads: 8
+      });
       items.push({
         id: "480p",
         badge: "480p",
@@ -738,15 +763,16 @@
       e.stopPropagation();
       e.preventDefault();
 
-      if (panel.style.display === "flex") {
+      const isPanelOpen = singletonPanel && (singletonPanel.style.display === "flex" || activePanel === singletonPanel);
+      if (isPanelOpen) {
         closePanel();
       } else {
         ensureTopmost(btn, panel);
-        if (currentVideo) updatePositionForVideo(currentVideo);
         panel.style.setProperty("display", "flex", "important");
         panel.style.setProperty("z-index", "2147483647", "important");
         btn.classList.add("myownidm-panel-active");
         activePanel = panel;
+        updatePanelPosition();
       }
     };
 
@@ -762,11 +788,14 @@
       e.stopPropagation();
       e.preventDefault();
       if (currentVideo) dismissVideo(currentVideo);
+      closePanel();
+      hideFloatingButton();
     });
 
     // Panel close button
     panel.querySelector(".myownidm-close-btn")?.addEventListener("click", (e) => {
       e.stopPropagation();
+      e.preventDefault();
       closePanel();
     });
 
@@ -822,7 +851,7 @@
 
     // Display video title or filename in the floating pill button (Kotak Kuning)
     const cleanTitle = cleanFilename(rawTitle, "video");
-    const displayTitle = (cleanTitle && cleanTitle !== "video") ? cleanTitle : (presets[0]?.filename || "Unduh Video");
+    const displayTitle = cleanDisplayTitle(rawTitle, (presets[0]?.filename || "Unduh Video"), 35);
     const fullFilename = (cleanTitle && cleanTitle !== "video") ? `${cleanTitle}.mp4` : (presets[0]?.filename || "video.mp4");
 
     if (singletonBtn) {
@@ -926,6 +955,27 @@
     });
   }
 
+  function updatePanelPosition() {
+    if (!singletonBtn || !singletonPanel) return;
+    ensureTopmost(singletonBtn, singletonPanel);
+
+    const btnRect = singletonBtn.getBoundingClientRect();
+    const panelWidth = singletonPanel.offsetWidth || 280;
+
+    let panelLeft = btnRect.right - panelWidth;
+    panelLeft = Math.max(12, Math.min(window.innerWidth - panelWidth - 12, panelLeft));
+
+    let panelTop = btnRect.bottom + 6;
+    const panelHeight = singletonPanel.offsetHeight || 260;
+    if (panelTop + panelHeight > window.innerHeight - 10 && btnRect.top - panelHeight - 6 > 10) {
+      panelTop = btnRect.top - panelHeight - 6;
+    }
+
+    singletonPanel.style.setProperty("top", `${panelTop}px`, "important");
+    singletonPanel.style.setProperty("left", `${panelLeft}px`, "important");
+    singletonPanel.style.setProperty("z-index", "2147483647", "important");
+  }
+
   function updatePositionForVideo(video) {
     if (!video || !video.isConnected || !singletonBtn) return false;
 
@@ -953,13 +1003,7 @@
     singletonBtn.style.setProperty("z-index", "2147483647", "important");
 
     if (singletonPanel && singletonPanel.style.display === "flex") {
-      const panelWidth = 410;
-      const panelLeft = Math.max(10, Math.min(window.innerWidth - panelWidth - 14, leftPos + btnWidth - panelWidth));
-      const panelTop = topPos + (singletonBtn.offsetHeight || 38) + 6;
-
-      singletonPanel.style.setProperty("top", `${panelTop}px`, "important");
-      singletonPanel.style.setProperty("left", `${panelLeft}px`, "important");
-      singletonPanel.style.setProperty("z-index", "2147483647", "important");
+      updatePanelPosition();
     }
 
     return true;
@@ -996,16 +1040,15 @@
 
   function hideFloatingButton() {
     if (!singletonBtn) return;
-    singletonBtn.style.opacity = "0";
-    singletonBtn.style.pointerEvents = "none";
-    if (activePanel) {
-      closePanel();
-    }
+    singletonBtn.style.setProperty("opacity", "0", "important");
+    singletonBtn.style.setProperty("pointer-events", "none", "important");
+    singletonBtn.style.setProperty("display", "none", "important");
+    closePanel();
   }
 
   function closePanel() {
     if (!singletonPanel) return;
-    singletonPanel.style.display = "none";
+    singletonPanel.style.setProperty("display", "none", "important");
     if (singletonBtn) singletonBtn.classList.remove("myownidm-panel-active");
     activePanel = null;
   }
@@ -1094,21 +1137,21 @@
     window.addEventListener("scroll", onScrollOrResize, { passive: true });
     window.addEventListener("resize", onScrollOrResize, { passive: true });
 
-    // 4. Close panel on outside click
+    // 4. Close panel on outside click (capture phase so page event blockers don't stop it)
     document.addEventListener("click", (e) => {
-      if (activePanel) {
-        if (!activePanel.contains(e.target) && !singletonBtn?.contains(e.target)) {
+      if (activePanel || (singletonPanel && singletonPanel.style.display === "flex")) {
+        if (!singletonPanel?.contains(e.target) && !singletonBtn?.contains(e.target)) {
           closePanel();
         }
       }
-    });
+    }, true);
 
     // 5. Close on Escape key
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && activePanel) {
+      if (e.key === "Escape") {
         closePanel();
       }
-    });
+    }, true);
 
     // 6. Fullscreen Change
     document.addEventListener("fullscreenchange", () => {
