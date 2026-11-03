@@ -3,6 +3,7 @@ namespace Mdm.Models;
 public class DownloadTask
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string RayId { get; set; } = Services.Logger.NewRayId();
     public string Url { get; set; } = string.Empty;
     public string Filename { get; set; } = string.Empty;
     public string SaveDir { get; set; } = string.Empty;

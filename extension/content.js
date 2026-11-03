@@ -14,21 +14,22 @@
 
   const ContentLogger = {
     minimumLevel: 0, // DEBUG
-    _format(levelName, comp, message) {
+    _format(levelName, comp, message, rayId = null) {
       const time = new Date().toISOString().substring(11, 23);
-      return `[${time}] [${levelName}] [${comp}] ${message}`;
+      const rayTag = rayId ? ` [${rayId}]` : "";
+      return `[${time}] [${levelName}] [${comp}]${rayTag} ${message}`;
     },
-    debug(msg, comp = "EXT:CONTENT", extra) {
-      if (this.minimumLevel <= 0) console.debug(this._format("DEBUG", comp, msg), extra !== undefined ? extra : "");
+    debug(msg, comp = "EXT:CONTENT", extra, rayId = null) {
+      if (this.minimumLevel <= 0) console.debug(this._format("DEBUG", comp, msg, rayId), extra !== undefined ? extra : "");
     },
-    info(msg, comp = "EXT:CONTENT", extra) {
-      if (this.minimumLevel <= 1) console.info(this._format("INFO", comp, msg), extra !== undefined ? extra : "");
+    info(msg, comp = "EXT:CONTENT", extra, rayId = null) {
+      if (this.minimumLevel <= 1) console.info(this._format("INFO", comp, msg, rayId), extra !== undefined ? extra : "");
     },
-    warn(msg, comp = "EXT:CONTENT", extra) {
-      if (this.minimumLevel <= 2) console.warn(this._format("WARN", comp, msg), extra !== undefined ? extra : "");
+    warn(msg, comp = "EXT:CONTENT", extra, rayId = null) {
+      if (this.minimumLevel <= 2) console.warn(this._format("WARN", comp, msg, rayId), extra !== undefined ? extra : "");
     },
-    error(msg, comp = "EXT:CONTENT", extra) {
-      if (this.minimumLevel <= 3) console.error(this._format("ERROR", comp, msg), extra !== undefined ? extra : "");
+    error(msg, comp = "EXT:CONTENT", extra, rayId = null) {
+      if (this.minimumLevel <= 3) console.error(this._format("ERROR", comp, msg, rayId), extra !== undefined ? extra : "");
     }
   };
 

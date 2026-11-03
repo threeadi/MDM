@@ -110,7 +110,8 @@ public partial class MainWindow : Window
                         dlg.Referer,
                         dlg.SelectedCategory,
                         dlg.StartImmediately,
-                        dlg.Quality
+                        dlg.Quality,
+                        req.RayId
                     );
                 }
             };

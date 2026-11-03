@@ -16,6 +16,7 @@ public class BrowserDownloadRequest
     public string? Quality { get; set; }
     public bool IsAudioOnly { get; set; }
     public int Threads { get; set; } = 8;
+    public string? RayId { get; set; }
 }
 
 public class IpcServer
@@ -132,7 +133,8 @@ public class IpcServer
                     var errJson = JsonDocument.Parse(body).RootElement;
                     string errType = errJson.TryGetProperty("error_type", out var et) ? et.GetString() ?? "Unknown" : "Unknown";
                     string errMsg = errJson.TryGetProperty("message", out var em) ? em.GetString() ?? "" : "";
-                    Logger.Warn($"Diagnostik dari ekstensi browser [{errType}]: {errMsg}", "EXT");
+                    string? rayId = errJson.TryGetProperty("ray_id", out var ry) ? ry.GetString() : null;
+                    Logger.Warn($"Diagnostik dari ekstensi browser [{errType}]: {errMsg}", "EXT", rayId);
 
                     byte[] reply = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
                     resp.ContentType = "application/json";
@@ -148,10 +150,11 @@ public class IpcServer
                     string level = logJson.TryGetProperty("level", out var l) ? l.GetString()?.ToUpperInvariant() ?? "INFO" : "INFO";
                     string logMsg = logJson.TryGetProperty("message", out var lm) ? lm.GetString() ?? "" : "";
                     string comp = logJson.TryGetProperty("component", out var cp) ? cp.GetString() ?? "EXT" : "EXT";
-                    if (level == "DEBUG") Logger.Debug(logMsg, comp);
-                    else if (level == "WARN") Logger.Warn(logMsg, comp);
-                    else if (level == "ERROR") Logger.Error(logMsg, null, comp);
-                    else Logger.Info(logMsg, comp);
+                    string? rayId = logJson.TryGetProperty("ray_id", out var ry) ? ry.GetString() : null;
+                    if (level == "DEBUG") Logger.Debug(logMsg, comp, rayId);
+                    else if (level == "WARN") Logger.Warn(logMsg, comp, rayId);
+                    else if (level == "ERROR") Logger.Error(logMsg, null, comp, rayId);
+                    else Logger.Info(logMsg, comp, rayId);
 
                     byte[] reply = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
                     resp.ContentType = "application/json";
@@ -167,6 +170,8 @@ public class IpcServer
                 string? quality = json.TryGetProperty("quality", out var q) ? q.GetString() : null;
                 bool isAudioOnly = json.TryGetProperty("is_audio_only", out var ao) && ao.GetBoolean();
                 int threads = json.TryGetProperty("threads", out var th) && th.TryGetInt32(out int t) ? t : 8;
+                string? rayIdVal = json.TryGetProperty("ray_id", out var rId) ? rId.GetString() : null;
+                string assignedRayId = !string.IsNullOrWhiteSpace(rayIdVal) ? rayIdVal : Logger.NewRayId("ray_ext");
                 string? referer = null;
                 string? cookies = null;
                 string? userAgent = null;
@@ -189,7 +194,7 @@ public class IpcServer
 
                 if (!string.IsNullOrEmpty(url))
                 {
-                    Logger.Info($"Permintaan unduhan diterima via HTTP IPC: {url} (filename={filename ?? "auto-detect"})", "IPC");
+                    Logger.Info($"Permintaan unduhan diterima via HTTP IPC: {url} (filename={filename ?? "auto-detect"})", "IPC", assignedRayId);
                     _ = Task.Run(() =>
                     {
                         try
@@ -203,19 +208,27 @@ public class IpcServer
                                 UserAgent = userAgent,
                                 Quality = quality,
                                 IsAudioOnly = isAudioOnly,
-                                Threads = threads
+                                Threads = threads,
+                                RayId = assignedRayId
                             });
                         }
                         catch { }
                     });
                 }
+
+                byte[] b = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { status = "ok", ray_id = assignedRayId }));
+                resp.ContentType = "application/json";
+                resp.ContentLength64 = b.Length;
+                await resp.OutputStream.WriteAsync(b);
+                resp.Close();
+                return;
             }
             catch { }
 
-            byte[] b = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
+            byte[] fallback = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
             resp.ContentType = "application/json";
-            resp.ContentLength64 = b.Length;
-            await resp.OutputStream.WriteAsync(b);
+            resp.ContentLength64 = fallback.Length;
+            await resp.OutputStream.WriteAsync(fallback);
             resp.Close();
             return;
         }
@@ -260,20 +273,23 @@ public class IpcServer
                                 string? filename = json.TryGetProperty("filename", out var f) ? f.GetString() : null;
                                 string? quality = json.TryGetProperty("quality", out var q) ? q.GetString() : null;
                                 string? referer = json.TryGetProperty("referer", out var r) ? r.GetString() : null;
+                                string? rayIdVal = json.TryGetProperty("ray_id", out var rId) ? rId.GetString() : null;
+                                string assignedRayId = !string.IsNullOrWhiteSpace(rayIdVal) ? rayIdVal : Logger.NewRayId("ray_ipc");
 
                                 if (!string.IsNullOrEmpty(url))
                                 {
-                                    Logger.Info($"Permintaan unduhan diterima via Named Pipe IPC: {url} (filename={filename ?? "auto-detect"})", "IPC");
+                                    Logger.Info($"Permintaan unduhan diterima via Named Pipe IPC: {url} (filename={filename ?? "auto-detect"})", "IPC", assignedRayId);
                                     DownloadRequested?.Invoke(this, new BrowserDownloadRequest
                                     {
                                         Url = url,
                                         Filename = filename,
                                         Quality = quality,
-                                        Referer = referer
+                                        Referer = referer,
+                                        RayId = assignedRayId
                                     });
                                 }
 
-                                byte[] reply = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
+                                byte[] reply = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { status = "ok", ray_id = assignedRayId }));
                                 byte[] replyLen = BitConverter.GetBytes(reply.Length);
                                 await pipe.WriteAsync(replyLen);
                                 await pipe.WriteAsync(reply);

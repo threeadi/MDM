@@ -68,9 +68,14 @@ public static class CrashReporter
                             }
                         }
                     },
+                    tags = new
+                    {
+                        ray_id = Logger.CurrentRayId ?? "none"
+                    },
                     extra = new
                     {
                         context,
+                        ray_id = Logger.CurrentRayId,
                         os = Environment.OSVersion.ToString(),
                         dotnet_version = Environment.Version.ToString(),
                         recent_logs = Logger.GetRecentLogs(30)

@@ -17,48 +17,54 @@ const DEFAULT_REGISTERED_EXTENSIONS = [
 // Leveled Logging System for MDM Browser Extension
 const LogLevel = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
 
+function generateRayId(prefix = "ray_ext") {
+  const hex = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
+  return `${prefix}_${hex}`;
+}
+
 const ExtensionLogger = {
   minimumLevel: LogLevel.DEBUG,
 
-  _format(levelName, comp, message) {
+  _format(levelName, comp, message, rayId = null) {
     const time = new Date().toISOString().substring(11, 23);
-    return `[${time}] [${levelName}] [${comp}] ${message}`;
+    const rayTag = rayId ? ` [${rayId}]` : "";
+    return `[${time}] [${levelName}] [${comp}]${rayTag} ${message}`;
   },
 
-  _forwardToDesktop(levelName, comp, message) {
+  _forwardToDesktop(levelName, comp, message, rayId = null) {
     try {
       fetch("http://127.0.0.1:18888/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ level: levelName, component: comp, message: String(message) })
+        body: JSON.stringify({ level: levelName, component: comp, message: String(message), ray_id: rayId || undefined })
       }).catch(() => {});
     } catch (_) {}
   },
 
-  debug(msg, comp = "EXT:BG", extra) {
+  debug(msg, comp = "EXT:BG", extra, rayId = null) {
     if (this.minimumLevel <= LogLevel.DEBUG) {
-      console.debug(this._format("DEBUG", comp, msg), extra !== undefined ? extra : "");
+      console.debug(this._format("DEBUG", comp, msg, rayId), extra !== undefined ? extra : "");
     }
   },
 
-  info(msg, comp = "EXT:BG", extra) {
+  info(msg, comp = "EXT:BG", extra, rayId = null) {
     if (this.minimumLevel <= LogLevel.INFO) {
-      console.info(this._format("INFO", comp, msg), extra !== undefined ? extra : "");
-      this._forwardToDesktop("INFO", comp, msg);
+      console.info(this._format("INFO", comp, msg, rayId), extra !== undefined ? extra : "");
+      this._forwardToDesktop("INFO", comp, msg, rayId);
     }
   },
 
-  warn(msg, comp = "EXT:BG", extra) {
+  warn(msg, comp = "EXT:BG", extra, rayId = null) {
     if (this.minimumLevel <= LogLevel.WARN) {
-      console.warn(this._format("WARN", comp, msg), extra !== undefined ? extra : "");
-      this._forwardToDesktop("WARN", comp, msg);
+      console.warn(this._format("WARN", comp, msg, rayId), extra !== undefined ? extra : "");
+      this._forwardToDesktop("WARN", comp, msg, rayId);
     }
   },
 
-  error(msg, comp = "EXT:BG", extra) {
+  error(msg, comp = "EXT:BG", extra, rayId = null) {
     if (this.minimumLevel <= LogLevel.ERROR) {
-      console.error(this._format("ERROR", comp, msg), extra !== undefined ? extra : "");
-      this._forwardToDesktop("ERROR", comp, msg);
+      console.error(this._format("ERROR", comp, msg, rayId), extra !== undefined ? extra : "");
+      this._forwardToDesktop("ERROR", comp, msg, rayId);
     }
   }
 };
@@ -469,7 +475,10 @@ function resolveSmartFilename(requestedFilename, tabTitle, quality = "") {
 
 // 4. Send to Desktop App via Local HTTP Server (Port 18888) or Native Messaging Fallback
 async function sendToMyOwnIdm(downloadUrl, refererUrl = "", filename = "", extraMeta = {}) {
+  const rayId = extraMeta.ray_id || generateRayId("ray_ext");
   try {
+    ExtensionLogger.info(`Menginisiasi transfer unduhan: ${downloadUrl} (filename: ${filename || "auto"})`, "EXT:IPC", null, rayId);
+
     // Only get cookies for valid http/https URLs
     let cookieHeader = "";
     if (downloadUrl && (downloadUrl.startsWith("http://") || downloadUrl.startsWith("https://"))) {
@@ -477,12 +486,13 @@ async function sendToMyOwnIdm(downloadUrl, refererUrl = "", filename = "", extra
         const cookies = await chrome.cookies.getAll({ url: downloadUrl });
         cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join("; ");
       } catch (e) {
-        ExtensionLogger.warn("Gagal membaca cookies:", "EXT:COOKIES", e);
+        ExtensionLogger.warn("Gagal membaca cookies:", "EXT:COOKIES", e, rayId);
       }
     }
 
     const payload = {
       action: "download",
+      ray_id: rayId,
       url: downloadUrl,
       filename: filename || "",
       quality: extraMeta.quality || "",
@@ -503,27 +513,27 @@ async function sendToMyOwnIdm(downloadUrl, refererUrl = "", filename = "", extra
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        ExtensionLogger.info("Permintaan unduhan berhasil dikirim ke MDM Desktop via HTTP IPC (200 OK)", "EXT:IPC");
+        ExtensionLogger.info("Permintaan unduhan berhasil dikirim ke MDM Desktop via HTTP IPC (200 OK)", "EXT:IPC", null, rayId);
         return true;
       }
     } catch (httpErr) {
-      ExtensionLogger.warn("HTTP IPC lokal tidak terhubung, mencoba fallback Native Messaging...", "EXT:IPC", httpErr);
+      ExtensionLogger.warn("HTTP IPC lokal tidak terhubung, mencoba fallback Native Messaging...", "EXT:IPC", httpErr, rayId);
     }
 
     // Fallback: Native Messaging
     return new Promise((resolve) => {
       chrome.runtime.sendNativeMessage(NATIVE_HOST, payload, (response) => {
         if (chrome.runtime.lastError) {
-          ExtensionLogger.error(`Komunikasi Native Messaging gagal: ${chrome.runtime.lastError.message}`, "EXT:IPC");
+          ExtensionLogger.error(`Komunikasi Native Messaging gagal: ${chrome.runtime.lastError.message}`, "EXT:IPC", null, rayId);
           resolve(false);
         } else {
-          ExtensionLogger.info("Respon MDM Desktop via Native Messaging berhasil diterima", "EXT:IPC", response);
+          ExtensionLogger.info("Respon MDM Desktop via Native Messaging berhasil diterima", "EXT:IPC", response, rayId);
           resolve(true);
         }
       });
     });
   } catch (err) {
-    ExtensionLogger.error("Gagal meneruskan unduhan ke desktop:", "EXT:IPC", err);
+    ExtensionLogger.error("Gagal meneruskan unduhan ke desktop:", "EXT:IPC", err, rayId);
     return false;
   }
 }

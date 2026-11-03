@@ -222,37 +222,43 @@ public class DownloadEngine
         int connections = 8,
         string? referer = null,
         string? category = null,
-        string? quality = null)
+        string? quality = null,
+        string? rayId = null)
     {
-        string effectiveUrl = GetEffectiveUrl(url, referer);
-        var probe = await ProbeUrlAsync(effectiveUrl, referer, quality);
-
-        string finalFilename = !string.IsNullOrWhiteSpace(filename) ? SanitizeFilename(filename) : probe.Filename;
-        string filePath = Path.Combine(saveDir, finalFilename);
-
-        int workerCount = CalculateOptimalThreads(probe.TotalBytes, probe.SupportsRange, probe.IsHls, quality);
-        var segments = CalculateSegments(probe.TotalBytes, workerCount);
-
-        var task = new DownloadTask
+        string effectiveRayId = !string.IsNullOrWhiteSpace(rayId) ? rayId : Logger.NewRayId();
+        using (Logger.WithRayId(effectiveRayId))
         {
-            Url = effectiveUrl,
-            Filename = finalFilename,
-            SaveDir = saveDir,
-            FilePath = filePath,
-            TotalBytes = probe.TotalBytes,
-            DownloadedBytes = 0,
-            Status = DownloadStatus.Downloading,
-            Connections = workerCount,
-            SupportsRange = probe.SupportsRange,
-            Category = category ?? probe.Category,
-            Segments = segments,
-            Referer = referer,
-            Quality = quality,
-            IsHls = probe.IsHls
-        };
+            string effectiveUrl = GetEffectiveUrl(url, referer);
+            var probe = await ProbeUrlAsync(effectiveUrl, referer, quality);
 
-        _database.UpsertTask(task);
-        return task;
+            string finalFilename = !string.IsNullOrWhiteSpace(filename) ? SanitizeFilename(filename) : probe.Filename;
+            string filePath = Path.Combine(saveDir, finalFilename);
+
+            int workerCount = CalculateOptimalThreads(probe.TotalBytes, probe.SupportsRange, probe.IsHls, quality);
+            var segments = CalculateSegments(probe.TotalBytes, workerCount);
+
+            var task = new DownloadTask
+            {
+                Url = effectiveUrl,
+                Filename = finalFilename,
+                SaveDir = saveDir,
+                FilePath = filePath,
+                TotalBytes = probe.TotalBytes,
+                DownloadedBytes = 0,
+                Status = DownloadStatus.Downloading,
+                Connections = workerCount,
+                SupportsRange = probe.SupportsRange,
+                Category = category ?? probe.Category,
+                Segments = segments,
+                Referer = referer,
+                Quality = quality,
+                IsHls = probe.IsHls,
+                RayId = effectiveRayId
+            };
+
+            _database.UpsertTask(task);
+            return task;
+        }
     }
 
     public static int CalculateOptimalThreads(long? totalBytes, bool supportsRange, bool isHls, string? quality = null)
@@ -299,37 +305,44 @@ public class DownloadEngine
 
     public void StartDownload(DownloadTask task)
     {
-        Logger.Info($"Memulai unduhan tugas: {task.Id} ({task.Filename}) -> {task.FilePath}", "ENGINE");
-        var cts = new CancellationTokenSource();
-        _runningTasks[task.Id] = cts;
-        task.Status = DownloadStatus.Downloading;
-        _database.UpsertTask(task);
-
-        Task.Run(async () =>
+        using (Logger.WithRayId(task.RayId))
         {
-            try
+            Logger.Info($"Memulai unduhan tugas: {task.Id} ({task.Filename}) -> {task.FilePath}", "ENGINE", task.RayId);
+            var cts = new CancellationTokenSource();
+            _runningTasks[task.Id] = cts;
+            task.Status = DownloadStatus.Downloading;
+            _database.UpsertTask(task);
+
+            Task.Run(async () =>
             {
-                await ExecuteDownloadAsync(task, cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                task.Status = DownloadStatus.Paused;
-                _database.UpsertTask(task);
-                TaskPaused?.Invoke(this, task.Id);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"Tugas unduhan gagal: {task.Id} ({task.Filename}) - {ex.Message}", ex, "ENGINE");
-                task.Status = DownloadStatus.Failed;
-                task.ErrorMessage = ex.Message;
-                _database.UpsertTask(task);
-                TaskFailed?.Invoke(this, (task.Id, ex.Message));
-            }
-            finally
-            {
-                _runningTasks.TryRemove(task.Id, out _);
-            }
-        });
+                using (Logger.WithRayId(task.RayId))
+                {
+                    try
+                    {
+                        await ExecuteDownloadAsync(task, cts.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Logger.Warn($"Unduhan tugas dijeda/dibatalkan: {task.Id}", "ENGINE", task.RayId);
+                        task.Status = DownloadStatus.Paused;
+                        _database.UpsertTask(task);
+                        TaskPaused?.Invoke(this, task.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"Tugas unduhan gagal: {task.Id} ({task.Filename}) - {ex.Message}", ex, "ENGINE", task.RayId);
+                        task.Status = DownloadStatus.Failed;
+                        task.ErrorMessage = ex.Message;
+                        _database.UpsertTask(task);
+                        TaskFailed?.Invoke(this, (task.Id, ex.Message));
+                    }
+                    finally
+                    {
+                        _runningTasks.TryRemove(task.Id, out _);
+                    }
+                }
+            });
+        }
     }
 
     public void PauseDownload(string taskId)
@@ -384,66 +397,74 @@ public class DownloadEngine
 
             activeWorkers.Add(Task.Run(async () =>
             {
-                var currentSeg = seg;
-                while (!ct.IsCancellationRequested)
+                string workerRayId = $"{task.RayId}:w{seg.Index + 1:D2}";
+                using (Logger.WithRayId(workerRayId))
                 {
-                    await DownloadSegmentRangeAsync(task, currentSeg, writer, channel.Writer, dynamicEnds, taskLimiter, ct);
-                    currentSeg.IsFinished = true;
-
-                    if (!task.SupportsRange || task.TotalBytes is null or <= 0) break;
-
-                    DownloadSegment? nextSeg = null;
-                    lock (splitLock)
+                    Logger.Debug($"Worker #{seg.Index + 1} aktif (rentang: {seg.StartByte}-{seg.EndByte})", "ENGINE", workerRayId);
+                    var currentSeg = seg;
+                    while (!ct.IsCancellationRequested)
                     {
-                        DownloadSegment? candidate = null;
-                        long maxRemaining = 0;
+                        await DownloadSegmentRangeAsync(task, currentSeg, writer, channel.Writer, dynamicEnds, taskLimiter, ct);
+                        currentSeg.IsFinished = true;
 
-                        foreach (var s in task.Segments)
+                        if (!task.SupportsRange || task.TotalBytes is null or <= 0) break;
+
+                        DownloadSegment? nextSeg = null;
+                        lock (splitLock)
                         {
-                            if (s.IsFinished) continue;
-                            if (!dynamicEnds.TryGetValue(s.Index, out long endBound)) continue;
+                            DownloadSegment? candidate = null;
+                            long maxRemaining = 0;
 
-                            long currentPos = s.StartByte + s.DownloadedBytes;
-                            long remaining = endBound - currentPos + 1;
-                            if (remaining >= MinSplitSize && remaining > maxRemaining)
+                            foreach (var s in task.Segments)
                             {
-                                maxRemaining = remaining;
-                                candidate = s;
+                                if (s.IsFinished) continue;
+                                if (!dynamicEnds.TryGetValue(s.Index, out long endBound)) continue;
+
+                                long currentPos = s.StartByte + s.DownloadedBytes;
+                                long remaining = endBound - currentPos + 1;
+                                if (remaining >= MinSplitSize && remaining > maxRemaining)
+                                {
+                                    maxRemaining = remaining;
+                                    candidate = s;
+                                }
+                            }
+
+                            if (candidate != null && maxRemaining >= MinSplitSize)
+                            {
+                                long currentPos = candidate.StartByte + candidate.DownloadedBytes;
+                                long oldEnd = dynamicEnds[candidate.Index];
+                                long splitPoint = currentPos + (maxRemaining / 2);
+
+                                dynamicEnds[candidate.Index] = splitPoint;
+                                candidate.EndByte = splitPoint;
+
+                                int newIdx = task.Segments.Count;
+                                nextSeg = new DownloadSegment
+                                {
+                                    Index = newIdx,
+                                    StartByte = splitPoint + 1,
+                                    EndByte = oldEnd,
+                                    DownloadedBytes = 0,
+                                    IsFinished = false
+                                };
+
+                                task.Segments.Add(nextSeg);
+                                dynamicEnds[newIdx] = oldEnd;
                             }
                         }
 
-                        if (candidate != null && maxRemaining >= MinSplitSize)
+                        if (nextSeg != null)
                         {
-                            long currentPos = candidate.StartByte + candidate.DownloadedBytes;
-                            long oldEnd = dynamicEnds[candidate.Index];
-                            long splitPoint = currentPos + (maxRemaining / 2);
-
-                            dynamicEnds[candidate.Index] = splitPoint;
-                            candidate.EndByte = splitPoint;
-
-                            int newIdx = task.Segments.Count;
-                            nextSeg = new DownloadSegment
-                            {
-                                Index = newIdx,
-                                StartByte = splitPoint + 1,
-                                EndByte = oldEnd,
-                                DownloadedBytes = 0,
-                                IsFinished = false
-                            };
-
-                            task.Segments.Add(nextSeg);
-                            dynamicEnds[newIdx] = oldEnd;
+                            currentSeg = nextSeg;
+                            string newWorkerRayId = $"{task.RayId}:w{currentSeg.Index + 1:D2}";
+                            Logger.Debug($"Segmen #{currentSeg.Index + 1} dialokasikan ke worker (split rentang: {currentSeg.StartByte}-{currentSeg.EndByte})", "ENGINE", newWorkerRayId);
+                        }
+                        else
+                        {
+                            break;
                         }
                     }
-
-                    if (nextSeg != null)
-                    {
-                        currentSeg = nextSeg;
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    Logger.Debug($"Worker #{seg.Index + 1} selesai", "ENGINE", workerRayId);
                 }
             }, ct));
         }
@@ -528,183 +549,189 @@ public class DownloadEngine
 
     private async Task ExecuteYtDlpDownloadAsync(DownloadTask task, CancellationToken ct)
     {
-        var taskLimiter = GetOrCreateTaskLimiter(task.Id, task.SpeedLimitBps ?? 0);
-        if (task.SpeedLimitBps.HasValue)
+        using (Logger.WithRayId(task.RayId))
         {
-            taskLimiter.SetRate(task.SpeedLimitBps.Value);
-        }
-
-        void OnProgress(long downloaded, long? total, long speed, long? eta)
-        {
-            task.DownloadedBytes = downloaded;
-            if (total.HasValue && total.Value > 0)
+            var taskLimiter = GetOrCreateTaskLimiter(task.Id, task.SpeedLimitBps ?? 0);
+            if (task.SpeedLimitBps.HasValue)
             {
-                task.TotalBytes = total.Value;
+                taskLimiter.SetRate(task.SpeedLimitBps.Value);
             }
 
-            ProgressUpdated?.Invoke(this, new DownloadProgressEventArgs
+            void OnProgress(long downloaded, long? total, long speed, long? eta)
             {
-                TaskId = task.Id,
-                DownloadedBytes = downloaded,
-                TotalBytes = task.TotalBytes,
-                SpeedBps = speed,
-                EtaSeconds = eta,
-                Segments = task.Segments
-            });
-        }
+                task.DownloadedBytes = downloaded;
+                if (total.HasValue && total.Value > 0)
+                {
+                    task.TotalBytes = total.Value;
+                }
 
-        Logger.Info($"Memulai unduhan streaming yt-dlp: '{task.Filename}' (kualitas={task.Quality ?? "best"})", "ENGINE");
-        await YtDlpService.DownloadAsync(task, taskLimiter, OnProgress, ct);
+                ProgressUpdated?.Invoke(this, new DownloadProgressEventArgs
+                {
+                    TaskId = task.Id,
+                    DownloadedBytes = downloaded,
+                    TotalBytes = task.TotalBytes,
+                    SpeedBps = speed,
+                    EtaSeconds = eta,
+                    Segments = task.Segments
+                });
+            }
 
-        // Synchronize actual file size from disk (1:1 with my-own-idm)
-        long actualLen = File.Exists(task.FilePath) ? new FileInfo(task.FilePath).Length : 0;
-        if (actualLen <= 0)
-        {
-            string? dir = Path.GetDirectoryName(task.FilePath);
-            if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+            Logger.Info($"Memulai unduhan streaming yt-dlp: '{task.Filename}' (kualitas={task.Quality ?? "best"})", "ENGINE", task.RayId);
+            await YtDlpService.DownloadAsync(task, taskLimiter, OnProgress, ct);
+
+            // Synchronize actual file size from disk (1:1 with my-own-idm)
+            long actualLen = File.Exists(task.FilePath) ? new FileInfo(task.FilePath).Length : 0;
+            if (actualLen <= 0)
             {
-                string stem = Path.GetFileNameWithoutExtension(task.FilePath);
-                string candMp4 = Path.Combine(dir, stem + ".mp4");
-                string candMkv = Path.Combine(dir, stem + ".mkv");
-                string candWebm = Path.Combine(dir, stem + ".webm");
+                string? dir = Path.GetDirectoryName(task.FilePath);
+                if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                {
+                    string stem = Path.GetFileNameWithoutExtension(task.FilePath);
+                    string candMp4 = Path.Combine(dir, stem + ".mp4");
+                    string candMkv = Path.Combine(dir, stem + ".mkv");
+                    string candWebm = Path.Combine(dir, stem + ".webm");
 
-                if (File.Exists(candMp4))
-                {
-                    task.FilePath = candMp4;
-                    task.Filename = Path.GetFileName(candMp4);
-                    actualLen = new FileInfo(candMp4).Length;
-                }
-                else if (File.Exists(candMkv))
-                {
-                    task.FilePath = candMkv;
-                    task.Filename = Path.GetFileName(candMkv);
-                    actualLen = new FileInfo(candMkv).Length;
-                }
-                else if (File.Exists(candWebm))
-                {
-                    task.FilePath = candWebm;
-                    task.Filename = Path.GetFileName(candWebm);
-                    actualLen = new FileInfo(candWebm).Length;
+                    if (File.Exists(candMp4))
+                    {
+                        task.FilePath = candMp4;
+                        task.Filename = Path.GetFileName(candMp4);
+                        actualLen = new FileInfo(candMp4).Length;
+                    }
+                    else if (File.Exists(candMkv))
+                    {
+                        task.FilePath = candMkv;
+                        task.Filename = Path.GetFileName(candMkv);
+                        actualLen = new FileInfo(candMkv).Length;
+                    }
+                    else if (File.Exists(candWebm))
+                    {
+                        task.FilePath = candWebm;
+                        task.Filename = Path.GetFileName(candWebm);
+                        actualLen = new FileInfo(candWebm).Length;
+                    }
                 }
             }
-        }
 
-        if (actualLen > 0)
-        {
-            task.DownloadedBytes = actualLen;
-            task.TotalBytes = actualLen;
-            task.Status = DownloadStatus.Completed;
-            task.CompletedAt = DateTime.Now.ToString("o");
-            task.ErrorMessage = null;
-            foreach (var s in task.Segments) s.IsFinished = true;
-            _database.UpsertTask(task);
-            TaskCompleted?.Invoke(this, task.Id);
-        }
-        else
-        {
-            throw new InvalidOperationException("Unduhan stream selesai tetapi berkas hasil akhir tidak ditemukan di disk.");
+            if (actualLen > 0)
+            {
+                task.DownloadedBytes = actualLen;
+                task.TotalBytes = actualLen;
+                task.Status = DownloadStatus.Completed;
+                task.CompletedAt = DateTime.Now.ToString("o");
+                task.ErrorMessage = null;
+                foreach (var s in task.Segments) s.IsFinished = true;
+                _database.UpsertTask(task);
+                TaskCompleted?.Invoke(this, task.Id);
+            }
+            else
+            {
+                throw new InvalidOperationException("Unduhan stream selesai tetapi berkas hasil akhir tidak ditemukan di disk.");
+            }
         }
     }
 
     private async Task ExecuteTelegramDownloadAsync(DownloadTask task, CancellationToken ct)
     {
-        var raw = task.Url.Replace("tg://chat/", "");
-        var parts = raw.Split("/msg/");
-        if (parts.Length != 2 || !long.TryParse(parts[0], out long chatId) || !int.TryParse(parts[1], out int messageId))
+        using (Logger.WithRayId(task.RayId))
         {
-            throw new FormatException($"Format URL Telegram tidak valid: {task.Url}");
-        }
-
-        Logger.Info($"Memulai unduhan media Telegram: Chat ID {chatId}, Message ID {messageId} -> '{task.FilePath}'", "ENGINE");
-
-        var taskLimiter = GetOrCreateTaskLimiter(task.Id, task.SpeedLimitBps ?? 0);
-        if (task.SpeedLimitBps.HasValue)
-        {
-            taskLimiter.SetRate(task.SpeedLimitBps.Value);
-        }
-
-        var channel = System.Threading.Channels.Channel.CreateUnbounded<(int SegIndex, int Bytes)>();
-        long bytesSinceLastSpeedCalc = 0;
-        var stopwatch = Stopwatch.StartNew();
-        var lastDbSave = Stopwatch.StartNew();
-        long currentSpeedBps = 0;
-
-        var progressReader = Task.Run(async () =>
-        {
-            while (await channel.Reader.WaitToReadAsync(ct))
+            var raw = task.Url.Replace("tg://chat/", "");
+            var parts = raw.Split("/msg/");
+            if (parts.Length != 2 || !long.TryParse(parts[0], out long chatId) || !int.TryParse(parts[1], out int messageId))
             {
-                while (channel.Reader.TryRead(out var item))
-                {
-                    bytesSinceLastSpeedCalc += item.Bytes;
-                }
+                throw new FormatException($"Format URL Telegram tidak valid: {task.Url}");
+            }
 
-                if (stopwatch.ElapsedMilliseconds >= 300)
-                {
-                    double seconds = stopwatch.Elapsed.TotalSeconds;
-                    currentSpeedBps = seconds > 0 ? (long)(bytesSinceLastSpeedCalc / seconds) : 0;
-                    bytesSinceLastSpeedCalc = 0;
-                    stopwatch.Restart();
+            Logger.Info($"Memulai unduhan media Telegram: Chat ID {chatId}, Message ID {messageId} -> '{task.FilePath}'", "ENGINE", task.RayId);
 
-                    long? eta = null;
-                    if (currentSpeedBps > 0 && task.TotalBytes is > 0)
+            var taskLimiter = GetOrCreateTaskLimiter(task.Id, task.SpeedLimitBps ?? 0);
+            if (task.SpeedLimitBps.HasValue)
+            {
+                taskLimiter.SetRate(task.SpeedLimitBps.Value);
+            }
+
+            var channel = System.Threading.Channels.Channel.CreateUnbounded<(int SegIndex, int Bytes)>();
+            long bytesSinceLastSpeedCalc = 0;
+            var stopwatch = Stopwatch.StartNew();
+            var lastDbSave = Stopwatch.StartNew();
+            long currentSpeedBps = 0;
+
+            var progressReader = Task.Run(async () =>
+            {
+                while (await channel.Reader.WaitToReadAsync(ct))
+                {
+                    while (channel.Reader.TryRead(out var item))
                     {
-                        long remaining = Math.Max(0, task.TotalBytes.Value - task.DownloadedBytes);
-                        eta = remaining / currentSpeedBps;
+                        bytesSinceLastSpeedCalc += item.Bytes;
                     }
 
-                    ProgressUpdated?.Invoke(this, new DownloadProgressEventArgs
+                    if (stopwatch.ElapsedMilliseconds >= 300)
                     {
-                        TaskId = task.Id,
-                        DownloadedBytes = task.DownloadedBytes,
-                        TotalBytes = task.TotalBytes,
-                        SpeedBps = currentSpeedBps,
-                        EtaSeconds = eta,
-                        Segments = task.Segments.ToList()
-                    });
+                        double seconds = stopwatch.Elapsed.TotalSeconds;
+                        currentSpeedBps = seconds > 0 ? (long)(bytesSinceLastSpeedCalc / seconds) : 0;
+                        bytesSinceLastSpeedCalc = 0;
+                        stopwatch.Restart();
+
+                        long? eta = null;
+                        if (currentSpeedBps > 0 && task.TotalBytes is > 0)
+                        {
+                            long remaining = Math.Max(0, task.TotalBytes.Value - task.DownloadedBytes);
+                            eta = remaining / currentSpeedBps;
+                        }
+
+                        ProgressUpdated?.Invoke(this, new DownloadProgressEventArgs
+                        {
+                            TaskId = task.Id,
+                            DownloadedBytes = task.DownloadedBytes,
+                            TotalBytes = task.TotalBytes,
+                            SpeedBps = currentSpeedBps,
+                            EtaSeconds = eta,
+                            Segments = task.Segments.ToList()
+                        });
+                    }
+
+                    if (lastDbSave.ElapsedMilliseconds >= 1500)
+                    {
+                        _database.UpsertTask(task);
+                        lastDbSave.Restart();
+                    }
                 }
+            }, ct);
 
-                if (lastDbSave.ElapsedMilliseconds >= 1500)
-                {
-                    _database.UpsertTask(task);
-                    lastDbSave.Restart();
-                }
-            }
-        }, ct);
-
-        long lastDone = task.DownloadedBytes;
-        await _telegramService.DownloadMediaMessageAsync(chatId, messageId, task.FilePath, async (done, total) =>
-        {
-            if (total > 0) task.TotalBytes = total;
-            task.DownloadedBytes = done;
-
-            long delta = done - lastDone;
-            if (delta > 0)
+            long lastDone = task.DownloadedBytes;
+            await _telegramService.DownloadMediaMessageAsync(chatId, messageId, task.FilePath, async (done, total) =>
             {
-                lastDone = done;
-                if (taskLimiter.BytesPerSecond > 0)
+                if (total > 0) task.TotalBytes = total;
+                task.DownloadedBytes = done;
+
+                long delta = done - lastDone;
+                if (delta > 0)
                 {
-                    await taskLimiter.ConsumeAsync((int)Math.Min(delta, int.MaxValue), ct);
+                    lastDone = done;
+                    if (taskLimiter.BytesPerSecond > 0)
+                    {
+                        await taskLimiter.ConsumeAsync((int)Math.Min(delta, int.MaxValue), ct);
+                    }
+                    if (GlobalLimiter.BytesPerSecond > 0)
+                    {
+                        await GlobalLimiter.ConsumeAsync((int)Math.Min(delta, int.MaxValue), ct);
+                    }
+                    channel.Writer.TryWrite((0, (int)Math.Min(delta, int.MaxValue)));
                 }
-                if (GlobalLimiter.BytesPerSecond > 0)
-                {
-                    await GlobalLimiter.ConsumeAsync((int)Math.Min(delta, int.MaxValue), ct);
-                }
-                channel.Writer.TryWrite((0, (int)Math.Min(delta, int.MaxValue)));
+            }, ct);
+
+            channel.Writer.Complete();
+            await progressReader;
+
+            task.Status = DownloadStatus.Completed;
+            task.CompletedAt = DateTime.Now.ToString("o");
+            if (task.TotalBytes is > 0)
+            {
+                task.DownloadedBytes = task.TotalBytes.Value;
             }
-        }, ct);
 
-        channel.Writer.Complete();
-        await progressReader;
-
-        task.Status = DownloadStatus.Completed;
-        task.CompletedAt = DateTime.Now.ToString("o");
-        if (task.TotalBytes is > 0)
-        {
-            task.DownloadedBytes = task.TotalBytes.Value;
+            _database.UpsertTask(task);
+            TaskCompleted?.Invoke(this, task.Id);
         }
-
-        _database.UpsertTask(task);
-        TaskCompleted?.Invoke(this, task.Id);
     }
 
     private async Task DownloadSegmentRangeAsync(

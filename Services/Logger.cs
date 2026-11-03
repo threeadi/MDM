@@ -17,12 +17,14 @@ public record LogEntry(
     LogLevel Level,
     string? Component,
     string Message,
-    string? ExceptionDetails
+    string? RayId = null,
+    string? ExceptionDetails = null
 )
 {
     public string Formatted =>
         $"[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{Level.ToString().ToUpperInvariant()}]" +
         (!string.IsNullOrEmpty(Component) ? $" [{Component}]" : "") +
+        (!string.IsNullOrEmpty(RayId) ? $" [{RayId}]" : "") +
         $" {Message}" +
         (!string.IsNullOrEmpty(ExceptionDetails) ? $" | Exception: {ExceptionDetails}" : "");
 }
@@ -33,8 +35,34 @@ public static class Logger
     private static readonly ConcurrentQueue<LogEntry> RingBuffer = new();
     private static readonly object FileLock = new();
     private static readonly string LogDir;
+    private static readonly AsyncLocal<string?> CurrentRayIdHolder = new();
 
     public static LogLevel MinimumLevel { get; set; } = LogLevel.Debug;
+
+    public static string? CurrentRayId
+    {
+        get => CurrentRayIdHolder.Value;
+        set => CurrentRayIdHolder.Value = value;
+    }
+
+    public static IDisposable WithRayId(string? rayId)
+    {
+        var previous = CurrentRayId;
+        CurrentRayId = rayId;
+        return new RayIdScope(previous);
+    }
+
+    private sealed class RayIdScope : IDisposable
+    {
+        private readonly string? _previous;
+        public RayIdScope(string? previous) => _previous = previous;
+        public void Dispose() => CurrentRayId = _previous;
+    }
+
+    public static string NewRayId(string prefix = "ray")
+    {
+        return $"{prefix}_{Guid.NewGuid().ToString("N")[..8]}";
+    }
 
     private static readonly Regex TokenRegex = new(
         @"(?i)(token|auth|api_key|secret|signature|key|password)=([^&\s]+)",
@@ -77,19 +105,20 @@ public static class Logger
         return sanitized;
     }
 
-    public static void Debug(string message, string? component = null) => Log(LogLevel.Debug, message, component);
-    public static void Info(string message, string? component = null) => Log(LogLevel.Info, message, component);
-    public static void Warn(string message, string? component = null) => Log(LogLevel.Warn, message, component);
-    public static void Error(string message, Exception? ex = null, string? component = null) => Log(LogLevel.Error, message, component, ex);
+    public static void Debug(string message, string? component = null, string? rayId = null) => Log(LogLevel.Debug, message, component, null, rayId);
+    public static void Info(string message, string? component = null, string? rayId = null) => Log(LogLevel.Info, message, component, null, rayId);
+    public static void Warn(string message, string? component = null, string? rayId = null) => Log(LogLevel.Warn, message, component, null, rayId);
+    public static void Error(string message, Exception? ex = null, string? component = null, string? rayId = null) => Log(LogLevel.Error, message, component, ex, rayId);
 
-    public static void Log(LogLevel level, string message, string? component = null, Exception? ex = null)
+    public static void Log(LogLevel level, string message, string? component = null, Exception? ex = null, string? rayId = null)
     {
         if (level < MinimumLevel) return;
 
+        string? effectiveRayId = !string.IsNullOrEmpty(rayId) ? rayId : CurrentRayId;
         string sanitizedMsg = Sanitize(message);
         string? exText = ex != null ? $"{ex.GetType().Name}: {Sanitize(ex.Message)}" : null;
 
-        var entry = new LogEntry(DateTime.Now, level, component, sanitizedMsg, exText);
+        var entry = new LogEntry(DateTime.Now, level, component, sanitizedMsg, effectiveRayId, exText);
         string formattedLine = entry.Formatted;
 
         // In-memory ring buffer
@@ -113,19 +142,19 @@ public static class Logger
         catch { }
     }
 
-    public static List<string> GetRecentLogs(int count = 100, LogLevel minLevel = LogLevel.Debug)
+    public static List<string> GetRecentLogs(int count = 100, LogLevel minLevel = LogLevel.Debug, string? rayId = null)
     {
         return RingBuffer
-            .Where(e => e.Level >= minLevel)
+            .Where(e => e.Level >= minLevel && (string.IsNullOrEmpty(rayId) || e.RayId == rayId || (e.RayId != null && e.RayId.StartsWith(rayId))))
             .TakeLast(count)
             .Select(e => e.Formatted)
             .ToList();
     }
 
-    public static List<LogEntry> GetRecentEntries(int count = 100, LogLevel minLevel = LogLevel.Debug)
+    public static List<LogEntry> GetRecentEntries(int count = 100, LogLevel minLevel = LogLevel.Debug, string? rayId = null)
     {
         return RingBuffer
-            .Where(e => e.Level >= minLevel)
+            .Where(e => e.Level >= minLevel && (string.IsNullOrEmpty(rayId) || e.RayId == rayId || (e.RayId != null && e.RayId.StartsWith(rayId))))
             .TakeLast(count)
             .ToList();
     }

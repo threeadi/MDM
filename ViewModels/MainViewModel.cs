@@ -1065,24 +1065,29 @@ public class MainViewModel : INotifyPropertyChanged
         string? referer = null,
         string? category = null,
         bool startImmediately = true,
-        string? quality = null)
+        string? quality = null,
+        string? rayId = null)
     {
-        Logger.Info($"Memulai alur unduhan baru: {url} -> {saveDir}/{filename ?? "auto-detect"} (threads: {threads}, auto-start: {startImmediately})", "VIEWMODEL");
-        var task = await _engine.ProbeAndCreateTaskAsync(url, saveDir, filename, threads, referer, category, quality);
-        if (!startImmediately)
+        string effectiveRayId = !string.IsNullOrWhiteSpace(rayId) ? rayId : Logger.NewRayId();
+        using (Logger.WithRayId(effectiveRayId))
         {
-            task.Status = DownloadStatus.Paused;
-            _database.UpsertTask(task);
-        }
+            Logger.Info($"Memulai alur unduhan baru: {url} -> {saveDir}/{filename ?? "auto-detect"} (threads: {threads}, auto-start: {startImmediately})", "VIEWMODEL", effectiveRayId);
+            var task = await _engine.ProbeAndCreateTaskAsync(url, saveDir, filename, threads, referer, category, quality, effectiveRayId);
+            if (!startImmediately)
+            {
+                task.Status = DownloadStatus.Paused;
+                _database.UpsertTask(task);
+            }
 
-        var vm = new DownloadItemViewModel(task);
-        _allTasks.Insert(0, vm);
-        SelectedTask = vm;
-        UpdateCounts();
+            var vm = new DownloadItemViewModel(task);
+            _allTasks.Insert(0, vm);
+            SelectedTask = vm;
+            UpdateCounts();
 
-        if (startImmediately)
-        {
-            _engine.StartDownload(task);
+            if (startImmediately)
+            {
+                _engine.StartDownload(task);
+            }
         }
     }
 
