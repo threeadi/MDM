@@ -877,6 +877,34 @@ public class DownloadEngine
             return;
         }
 
+        if (isVideo && File.Exists(task.FilePath))
+        {
+            try
+            {
+                using var fs = File.OpenRead(task.FilePath);
+                byte[] sample = new byte[Math.Min(1024, (int)fs.Length)];
+                int read = fs.Read(sample, 0, sample.Length);
+                if (read >= 8 && SteganographyDecrypter.IsSteganographyDecoy(sample.AsSpan(0, read)))
+                {
+                    Logger.Info($"Mencoba membongkar decoy steganografi untuk unduhan '{task.Filename}'...", "ENGINE");
+                    bool decrypted = await SteganographyDecrypter.TryDecryptInPlaceAsync(task.FilePath);
+                    if (decrypted)
+                    {
+                        long actualLen = new FileInfo(task.FilePath).Length;
+                        task.DownloadedBytes = actualLen;
+                        task.TotalBytes = actualLen;
+                        task.IsDecoyCanvas = false;
+                        task.ProtectionWarning = null;
+                        Logger.Info($"Berhasil membongkar decoy steganografi untuk '{task.Filename}' (ukuran: {actualLen} B)!", "ENGINE");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn($"Gagal mengevaluasi decoy steganografi pada unduhan reguler: {ex.Message}", "ENGINE");
+            }
+        }
+
         Logger.Info($"Tugas unduhan selesai: {task.Id} ({task.Filename}), total={task.DownloadedBytes} bytes", "ENGINE");
         // Mark Completed
         task.Status = DownloadStatus.Completed;
@@ -976,8 +1004,8 @@ public class DownloadEngine
                 task.ErrorMessage = null;
                 foreach (var s in task.Segments) s.IsFinished = true;
 
-                // Validate container format of output file and auto-decrypt steganographic decoys
-                bool isDecoyJpeg = false;
+                // Validate container format of output file and auto-decrypt steganographic decoys (JPEG or PNG)
+                bool isDecoyStegano = false;
                 bool isHtmlError = false;
                 try
                 {
@@ -987,9 +1015,9 @@ public class DownloadEngine
                         int read = fs.Read(sample, 0, sample.Length);
                         var sampleSpan = sample.AsSpan(0, read);
 
-                        if (read >= 3 && sampleSpan[0] == 0xFF && sampleSpan[1] == 0xD8 && sampleSpan[2] == 0xFF)
+                        if (SteganographyDecrypter.IsSteganographyDecoy(sampleSpan))
                         {
-                            isDecoyJpeg = true;
+                            isDecoyStegano = true;
                         }
                         else if (read >= 15 && HoneypotDetector.IsHtmlErrorPayload(sampleSpan))
                         {
@@ -997,9 +1025,9 @@ public class DownloadEngine
                         }
                     }
 
-                    if (isDecoyJpeg)
+                    if (isDecoyStegano)
                     {
-                        Logger.Info($"Mencoba mendekripsi decoy steganografi untuk '{task.Filename}'...", "ENGINE", task.RayId);
+                        Logger.Info($"Mencoba membongkar decoy steganografi untuk '{task.Filename}'...", "ENGINE", task.RayId);
                         bool decrypted = await SteganographyDecrypter.TryDecryptInPlaceAsync(task.FilePath);
                         if (decrypted)
                         {
@@ -1008,13 +1036,13 @@ public class DownloadEngine
                             task.TotalBytes = actualLen;
                             task.IsDecoyCanvas = false;
                             task.ProtectionWarning = null;
-                            Logger.Info($"Berhasil mendekripsi decoy steganografi untuk '{task.Filename}' (ukuran: {actualLen} B)!", "ENGINE", task.RayId);
+                            Logger.Info($"Berhasil membongkar decoy steganografi untuk '{task.Filename}' (ukuran: {actualLen} B)!", "ENGINE", task.RayId);
                         }
                         else
                         {
                             task.IsDecoyCanvas = true;
-                            task.ProtectionWarning = "Decoy Steganografi Terdeteksi: Video disamarkan sebagai stream gambar JPEG oleh server";
-                            Logger.Warn($"Unduhan '{task.Filename}' terdeteksi sebagai decoy steganografi JPEG.", "ENGINE", task.RayId);
+                            task.ProtectionWarning = "Decoy Steganografi Terdeteksi: Video disamarkan sebagai stream gambar (JPEG/PNG) oleh server";
+                            Logger.Warn($"Unduhan '{task.Filename}' terdeteksi sebagai decoy steganografi yang belum didukung.", "ENGINE", task.RayId);
                         }
                     }
                     else if (isHtmlError)

@@ -421,8 +421,9 @@
         const streamRes = classifyResolution(0, 0, m.url);
         const formatLabel = m.format || (m.type === "stream" ? "M3U8" : "MP4");
         const fileExt = (formatLabel.toLowerCase() === "m3u8" || formatLabel.toLowerCase() === "hls") ? "mp4" : formatLabel.toLowerCase();
+        const displayFormat = (formatLabel.toLowerCase() === "m3u8" || formatLabel.toLowerCase() === "hls") ? "MP4" : formatLabel;
         const realSize = m.sizeFormatted || (m.contentLength ? formatBytes(m.contentLength) : "") || getResourceSize(m.url);
-        const metaStr = realSize ? `${formatLabel} • ${realSize}` : `${formatLabel} • ${streamRes.tag || streamRes.quality || "Stream"}`;
+        const metaStr = realSize ? `${displayFormat} • ${realSize}` : `${displayFormat} • ${streamRes.tag || streamRes.quality || "Stream"}`;
         return {
           id: `stream_${idx}`,
           badge: m.type === "stream" ? "HLS" : streamRes.badge,
@@ -458,8 +459,9 @@
     const matched = validSniffed.find(m => m.url === vSrc) || validSniffed.find(m => vSrc && vSrc.includes(m.url)) || validSniffed[0];
     const formatLabel = matched?.format || (vSrc.includes(".webm") ? "WEBM" : (vSrc.includes(".m3u8") ? "M3U8" : "MP4"));
     const fileExt = (formatLabel.toLowerCase() === "m3u8" || formatLabel.toLowerCase() === "hls") ? "mp4" : formatLabel.toLowerCase();
+    const displayFormat = (formatLabel.toLowerCase() === "m3u8" || formatLabel.toLowerCase() === "hls") ? "MP4" : formatLabel;
     const realSize = matched?.sizeFormatted || (matched?.contentLength ? formatBytes(matched.contentLength) : "") || getResourceSize(vSrc);
-    const metaStr = realSize ? `${formatLabel} • ${realSize}` : `${formatLabel} • ${res.tag || res.quality || "Video"}`;
+    const metaStr = realSize ? `${displayFormat} • ${realSize}` : `${displayFormat} • ${res.tag || res.quality || "Video"}`;
 
     const items = [
       {

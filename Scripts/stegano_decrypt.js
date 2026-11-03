@@ -1,11 +1,30 @@
 /**
  * Steganography HLS Decrypter for MDM
- * Unpacks concatenated JPEG-wrapped AES-CBC video chunks and remuxes to clean MP4
+ * Unpacks concatenated JPEG-wrapped AES-CBC video chunks and PNG-wrapped MPEG-TS chunks
+ * and remuxes them to clean, playable MP4.
  */
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
+
+function findFfmpeg() {
+  try {
+    execSync('ffmpeg -version', { stdio: 'ignore' });
+    return 'ffmpeg';
+  } catch (_) {}
+
+  const localAppData = process.env.LOCALAPPDATA || '';
+  const candidates = [
+    path.join(__dirname, '..', 'ffmpeg.exe'),
+    path.join(__dirname, '..', 'bin', 'ffmpeg.exe'),
+    path.join(localAppData, 'Microsoft', 'WinGet', 'Links', 'ffmpeg.exe'),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return 'ffmpeg';
+}
 
 function rc4(data, key) {
   for (var n, o = [], r = 0, l = '', a = 0; a < 256; a++) o[a] = a;
@@ -106,24 +125,7 @@ function decryptChunk(raw, p, ivBytes) {
   return Buffer.from(u);
 }
 
-function processFile(filePath) {
-  if (!fs.existsSync(filePath)) {
-    console.error(`File not found: ${filePath}`);
-    process.exit(1);
-  }
-
-  const raw = fs.readFileSync(filePath);
-  if (raw.length < 1024) {
-    console.error('File too small');
-    process.exit(1);
-  }
-
-  // Check if starts with JPEG SOI
-  if (!(raw[0] === 0xFF && raw[1] === 0xD8 && raw[2] === 0xFF)) {
-    console.log('Not a JPEG-wrapped decoy stream.');
-    process.exit(0);
-  }
-
+function processJpegDecoy(filePath, raw) {
   const matches = [];
   for (let i = 0; i < raw.length - 4; i++) {
     if (raw[i] === 0xFF && raw[i + 1] === 0xD8 && raw[i + 2] === 0xFF && raw[i + 3] === 0xE0) {
@@ -172,13 +174,18 @@ function processFile(filePath) {
     process.exit(1);
   }
 
+  const ffmpeg = findFfmpeg();
   try {
     console.log('Remuxing TS to clean MP4 via ffmpeg...');
-    execSync(`ffmpeg -y -v error -i "${tempTs}" -c copy "${tempMp4}"`);
+    try {
+      execSync(`"${ffmpeg}" -y -v error -i "${tempTs}" -map 0:v? -map 0:a? -c copy "${tempMp4}"`);
+    } catch (_) {
+      execSync(`"${ffmpeg}" -y -v error -i "${tempTs}" -c copy "${tempMp4}"`);
+    }
 
     if (fs.existsSync(tempMp4) && fs.statSync(tempMp4).size > 1024) {
       fs.copyFileSync(tempMp4, filePath);
-      console.log('Successfully decrypted and replaced file in-place!');
+      console.log('Successfully decrypted JPEG decoy and replaced file in-place!');
     } else {
       throw new Error('ffmpeg did not produce a valid output file');
     }
@@ -191,10 +198,116 @@ function processFile(filePath) {
   }
 }
 
+function processPngDecoy(filePath, raw) {
+  const pngSig = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+  const matches = [];
+  let idx = 0;
+  while (idx < raw.length) {
+    const pos = raw.indexOf(pngSig, idx);
+    if (pos === -1) break;
+    matches.push(pos);
+    idx = pos + 8;
+  }
+  matches.push(raw.length);
+
+  const totalSegments = matches.length - 1;
+  console.log(`Found ${totalSegments} PNG-prefixed segment(s). Inspecting payloads...`);
+
+  const randSuffix = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const tempTs = path.join(os.tmpdir(), `mdm_stegano_png_${randSuffix}.ts`);
+  const tempMp4 = path.join(os.tmpdir(), `mdm_stegano_png_${randSuffix}.mp4`);
+  const fd = fs.openSync(tempTs, 'w');
+
+  let extractedTsCount = 0;
+  const iendSig = Buffer.from('IEND');
+
+  try {
+    for (let i = 0; i < totalSegments; i++) {
+      const seg = raw.subarray(matches[i], matches[i + 1]);
+      const iendPos = seg.indexOf(iendSig);
+      let foundTs = -1;
+      const startSearch = iendPos !== -1 ? iendPos + 8 : 8;
+
+      // Look for MPEG-TS sync byte 0x47 with 188-byte stride
+      for (let o = startSearch; o < Math.min(seg.length, 4096); o++) {
+        if (seg[o] === 0x47) {
+          if (o + 188 < seg.length && seg[o + 188] === 0x47) {
+            foundTs = o;
+            break;
+          }
+        }
+      }
+
+      if (foundTs !== -1) {
+        fs.writeSync(fd, seg.subarray(foundTs));
+        extractedTsCount++;
+      }
+    }
+  } finally {
+    fs.closeSync(fd);
+  }
+
+  console.log(`Extracted TS payload from ${extractedTsCount}/${totalSegments} segments.`);
+
+  if (extractedTsCount === 0) {
+    try { fs.unlinkSync(tempTs); } catch (_) {}
+    console.error('No valid MPEG-TS stream found behind PNG decoy headers');
+    process.exit(1);
+  }
+
+  const ffmpeg = findFfmpeg();
+  try {
+    console.log('Remuxing extracted TS to clean MP4 via ffmpeg...');
+    try {
+      execSync(`"${ffmpeg}" -y -v error -i "${tempTs}" -map 0:v? -map 0:a? -c copy "${tempMp4}"`);
+    } catch (_) {
+      execSync(`"${ffmpeg}" -y -v error -i "${tempTs}" -c copy "${tempMp4}"`);
+    }
+
+    if (fs.existsSync(tempMp4) && fs.statSync(tempMp4).size > 1024) {
+      fs.copyFileSync(tempMp4, filePath);
+      console.log('Successfully unpacked PNG decoy and remuxed to MP4 in-place!');
+    } else {
+      throw new Error('ffmpeg did not produce a valid output file');
+    }
+  } catch (err) {
+    console.error('Failed to remux with ffmpeg:', err.message);
+    process.exit(1);
+  } finally {
+    try { if (fs.existsSync(tempTs)) fs.unlinkSync(tempTs); } catch (_) {}
+    try { if (fs.existsSync(tempMp4)) fs.unlinkSync(tempMp4); } catch (_) {}
+  }
+}
+
+function processFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`File not found: ${filePath}`);
+    process.exit(1);
+  }
+
+  const raw = fs.readFileSync(filePath);
+  if (raw.length < 1024) {
+    console.error('File too small');
+    process.exit(1);
+  }
+
+  const isJpeg = raw[0] === 0xFF && raw[1] === 0xD8 && raw[2] === 0xFF;
+  const isPng = raw[0] === 0x89 && raw[1] === 0x50 && raw[2] === 0x4E && raw[3] === 0x47 &&
+                raw[4] === 0x0D && raw[5] === 0x0A && raw[6] === 0x1A && raw[7] === 0x0A;
+
+  if (isJpeg) {
+    processJpegDecoy(filePath, raw);
+  } else if (isPng) {
+    processPngDecoy(filePath, raw);
+  } else {
+    console.log('Not a recognized steganography decoy stream (JPEG/PNG).');
+    process.exit(0);
+  }
+}
+
 const targetPath = process.argv[2];
 if (!targetPath) {
   console.log('Usage: node stegano_decrypt.js <filePath>');
   process.exit(1);
 }
 processFile(targetPath);
-

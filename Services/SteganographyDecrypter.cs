@@ -7,6 +7,25 @@ namespace Mdm.Services;
 
 public static class SteganographyDecrypter
 {
+    public static bool IsSteganographyDecoy(ReadOnlySpan<byte> head)
+    {
+        // JPEG SOI
+        if (head.Length >= 3 && head[0] == 0xFF && head[1] == 0xD8 && head[2] == 0xFF)
+        {
+            return true;
+        }
+
+        // PNG Magic signature (\x89PNG\r\n\x1a\n)
+        if (head.Length >= 8 &&
+            head[0] == 0x89 && head[1] == 0x50 && head[2] == 0x4E && head[3] == 0x47 &&
+            head[4] == 0x0D && head[5] == 0x0A && head[6] == 0x1A && head[7] == 0x0A)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     public static async Task<bool> TryDecryptInPlaceAsync(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
@@ -16,13 +35,13 @@ public static class SteganographyDecrypter
 
         try
         {
-            // Verify if file begins with JPEG SOI
+            // Verify if file begins with JPEG SOI or PNG magic
             using (var fs = File.OpenRead(filePath))
             {
                 if (fs.Length < 1024) return false;
-                byte[] head = new byte[3];
-                int r = fs.Read(head, 0, 3);
-                if (r < 3 || head[0] != 0xFF || head[1] != 0xD8 || head[2] != 0xFF)
+                byte[] head = new byte[8];
+                int r = fs.Read(head, 0, 8);
+                if (r < 3 || !IsSteganographyDecoy(head.AsSpan(0, r)))
                 {
                     return false;
                 }
