@@ -4,7 +4,7 @@
         xmlns:services="clr-namespace:Mdm.Services"
         Title="{services:Loc addDownload.title}"
         Icon="pack://application:,,,/Mdm;component/Assets/app.ico"
-        Width="540" Height="420"
+        Width="520" Height="340"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="{StaticResource CanvasBrush}">
@@ -26,18 +26,12 @@
             <!-- Form Inputs -->
             <StackPanel Grid.Row="1" VerticalAlignment="Top">
                 <TextBlock Text="{services:Loc addDownload.urlLabel}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
-                <TextBox x:Name="UrlTextBox" Style="{StaticResource FlatTextBox}" Margin="0,0,0,4" TextChanged="UrlTextBox_TextChanged"/>
-
-                <!-- Probe Info Badge -->
-                <Border x:Name="ProbeBadge" Background="#1D2432" BorderBrush="#2F3B52" BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="0,0,0,10" Visibility="Collapsed">
-                    <TextBlock x:Name="ProbeStatusText" Text="Memeriksa URL..." FontSize="11" Foreground="{StaticResource AccentCyanBrush}"/>
-                </Border>
+                <TextBox x:Name="UrlTextBox" Style="{StaticResource FlatTextBox}" Margin="0,0,0,10" TextChanged="UrlTextBox_TextChanged"/>
 
                 <Grid Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="80"/>
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0">
@@ -45,12 +39,7 @@
                         <TextBox x:Name="SaveDirTextBox" Style="{StaticResource FlatTextBox}"/>
                     </StackPanel>
 
-                    <Button Grid.Column="1" Content="..." Style="{StaticResource FlatActionButton}" Width="32" Height="28" VerticalAlignment="Bottom" Margin="6,0,10,0" Click="BrowseFolder_Click"/>
-
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="{services:Loc addDownload.connectionsLabel}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
-                        <TextBox x:Name="ThreadsTextBox" Text="16" Style="{StaticResource FlatTextBox}"/>
-                    </StackPanel>
+                    <Button Grid.Column="1" Content="..." Style="{StaticResource FlatActionButton}" Width="32" Height="28" VerticalAlignment="Bottom" Margin="6,0,0,0" Click="BrowseFolder_Click"/>
                 </Grid>
 
                 <Grid Margin="0,0,0,10">

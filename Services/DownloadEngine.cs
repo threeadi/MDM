@@ -230,7 +230,7 @@ public class DownloadEngine
         string finalFilename = !string.IsNullOrWhiteSpace(filename) ? SanitizeFilename(filename) : probe.Filename;
         string filePath = Path.Combine(saveDir, finalFilename);
 
-        int workerCount = (probe.SupportsRange && !probe.IsHls && probe.TotalBytes is > 0) ? Math.Max(1, Math.Min(connections, 32)) : 1;
+        int workerCount = CalculateOptimalThreads(probe.TotalBytes, probe.SupportsRange, probe.IsHls, quality);
         var segments = CalculateSegments(probe.TotalBytes, workerCount);
 
         var task = new DownloadTask
@@ -253,6 +253,20 @@ public class DownloadEngine
 
         _database.UpsertTask(task);
         return task;
+    }
+
+    public static int CalculateOptimalThreads(long? totalBytes, bool supportsRange, bool isHls, string? quality = null)
+    {
+        if (!supportsRange || isHls) return 1;
+        if (!totalBytes.HasValue || totalBytes.Value <= 0) return 8;
+
+        long mb = totalBytes.Value / (1024 * 1024);
+        if (mb >= 500) return 32;
+        if (mb >= 100) return 24;
+        if (mb >= 30) return 16;
+        if (mb >= 10) return 8;
+        if (mb >= 2) return 4;
+        return 2;
     }
 
     public static List<DownloadSegment> CalculateSegments(long? totalBytes, int workerCount)
@@ -539,6 +553,37 @@ public class DownloadEngine
 
         // Synchronize actual file size from disk (1:1 with my-own-idm)
         long actualLen = File.Exists(task.FilePath) ? new FileInfo(task.FilePath).Length : 0;
+        if (actualLen <= 0)
+        {
+            string? dir = Path.GetDirectoryName(task.FilePath);
+            if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+            {
+                string stem = Path.GetFileNameWithoutExtension(task.FilePath);
+                string candMp4 = Path.Combine(dir, stem + ".mp4");
+                string candMkv = Path.Combine(dir, stem + ".mkv");
+                string candWebm = Path.Combine(dir, stem + ".webm");
+
+                if (File.Exists(candMp4))
+                {
+                    task.FilePath = candMp4;
+                    task.Filename = Path.GetFileName(candMp4);
+                    actualLen = new FileInfo(candMp4).Length;
+                }
+                else if (File.Exists(candMkv))
+                {
+                    task.FilePath = candMkv;
+                    task.Filename = Path.GetFileName(candMkv);
+                    actualLen = new FileInfo(candMkv).Length;
+                }
+                else if (File.Exists(candWebm))
+                {
+                    task.FilePath = candWebm;
+                    task.Filename = Path.GetFileName(candWebm);
+                    actualLen = new FileInfo(candWebm).Length;
+                }
+            }
+        }
+
         if (actualLen > 0)
         {
             task.DownloadedBytes = actualLen;

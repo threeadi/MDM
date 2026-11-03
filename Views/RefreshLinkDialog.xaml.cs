@@ -110,7 +110,7 @@ public partial class RefreshLinkDialog : Window
                         }
                     }
 
-                    ProbeStatusText.Text = $"Tautan valid! Ukuran: {(probe.TotalBytes.HasValue ? DownloadItemViewModel.FormatBytes(probe.TotalBytes.Value) : "Sesuai")}. Multi-thread Range didukung.";
+                    ProbeStatusText.Text = $"Tautan valid! Ukuran: {(probe.TotalBytes.HasValue ? DownloadItemViewModel.FormatBytes(probe.TotalBytes.Value) : "Sesuai")}.";
                     ProbeStatusText.Foreground = (Brush)FindResource("AccentEmeraldBrush");
                     ApplyButton.IsEnabled = true;
                     ValidatedNewUrl = url;

@@ -43,7 +43,7 @@
                                     <TextBlock x:Name="AuthBadgeText" Text="MTProto Connected" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentEmeraldBrush}"/>
                                 </Border>
                             </StackPanel>
-                            <TextBlock Text="Sesi MTProto Desktop terhubung dengan engine download multi-thread MDM" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
+                            <TextBlock Text="Sesi MTProto Desktop terhubung dengan engine download MDM" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
                         </StackPanel>
                     </StackPanel>
 

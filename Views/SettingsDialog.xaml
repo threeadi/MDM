@@ -415,23 +415,6 @@
                                         <TextBlock Text="{services:Loc settings.maxRetriesDesc}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
                                     </StackPanel>
                                 </Grid>
-
-                                <!-- Divider -->
-                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,14"/>
-
-                                <!-- Parallel Connections -->
-                                <StackPanel>
-                                    <TextBlock Text="{services:Loc settings.parallelConnections}" FontSize="11.5" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <ComboBox x:Name="MaxParallelConnectionsComboBox" Width="210" Height="32" Style="{StaticResource DarkComboBox}" Margin="0,0,12,0">
-                                            <ComboBoxItem Content="4 Jalur (Ringan)"/>
-                                            <ComboBoxItem Content="8 Jalur (Normal)"/>
-                                            <ComboBoxItem Content="16 Jalur (Standar Turbo)" IsSelected="True"/>
-                                            <ComboBoxItem Content="32 Jalur (Maksimum Server Cepat)"/>
-                                        </ComboBox>
-                                        <TextBlock Text="{services:Loc settings.parallelConnectionsDesc}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>

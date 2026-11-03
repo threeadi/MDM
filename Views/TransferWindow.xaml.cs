@@ -41,7 +41,7 @@ public partial class TransferWindow : Window
                 {
                     ToggleDetailsText.Text = SegmentDetailsPanel.Visibility == Visibility.Visible
                         ? I18n.Tr("transfer.hideThreadDetails", "Sembunyikan Rincian")
-                        : I18n.Tr("transfer.showThreadDetails", "Tampilkan Rincian Thread");
+                        : I18n.Tr("transfer.showThreadDetails", "Tampilkan Rincian");
                 }
             });
         };
@@ -137,7 +137,7 @@ public partial class TransferWindow : Window
         if (SegmentDetailsPanel.Visibility == Visibility.Visible)
         {
             SegmentDetailsPanel.Visibility = Visibility.Collapsed;
-            ToggleDetailsText.Text = I18n.Tr("transfer.showThreadDetails", "Tampilkan Rincian Thread");
+            ToggleDetailsText.Text = I18n.Tr("transfer.showThreadDetails", "Tampilkan Rincian");
             ToggleChevronIcon.Kind = "chevron-down";
         }
         else

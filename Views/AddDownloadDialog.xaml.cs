@@ -15,7 +15,7 @@ public partial class AddDownloadDialog : Window
     public string DownloadUrl => UrlTextBox.Text.Trim();
     public string SaveDirectory => SaveDirTextBox.Text.Trim();
     public string CustomFilename => FilenameTextBox.Text.Trim();
-    public int ConnectionThreads => int.TryParse(ThreadsTextBox.Text.Trim(), out int t) ? Math.Clamp(t, 1, 32) : 16;
+    public int ConnectionThreads => 16;
     public string SelectedCategory => (CategoryComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Umum";
     public bool StartImmediately => StartNowCheckBox.IsChecked == true;
     public string? Referer { get; set; }
@@ -75,17 +75,12 @@ public partial class AddDownloadDialog : Window
         if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
             !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
-            ProbeBadge.Visibility = Visibility.Collapsed;
             return;
         }
 
         _probeCts?.Cancel();
         _probeCts = new CancellationTokenSource();
         var token = _probeCts.Token;
-
-        ProbeBadge.Visibility = Visibility.Visible;
-        ProbeStatusText.Text = "Memeriksa informasi berkas...";
-        ProbeStatusText.Foreground = (Brush)FindResource("TextMutedBrush");
 
         Task.Run(async () =>
         {
@@ -103,28 +98,10 @@ public partial class AddDownloadDialog : Window
                         FilenameTextBox.Text = probe.Filename;
                         SelectCategoryByExtension(probe.Filename);
                     }
-
-                    string sizeStr = probe.TotalBytes.HasValue
-                        ? DownloadItemViewModel.FormatBytes(probe.TotalBytes.Value)
-                        : "Ukuran tidak diketahui";
-
-                    string rangeStr = probe.SupportsRange ? "Multi-Thread (206 OK)" : "Single Connection";
-                    string qInfo = !string.IsNullOrWhiteSpace(Quality) ? $"  |  Kualitas: {Quality}" : "";
-
-                    ProbeStatusText.Text = $"Ukuran: {sizeStr}{qInfo}  |  Resume: {rangeStr}  |  Kategori: {probe.Category}";
-                    ProbeStatusText.Foreground = (Brush)FindResource("AccentCyanBrush");
                 });
             }
             catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    if (token.IsCancellationRequested) return;
-                    ProbeStatusText.Text = $"Gagal probe: {ex.Message}";
-                    ProbeStatusText.Foreground = (Brush)FindResource("AccentRoseBrush");
-                });
-            }
+            catch { }
         }, token);
     }
 

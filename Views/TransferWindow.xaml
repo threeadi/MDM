@@ -436,12 +436,7 @@
                             </Grid>
 
                             <!-- Multi-Connection Segment Strip Section -->
-                            <Grid Margin="0,2,0,4">
-                                <TextBlock Text="{services:Loc transfer.bufferSegments}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                <TextBlock FontSize="10" Foreground="#94A3B8" HorizontalAlignment="Right">
-                                    <Run Text="{Binding Segments.Count, Mode=OneWay}"/><Run Text=" Threads"/>
-                                </TextBlock>
-                            </Grid>
+                            <TextBlock Text="{services:Loc transfer.bufferSegments}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,4"/>
                             <!-- Segment Strip (Muted Slate & Emerald Blocks) -->
                             <Border Height="12" Background="{StaticResource SurfaceMediumBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="3" Padding="1" Margin="0,0,0,8">
                                 <ItemsControl ItemsSource="{Binding Segments}">

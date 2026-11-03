@@ -263,6 +263,13 @@ public class DownloadItemViewModel : INotifyPropertyChanged
 
         if (total is > 0)
         {
+            if (Task.TotalBytes != total)
+            {
+                Task.TotalBytes = total;
+                OnPropertyChanged(nameof(TotalBytes));
+                OnPropertyChanged(nameof(SizeFormatted));
+            }
+
             Progress = Math.Clamp((double)downloaded / total.Value, 0.0, 1.0);
             ProgressText = (Progress * 100).ToString("F1", System.Globalization.CultureInfo.InvariantCulture) + "%";
         }
@@ -280,6 +287,12 @@ public class DownloadItemViewModel : INotifyPropertyChanged
         SpeedBps = 0;
         EtaFormatted = "--";
         EtaSeconds = null;
+        DownloadedFormatted = FormatBytes(Task.DownloadedBytes);
+        OnPropertyChanged(nameof(SizeFormatted));
+        OnPropertyChanged(nameof(DownloadedFormatted));
+        OnPropertyChanged(nameof(TotalBytes));
+        OnPropertyChanged(nameof(Filename));
+        OnPropertyChanged(nameof(FilePath));
         Status = DownloadStatus.Completed;
     }
 

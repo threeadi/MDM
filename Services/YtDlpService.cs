@@ -245,7 +245,7 @@ public static class YtDlpService
         psi.ArgumentList.Add("--progress-delta");
         psi.ArgumentList.Add("0.2");
         psi.ArgumentList.Add("--progress-template");
-        psi.ArgumentList.Add("IDM_PROGRESS:%(progress.downloaded_bytes)s:%(progress.total_bytes,progress.total_bytes_estimate)s");
+        psi.ArgumentList.Add("IDM_PROGRESS:%(info.format_id)s:%(progress.downloaded_bytes)s:%(progress.total_bytes,progress.total_bytes_estimate)s");
         psi.ArgumentList.Add("-o");
         psi.ArgumentList.Add(outputFile);
 
@@ -272,6 +272,8 @@ public static class YtDlpService
         using var process = new Process { StartInfo = psi };
         process.Start();
 
+        using var localCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
         // Continuous drain of standard error to prevent Windows pipe buffer deadlock
         var stderrLines = new List<string>();
         var stderrLock = new object();
@@ -279,7 +281,7 @@ public static class YtDlpService
         {
             try
             {
-                while (await process.StandardError.ReadLineAsync(CancellationToken.None) is { } errLine)
+                while (await process.StandardError.ReadLineAsync(localCts.Token) is { } errLine)
                 {
                     if (!string.IsNullOrWhiteSpace(errLine))
                     {
@@ -292,7 +294,10 @@ public static class YtDlpService
                 }
             }
             catch { }
-        });
+        }, localCts.Token);
+
+        var formatDownloaded = new System.Collections.Concurrent.ConcurrentDictionary<string, long>();
+        var formatTotals = new System.Collections.Concurrent.ConcurrentDictionary<string, long>();
 
         long lastBytes = task.DownloadedBytes;
         var lastReportInstant = Stopwatch.StartNew();
@@ -301,35 +306,40 @@ public static class YtDlpService
 
         var readerTask = Task.Run(async () =>
         {
-            while (await process.StandardOutput.ReadLineAsync(ct) is { } line)
+            while (await process.StandardOutput.ReadLineAsync(localCts.Token) is { } line)
             {
-                if (ct.IsCancellationRequested) break;
+                if (localCts.IsCancellationRequested) break;
 
                 if (line.StartsWith("IDM_PROGRESS:"))
                 {
                     string content = line["IDM_PROGRESS:".Length..].Trim();
                     string[] parts = content.Split(':');
-                    long downloaded = 0;
-                    if (parts.Length > 0 && long.TryParse(parts[0], out long d))
-                    {
-                        downloaded = d;
-                    }
 
-                    if (parts.Length > 1 && long.TryParse(parts[1], out long estTotal) && estTotal > 0)
+                    if (parts.Length >= 3)
                     {
-                        if (task.TotalBytes == null || task.TotalBytes <= 0 || task.TotalBytes != estTotal)
+                        string fId = parts[0];
+                        if (long.TryParse(parts[1], out long fDown) && fDown >= 0)
                         {
-                            task.TotalBytes = estTotal;
+                            formatDownloaded[fId] = fDown;
                         }
-                    }
-
-                    if (downloaded > 0)
-                    {
-                        if (downloaded > lastBytes)
+                        if (long.TryParse(parts[2], out long fTot) && fTot > 0)
                         {
-                            long delta = downloaded - lastBytes;
+                            formatTotals[fId] = fTot;
+                        }
+
+                        long currentTotal = formatTotals.Values.Sum();
+                        long currentDownloaded = formatDownloaded.Values.Sum();
+
+                        if (currentTotal > 0 && (task.TotalBytes == null || task.TotalBytes <= 0 || task.TotalBytes != currentTotal))
+                        {
+                            task.TotalBytes = currentTotal;
+                        }
+
+                        if (currentDownloaded > lastBytes)
+                        {
+                            long delta = currentDownloaded - lastBytes;
                             bytesSinceSpeedCalc += delta;
-                            lastBytes = downloaded;
+                            lastBytes = currentDownloaded;
                         }
 
                         if (lastReportInstant.ElapsedMilliseconds >= 300)
@@ -342,24 +352,74 @@ public static class YtDlpService
                             long? eta = null;
                             if (task.TotalBytes is > 0 && speedBps > 0)
                             {
-                                long remaining = Math.Max(0, task.TotalBytes.Value - downloaded);
+                                long remaining = Math.Max(0, task.TotalBytes.Value - lastBytes);
                                 eta = remaining / speedBps;
                             }
 
-                            onProgress(downloaded, task.TotalBytes, speedBps, eta);
+                            onProgress(lastBytes, task.TotalBytes, speedBps, eta);
+                        }
+                    }
+                    else if (parts.Length >= 2)
+                    {
+                        long downloaded = 0;
+                        if (long.TryParse(parts[0], out long d))
+                        {
+                            downloaded = d;
+                        }
+                        if (long.TryParse(parts[1], out long estTotal) && estTotal > 0)
+                        {
+                            if (task.TotalBytes == null || task.TotalBytes <= 0 || task.TotalBytes != estTotal)
+                            {
+                                task.TotalBytes = estTotal;
+                            }
+                        }
+                        if (downloaded > 0)
+                        {
+                            if (downloaded > lastBytes)
+                            {
+                                bytesSinceSpeedCalc += (downloaded - lastBytes);
+                                lastBytes = downloaded;
+                            }
+
+                            if (lastReportInstant.ElapsedMilliseconds >= 300)
+                            {
+                                double elapsed = lastReportInstant.Elapsed.TotalSeconds;
+                                speedBps = elapsed > 0 ? (long)(bytesSinceSpeedCalc / elapsed) : 0;
+                                bytesSinceSpeedCalc = 0;
+                                lastReportInstant.Restart();
+
+                                long? eta = null;
+                                if (task.TotalBytes is > 0 && speedBps > 0)
+                                {
+                                    long remaining = Math.Max(0, task.TotalBytes.Value - downloaded);
+                                    eta = remaining / speedBps;
+                                }
+
+                                onProgress(downloaded, task.TotalBytes, speedBps, eta);
+                            }
                         }
                     }
                 }
             }
-        }, ct);
+        }, localCts.Token);
 
-        // Background physical disk polling loop (1:1 with my-own-idm lines 470-484)
+        // Background physical disk polling loop
         string partPath = outputFile + ".part";
         var diskPollTask = Task.Run(async () =>
         {
-            while (!process.HasExited && !ct.IsCancellationRequested)
+            while (!localCts.IsCancellationRequested)
             {
-                await Task.Delay(250, ct);
+                try
+                {
+                    if (process.HasExited) break;
+                }
+                catch { break; }
+
+                try
+                {
+                    await Task.Delay(250, localCts.Token);
+                }
+                catch { break; }
 
                 try
                 {
@@ -374,9 +434,10 @@ public static class YtDlpService
                     }
                     else if (!string.IsNullOrEmpty(targetDir) && Directory.Exists(targetDir))
                     {
-                        // Check if any temp file matches
                         string stem = Path.GetFileNameWithoutExtension(outputFile);
-                        var tempFiles = Directory.EnumerateFiles(targetDir, $"{stem}*.part").ToList();
+                        var tempFiles = Directory.EnumerateFiles(targetDir, $"{stem}*")
+                            .Where(f => f.EndsWith(".part") || f.EndsWith(".temp") || f.Contains(".f"))
+                            .ToList();
                         if (tempFiles.Count > 0)
                         {
                             diskBytes = tempFiles.Sum(f => new FileInfo(f).Length);
@@ -409,7 +470,7 @@ public static class YtDlpService
                 }
                 catch { }
             }
-        }, ct);
+        }, localCts.Token);
 
         try
         {
@@ -429,6 +490,13 @@ public static class YtDlpService
             catch { }
             throw;
         }
+        finally
+        {
+            localCts.Cancel();
+            try { await diskPollTask; } catch { }
+            try { await readerTask; } catch { }
+            try { await stderrTask; } catch { }
+        }
 
         if (process.ExitCode != 0)
         {
@@ -440,12 +508,13 @@ public static class YtDlpService
             throw new InvalidOperationException($"yt-dlp failed (exit code {process.ExitCode}): {errSummary}");
         }
 
-        // Output file resolution: check if merged to .mp4 or .mkv
+        // Output file resolution: check if merged to .mp4, .mkv, or .webm
         if (!File.Exists(outputFile))
         {
             string stem = Path.GetFileNameWithoutExtension(outputFile);
             string candidateMp4 = Path.Combine(targetDir ?? "", stem + ".mp4");
             string candidateMkv = Path.Combine(targetDir ?? "", stem + ".mkv");
+            string candidateWebm = Path.Combine(targetDir ?? "", stem + ".webm");
 
             if (File.Exists(candidateMp4))
             {
@@ -456,6 +525,11 @@ public static class YtDlpService
             {
                 task.FilePath = candidateMkv;
                 task.Filename = Path.GetFileName(candidateMkv);
+            }
+            else if (File.Exists(candidateWebm))
+            {
+                task.FilePath = candidateWebm;
+                task.Filename = Path.GetFileName(candidateWebm);
             }
         }
     }
