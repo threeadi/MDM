@@ -34,6 +34,7 @@ public class I18n : INotifyPropertyChanged
         if (CurrentLanguage != normalized)
         {
             CurrentLanguage = normalized;
+            Logger.Info($"Bahasa antarmuka diubah ke: {normalized.ToUpperInvariant()}", "I18N");
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLanguage)));

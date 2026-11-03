@@ -12,6 +12,26 @@
     } catch (e) { }
   }
 
+  const ContentLogger = {
+    minimumLevel: 0, // DEBUG
+    _format(levelName, comp, message) {
+      const time = new Date().toISOString().substring(11, 23);
+      return `[${time}] [${levelName}] [${comp}] ${message}`;
+    },
+    debug(msg, comp = "EXT:CONTENT", extra) {
+      if (this.minimumLevel <= 0) console.debug(this._format("DEBUG", comp, msg), extra !== undefined ? extra : "");
+    },
+    info(msg, comp = "EXT:CONTENT", extra) {
+      if (this.minimumLevel <= 1) console.info(this._format("INFO", comp, msg), extra !== undefined ? extra : "");
+    },
+    warn(msg, comp = "EXT:CONTENT", extra) {
+      if (this.minimumLevel <= 2) console.warn(this._format("WARN", comp, msg), extra !== undefined ? extra : "");
+    },
+    error(msg, comp = "EXT:CONTENT", extra) {
+      if (this.minimumLevel <= 3) console.error(this._format("ERROR", comp, msg), extra !== undefined ? extra : "");
+    }
+  };
+
   const dismissedVideos = new WeakSet();
   let singletonBtn = null;
   let singletonPanel = null;
@@ -507,7 +527,7 @@
         return await new Promise((resolve) => {
           chrome.runtime.sendMessage(payload, (response) => {
             if (chrome.runtime.lastError) {
-              console.warn("My Own IDM: Extension runtime error:", chrome.runtime.lastError.message);
+              ContentLogger.warn("Extension runtime error:", "EXT:RUNTIME", chrome.runtime.lastError.message);
               resolve(null);
             } else {
               resolve(response);
@@ -515,7 +535,7 @@
           });
         });
       } catch (err) {
-        console.warn("My Own IDM: chrome.runtime.sendMessage exception:", err);
+        ContentLogger.warn("chrome.runtime.sendMessage exception:", "EXT:RUNTIME", err);
       }
     }
 
@@ -540,10 +560,11 @@
           body: JSON.stringify(httpPayload)
         });
         if (res.ok) {
+          ContentLogger.info("Berhasil mengirim unduhan via direct HTTP fallback", "EXT:HTTP");
           return { status: "ok" };
         }
       } catch (fetchErr) {
-        console.warn("My Own IDM: Direct HTTP fallback failed:", fetchErr);
+        ContentLogger.warn("Direct HTTP fallback gagal:", "EXT:HTTP", fetchErr);
       }
     }
 

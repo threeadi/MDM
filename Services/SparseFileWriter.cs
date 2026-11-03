@@ -45,6 +45,8 @@ public class SparseFileWriter : IDisposable
         {
             _stream.SetLength(totalBytes.Value);
         }
+
+        Logger.Debug($"SparseFileWriter diinisialisasi untuk '{filePath}' (Pre-alokasi: {(totalBytes.HasValue ? totalBytes.Value + " bytes" : "dinamis")})", "WRITER");
     }
 
     public void WriteAt(long offset, byte[] buffer, int count)
@@ -62,11 +64,13 @@ public class SparseFileWriter : IDisposable
         {
             _stream.Flush();
         }
+        Logger.Debug($"SparseFileWriter flush selesai: '{FilePath}'", "WRITER");
     }
 
     public void Dispose()
     {
         _stream.Dispose();
+        Logger.Debug($"SparseFileWriter ditutup dan sumber daya dilepas: '{FilePath}'", "WRITER");
         GC.SuppressFinalize(this);
     }
 }

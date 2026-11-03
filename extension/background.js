@@ -14,6 +14,55 @@ const DEFAULT_REGISTERED_EXTENSIONS = [
   "pdf", "docx", "xlsx", "pptx", "epub", "csv"
 ];
 
+// Leveled Logging System for MDM Browser Extension
+const LogLevel = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
+
+const ExtensionLogger = {
+  minimumLevel: LogLevel.DEBUG,
+
+  _format(levelName, comp, message) {
+    const time = new Date().toISOString().substring(11, 23);
+    return `[${time}] [${levelName}] [${comp}] ${message}`;
+  },
+
+  _forwardToDesktop(levelName, comp, message) {
+    try {
+      fetch("http://127.0.0.1:18888/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ level: levelName, component: comp, message: String(message) })
+      }).catch(() => {});
+    } catch (_) {}
+  },
+
+  debug(msg, comp = "EXT:BG", extra) {
+    if (this.minimumLevel <= LogLevel.DEBUG) {
+      console.debug(this._format("DEBUG", comp, msg), extra !== undefined ? extra : "");
+    }
+  },
+
+  info(msg, comp = "EXT:BG", extra) {
+    if (this.minimumLevel <= LogLevel.INFO) {
+      console.info(this._format("INFO", comp, msg), extra !== undefined ? extra : "");
+      this._forwardToDesktop("INFO", comp, msg);
+    }
+  },
+
+  warn(msg, comp = "EXT:BG", extra) {
+    if (this.minimumLevel <= LogLevel.WARN) {
+      console.warn(this._format("WARN", comp, msg), extra !== undefined ? extra : "");
+      this._forwardToDesktop("WARN", comp, msg);
+    }
+  },
+
+  error(msg, comp = "EXT:BG", extra) {
+    if (this.minimumLevel <= LogLevel.ERROR) {
+      console.error(this._format("ERROR", comp, msg), extra !== undefined ? extra : "");
+      this._forwardToDesktop("ERROR", comp, msg);
+    }
+  }
+};
+
 // State
 let isInterceptorEnabled = true;
 let bypassUntilTimestamp = 0;
@@ -154,22 +203,24 @@ if (typeof chrome !== "undefined" && chrome.downloads?.onCreated) {
 
   // 1. Check if download was bypassed (e.g. user held Alt key while clicking)
   if (Date.now() < bypassUntilTimestamp) {
-    console.log("Download bypassed by user shortcut key (Alt held). Passing to browser.");
+    ExtensionLogger.debug("Download di-bypass oleh tombol pintas pengguna (Alt ditahan). Diteruskan ke browser.", "EXT:INTERCEPT");
     return;
   }
 
   // 2. Check registered file extensions whitelist
   const safeFilename = item.filename || extractFilenameFromUrl(item.url);
   if (filterByExtensions && !isExtensionRegistered(safeFilename || item.url, registeredExtensions)) {
-    console.log("File extension not in registered whitelist. Passing to browser:", safeFilename || item.url);
+    ExtensionLogger.debug(`Ekstensi berkas tidak terdaftar di whitelist. Diteruskan ke browser: ${safeFilename || item.url}`, "EXT:INTERCEPT");
     return;
   }
 
   // 3. Check minimum file size threshold (if Content-Length or totalBytes is known)
   if (minFileSizeKb > 0 && item.totalBytes > 0 && item.totalBytes < minFileSizeKb * 1024) {
-    console.log(`File size (${item.totalBytes} B) below minimum threshold (${minFileSizeKb} KB). Passing to browser.`);
+    ExtensionLogger.debug(`Ukuran berkas (${item.totalBytes} B) di bawah ambang batas minimum (${minFileSizeKb} KB). Diteruskan ke browser.`, "EXT:INTERCEPT");
     return;
   }
+
+  ExtensionLogger.info(`Mencegat unduhan browser: ${safeFilename || item.url} (${item.totalBytes ? item.totalBytes + " B" : "ukuran dinamis"})`, "EXT:INTERCEPT");
 
   // Pause and cancel browser download immediately
   try {
@@ -426,7 +477,7 @@ async function sendToMyOwnIdm(downloadUrl, refererUrl = "", filename = "", extra
         const cookies = await chrome.cookies.getAll({ url: downloadUrl });
         cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join("; ");
       } catch (e) {
-        console.warn("Could not read cookies:", e);
+        ExtensionLogger.warn("Gagal membaca cookies:", "EXT:COOKIES", e);
       }
     }
 
@@ -452,27 +503,27 @@ async function sendToMyOwnIdm(downloadUrl, refererUrl = "", filename = "", extra
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        console.log("Sent to My Own IDM via HTTP successfully!");
+        ExtensionLogger.info("Permintaan unduhan berhasil dikirim ke MDM Desktop via HTTP IPC (200 OK)", "EXT:IPC");
         return true;
       }
     } catch (httpErr) {
-      console.warn("Local HTTP IPC not reached, trying Native Messaging fallback...", httpErr);
+      ExtensionLogger.warn("HTTP IPC lokal tidak terhubung, mencoba fallback Native Messaging...", "EXT:IPC", httpErr);
     }
 
     // Fallback: Native Messaging
     return new Promise((resolve) => {
       chrome.runtime.sendNativeMessage(NATIVE_HOST, payload, (response) => {
         if (chrome.runtime.lastError) {
-          console.error("Native messaging error:", chrome.runtime.lastError.message);
+          ExtensionLogger.error(`Komunikasi Native Messaging gagal: ${chrome.runtime.lastError.message}`, "EXT:IPC");
           resolve(false);
         } else {
-          console.log("Desktop app response via Native Messaging:", response);
+          ExtensionLogger.info("Respon MDM Desktop via Native Messaging berhasil diterima", "EXT:IPC", response);
           resolve(true);
         }
       });
     });
   } catch (err) {
-    console.error("Failed to forward download:", err);
+    ExtensionLogger.error("Gagal meneruskan unduhan ke desktop:", "EXT:IPC", err);
     return false;
   }
 }
@@ -577,7 +628,7 @@ async function reportExtensionError(errorType, message, details = {}) {
       body: JSON.stringify(payload)
     });
     if (res.ok) {
-      console.log("[MyOwnIDM] Extension diagnostic reported via Desktop IPC:", errorType);
+      ExtensionLogger.info(`Diagnostik error ekstensi dilaporkan via Desktop IPC: ${errorType}`, "EXT:CRASH");
       return true;
     }
   } catch (ipcErr) {
@@ -629,7 +680,7 @@ async function reportExtensionError(errorType, message, details = {}) {
       body: JSON.stringify(sentryEvent)
     });
     if (directRes.ok) {
-      console.log("[MyOwnIDM] Extension diagnostic reported directly to GlitchTip:", errorType);
+      ExtensionLogger.info(`Diagnostik error dilaporkan langsung ke GlitchTip: ${errorType}`, "EXT:CRASH");
       return true;
     }
   } catch (directErr) {

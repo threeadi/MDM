@@ -299,6 +299,7 @@ public class DownloadEngine
 
     public void StartDownload(DownloadTask task)
     {
+        Logger.Info($"Memulai unduhan tugas: {task.Id} ({task.Filename}) -> {task.FilePath}", "ENGINE");
         var cts = new CancellationTokenSource();
         _runningTasks[task.Id] = cts;
         task.Status = DownloadStatus.Downloading;
@@ -318,6 +319,7 @@ public class DownloadEngine
             }
             catch (Exception ex)
             {
+                Logger.Error($"Tugas unduhan gagal: {task.Id} ({task.Filename}) - {ex.Message}", ex, "ENGINE");
                 task.Status = DownloadStatus.Failed;
                 task.ErrorMessage = ex.Message;
                 _database.UpsertTask(task);
@@ -332,6 +334,7 @@ public class DownloadEngine
 
     public void PauseDownload(string taskId)
     {
+        Logger.Warn($"Menjeda unduhan tugas: {taskId}", "ENGINE");
         if (_runningTasks.TryRemove(taskId, out var cts))
         {
             cts.Cancel();
@@ -509,6 +512,7 @@ public class DownloadEngine
 
         writer.Flush();
 
+        Logger.Info($"Tugas unduhan selesai: {task.Id} ({task.Filename}), total={task.DownloadedBytes} bytes", "ENGINE");
         // Mark Completed
         task.Status = DownloadStatus.Completed;
         task.CompletedAt = DateTime.Now.ToString("o");
@@ -549,6 +553,7 @@ public class DownloadEngine
             });
         }
 
+        Logger.Info($"Memulai unduhan streaming yt-dlp: '{task.Filename}' (kualitas={task.Quality ?? "best"})", "ENGINE");
         await YtDlpService.DownloadAsync(task, taskLimiter, OnProgress, ct);
 
         // Synchronize actual file size from disk (1:1 with my-own-idm)
@@ -609,6 +614,8 @@ public class DownloadEngine
         {
             throw new FormatException($"Format URL Telegram tidak valid: {task.Url}");
         }
+
+        Logger.Info($"Memulai unduhan media Telegram: Chat ID {chatId}, Message ID {messageId} -> '{task.FilePath}'", "ENGINE");
 
         var taskLimiter = GetOrCreateTaskLimiter(task.Id, task.SpeedLimitBps ?? 0);
         if (task.SpeedLimitBps.HasValue)

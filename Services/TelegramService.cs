@@ -116,7 +116,7 @@ public class TelegramService
                 if (!string.IsNullOrEmpty(user.username)) _database.SetSetting("tg_username", user.username);
                 if (!string.IsNullOrEmpty(AuthStatus.DisplayName)) _database.SetSetting("tg_display_name", AuthStatus.DisplayName);
 
-                Logger.Info($"Telegram session dipulihkan untuk akun: {AuthStatus.DisplayName} (@{AuthStatus.Username})");
+                Logger.Info($"Telegram session dipulihkan untuk akun: {AuthStatus.DisplayName} (@{AuthStatus.Username})", "TELEGRAM");
             }
             else
             {
@@ -125,7 +125,7 @@ public class TelegramService
         }
         catch (Exception ex)
         {
-            Logger.Warn($"Gagal memulihkan session Telegram: {ex.Message}");
+            Logger.Warn($"Gagal memulihkan session Telegram: {ex.Message}", "TELEGRAM");
 
             // Only revoke auth if Telegram explicitly said the session is invalid / revoked
             bool isRevoked = ex.Message.Contains("AUTH_KEY_UNREGISTERED", StringComparison.OrdinalIgnoreCase) ||
@@ -210,7 +210,7 @@ public class TelegramService
                     Username = user?.username,
                     DisplayName = $"{user?.first_name} {user?.last_name}".Trim()
                 };
-                Logger.Info($"Login Telegram langsung sukses: {AuthStatus.DisplayName}");
+                Logger.Info($"Login Telegram langsung sukses: {AuthStatus.DisplayName}", "TELEGRAM");
             }
 
             return AuthStatus;
@@ -223,13 +223,13 @@ public class TelegramService
             {
                 msg = $"FLOOD_WAIT_{waitSec}";
             }
-            Logger.Error($"Gagal meminta OTP Telegram | RpcException: {msg} (Code: {rpcEx.Code}, X: {waitSec})", rpcEx);
+            Logger.Error($"Gagal meminta OTP Telegram | RpcException: {msg} (Code: {rpcEx.Code}, X: {waitSec})", rpcEx, "TELEGRAM");
             AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = msg };
             return AuthStatus;
         }
         catch (Exception ex)
         {
-            Logger.Error("Gagal meminta OTP Telegram", ex);
+            Logger.Error("Gagal meminta OTP Telegram", ex, "TELEGRAM");
             AuthStatus = new TelegramAuthStatus
             {
                 IsAuthenticated = false,
@@ -296,7 +296,7 @@ public class TelegramService
                     if (!string.IsNullOrEmpty(AuthStatus.DisplayName)) _database.SetSetting("tg_display_name", AuthStatus.DisplayName);
                 }
 
-                Logger.Info($"Login Telegram sukses: {AuthStatus.DisplayName}");
+                Logger.Info($"Login Telegram sukses: {AuthStatus.DisplayName}", "TELEGRAM");
             }
 
             OnAuthStatusChanged?.Invoke(AuthStatus);
@@ -310,13 +310,13 @@ public class TelegramService
             {
                 msg = $"FLOOD_WAIT_{waitSec}";
             }
-            Logger.Error($"Gagal verifikasi OTP Telegram | RpcException: {msg} (Code: {rpcEx.Code}, X: {waitSec})", rpcEx);
+            Logger.Error($"Gagal verifikasi OTP Telegram | RpcException: {msg} (Code: {rpcEx.Code}, X: {waitSec})", rpcEx, "TELEGRAM");
             AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = msg };
             return AuthStatus;
         }
         catch (Exception ex)
         {
-            Logger.Error("Gagal verifikasi OTP Telegram", ex);
+            Logger.Error("Gagal verifikasi OTP Telegram", ex, "TELEGRAM");
             AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = ex.Message };
             return AuthStatus;
         }
@@ -363,7 +363,7 @@ public class TelegramService
                     if (!string.IsNullOrEmpty(AuthStatus.DisplayName)) _database.SetSetting("tg_display_name", AuthStatus.DisplayName);
                 }
 
-                Logger.Info($"Verifikasi 2FA Telegram sukses: {AuthStatus.DisplayName}");
+                Logger.Info($"Verifikasi 2FA Telegram sukses: {AuthStatus.DisplayName}", "TELEGRAM");
             }
             else
             {
@@ -381,14 +381,14 @@ public class TelegramService
             {
                 msg = $"FLOOD_WAIT_{waitSec}";
             }
-            Logger.Error($"Gagal verifikasi password 2FA Telegram | RpcException: {msg} (Code: {rpcEx.Code}, X: {waitSec})", rpcEx);
+            Logger.Error($"Gagal verifikasi password 2FA Telegram | RpcException: {msg} (Code: {rpcEx.Code}, X: {waitSec})", rpcEx, "TELEGRAM");
             AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = msg };
             OnAuthStatusChanged?.Invoke(AuthStatus);
             return AuthStatus;
         }
         catch (Exception ex)
         {
-            Logger.Error("Gagal verifikasi password 2FA Telegram", ex);
+            Logger.Error("Gagal verifikasi password 2FA Telegram", ex, "TELEGRAM");
             AuthStatus = new TelegramAuthStatus { IsAuthenticated = false, ErrorMessage = ex.Message };
             OnAuthStatusChanged?.Invoke(AuthStatus);
             return AuthStatus;
@@ -420,11 +420,11 @@ public class TelegramService
 
             AuthStatus = new TelegramAuthStatus { IsAuthenticated = false };
             OnAuthStatusChanged?.Invoke(AuthStatus);
-            Logger.Info("Akun Telegram telah logout.");
+            Logger.Info("Akun Telegram telah logout.", "TELEGRAM");
         }
         catch (Exception ex)
         {
-            Logger.Warn($"Gagal logout Telegram: {ex.Message}");
+            Logger.Warn($"Gagal logout Telegram: {ex.Message}", "TELEGRAM");
         }
     }
 
@@ -490,7 +490,7 @@ public class TelegramService
         }
         catch (Exception ex)
         {
-            Logger.Warn($"Gagal memuat daftar dialog Telegram: {ex.Message}");
+            Logger.Warn($"Gagal memuat daftar dialog Telegram: {ex.Message}", "TELEGRAM");
         }
 
         return list;
@@ -878,11 +878,11 @@ public class TelegramService
                 }
             }
 
-            Logger.Info($"Pindai media Telegram '{chatTitle}' selesai: {results.Count} berkas ditemukan.");
+            Logger.Info($"Pindai media Telegram '{chatTitle}' selesai: {results.Count} berkas ditemukan.", "TELEGRAM");
         }
         catch (Exception ex)
         {
-            Logger.Error($"Gagal memindai media Telegram untuk '{chatQuery}'", ex);
+            Logger.Error($"Gagal memindai media Telegram untuk '{chatQuery}'", ex, "TELEGRAM");
             throw;
         }
 

@@ -169,6 +169,7 @@ public static class YtDlpService
         }
         psi.ArgumentList.Add(url);
 
+        Logger.Debug($"yt-dlp probing URL: {url}", "YTDLP");
         using var process = new Process { StartInfo = psi };
         process.Start();
 
@@ -269,6 +270,8 @@ public static class YtDlpService
 
         psi.ArgumentList.Add(task.Url);
 
+        Logger.Info($"Memulai unduhan yt-dlp: {task.Filename} -> {outputFile}", "YTDLP");
+        Logger.Debug($"yt-dlp parameter: {string.Join(" ", psi.ArgumentList)}", "YTDLP");
         using var process = new Process { StartInfo = psi };
         process.Start();
 

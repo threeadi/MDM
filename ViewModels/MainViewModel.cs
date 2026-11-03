@@ -690,6 +690,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         PauseAllCommand = new RelayCommand(() =>
         {
+            Logger.Info("Menjeda semua tugas unduhan yang sedang berjalan", "VIEWMODEL");
             foreach (var t in _allTasks.Where(x => x.Status == DownloadStatus.Downloading))
             {
                 _engine.PauseDownload(t.Id);
@@ -698,6 +699,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         ResumeAllCommand = new RelayCommand(() =>
         {
+            Logger.Info("Melanjutkan semua tugas unduhan yang terjeda", "VIEWMODEL");
             foreach (var t in _allTasks.Where(x => x.Status is DownloadStatus.Paused or DownloadStatus.Failed))
             {
                 _engine.StartDownload(t.Task);
@@ -706,6 +708,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         ClearCompletedCommand = new RelayCommand(() =>
         {
+            Logger.Info("Membersihkan semua tugas unduhan yang telah selesai", "VIEWMODEL");
             var completed = _allTasks.Where(t => t.Status == DownloadStatus.Completed).ToList();
             foreach (var t in completed)
             {
@@ -1064,6 +1067,7 @@ public class MainViewModel : INotifyPropertyChanged
         bool startImmediately = true,
         string? quality = null)
     {
+        Logger.Info($"Memulai alur unduhan baru: {url} -> {saveDir}/{filename ?? "auto-detect"} (threads: {threads}, auto-start: {startImmediately})", "VIEWMODEL");
         var task = await _engine.ProbeAndCreateTaskAsync(url, saveDir, filename, threads, referer, category, quality);
         if (!startImmediately)
         {
@@ -1084,6 +1088,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     public void DeleteTasks(IReadOnlyList<DownloadItemViewModel> targets, bool deleteFilesFromDisk)
     {
+        Logger.Info($"Menghapus {targets.Count} tugas unduhan (hapus file fisik: {deleteFilesFromDisk})", "VIEWMODEL");
         foreach (var t in targets)
         {
             _engine.PauseDownload(t.Id);
@@ -1268,7 +1273,7 @@ public class MainViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            Logger.Warn($"Telegram scan error: {ex.Message}");
+            Logger.Warn($"Telegram scan error: {ex.Message}", "VIEWMODEL");
         }
         finally
         {
@@ -1303,7 +1308,7 @@ public class MainViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            Logger.Warn($"Fetch Telegram dialogs error: {ex.Message}");
+            Logger.Warn($"Fetch Telegram dialogs error: {ex.Message}", "VIEWMODEL");
         }
 
         RefreshTelegramChannels();
@@ -1646,7 +1651,7 @@ public class MainViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            Logger.Warn($"Batch queue error: {ex.Message}");
+            Logger.Warn($"Batch queue error: {ex.Message}", "VIEWMODEL");
             BatchQueueStatusText = $"Kesalahan: {ex.Message}";
             await Task.Delay(3000);
         }
@@ -1699,7 +1704,7 @@ public class MainViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            Logger.Warn($"Auto fetch error: {ex.Message}");
+            Logger.Warn($"Auto fetch error: {ex.Message}", "VIEWMODEL");
         }
         finally
         {

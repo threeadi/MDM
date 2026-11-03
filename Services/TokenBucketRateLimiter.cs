@@ -41,6 +41,8 @@ public class TokenBucketRateLimiter
             _changeSignal = new(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
+        Logger.Debug($"Rate limiter diatur ke: {(bytesPerSecond > 0 ? bytesPerSecond + " B/s" : "Tanpa Batas (Unlimited)")}", "LIMITER");
+
         oldSignal.TrySetResult(true);
     }
 

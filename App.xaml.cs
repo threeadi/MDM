@@ -13,14 +13,14 @@ public partial class App : Application
         CrashReporter.Initialize();
         var db = new Database();
         I18n.Instance.Initialize(db);
-        Logger.Info($"MDM Modern Download Manager (.NET 10 Native) dimulai. Bahasa: {I18n.Instance.CurrentLanguage}");
+        Logger.Info($"MDM Modern Download Manager (.NET 10 Native) dimulai. Bahasa: {I18n.Instance.CurrentLanguage}", "APP");
 
         DispatcherUnhandledException += App_DispatcherUnhandledException;
     }
 
     private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        Logger.Error("Unhandled Dispatcher Exception", e.Exception);
+        Logger.Error("Unhandled Dispatcher Exception", e.Exception, "APP");
         CrashReporter.SendCrashReport(e.Exception, "DispatcherUnhandledException");
         MessageBox.Show($"Terjadi kesalahan aplikasi:\n\n{e.Exception.Message}\n\n{e.Exception.StackTrace}", "MDM Error", MessageBoxButton.OK, MessageBoxImage.Error);
         e.Handled = true;

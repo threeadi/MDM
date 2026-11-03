@@ -53,6 +53,7 @@ public partial class MainWindow : Window
             _trayService = new TrayIconService(this);
             _trayService.OnOpenRequested += () =>
             {
+                Logger.Debug("MainWindow dipulihkan dari System Tray", "MAINWINDOW");
                 Show();
                 WindowState = WindowState.Normal;
                 Activate();
@@ -63,6 +64,7 @@ public partial class MainWindow : Window
             _trayService.OnResumeAllRequested += () => ViewModel.ResumeAllCommand.Execute(null);
             _trayService.OnExitRequested += () =>
             {
+                Logger.Info("Aplikasi keluar melalui System Tray menu", "MAINWINDOW");
                 _isExplicitExit = true;
                 Close();
             };
@@ -137,7 +139,7 @@ public partial class MainWindow : Window
                 }
                 catch (Exception ex)
                 {
-                    Logger.Warn($"Gagal restore Telegram session di MainWindow: {ex.Message}");
+                    Logger.Warn($"Gagal restore Telegram session di MainWindow: {ex.Message}", "MAINWINDOW");
                 }
             });
         };
@@ -150,6 +152,7 @@ public partial class MainWindow : Window
         if (!_isExplicitExit && ViewModel.Database.GetSetting("minimize_to_tray", "1") == "1")
         {
             e.Cancel = true;
+            Logger.Debug("MainWindow diminimalkan ke System Tray", "MAINWINDOW");
             Hide();
         }
         else

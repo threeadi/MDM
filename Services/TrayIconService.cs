@@ -156,6 +156,7 @@ public class TrayIconService : IDisposable
         };
 
         _isCreated = Shell_NotifyIcon(NIM_ADD, ref _nid);
+        Logger.Info($"System Tray Icon diinisialisasi (status: {(_isCreated ? "sukses" : "gagal")})", "TRAY");
         BuildContextMenu();
     }
 
@@ -193,6 +194,7 @@ public class TrayIconService : IDisposable
 
     public void ShowNotification(string title, string message)
     {
+        Logger.Debug($"Menampilkan notifikasi System Tray: '{title}' - '{message}'", "TRAY");
         if (!_isCreated) return;
 
         _nid.uFlags = NIF_INFO;

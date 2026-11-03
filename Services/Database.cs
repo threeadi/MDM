@@ -29,6 +29,7 @@ public class Database
             Mode = SqliteOpenMode.ReadWriteCreate
         }.ToString();
 
+        Logger.Info($"Inisialisasi basis data SQLite di: '{dbPath}'", "DATABASE");
         InitSchema();
     }
 
@@ -254,6 +255,7 @@ public class Database
         cmd.Parameters.AddWithValue("@is_hls", task.IsHls ? 1 : 0);
 
         cmd.ExecuteNonQuery();
+        Logger.Debug($"Upsert task '{task.Id}' ({task.Filename}, status={task.Status})", "DATABASE");
     }
 
     public DownloadTask? GetTask(string id)
@@ -390,6 +392,7 @@ public class Database
         cmd.Parameters.AddWithValue("@key", key);
         cmd.Parameters.AddWithValue("@value", value);
         cmd.ExecuteNonQuery();
+        Logger.Debug($"Simpan setting '{key}' = '{value}'", "DATABASE");
     }
 
     public void DeleteTask(string id)
@@ -401,6 +404,7 @@ public class Database
         cmd.CommandText = "DELETE FROM downloads WHERE id = @id";
         cmd.Parameters.AddWithValue("@id", id);
         cmd.ExecuteNonQuery();
+        Logger.Info($"Menghapus task '{id}' dari basis data", "DATABASE");
     }
 
     public List<TelegramChannelInfo> GetTelegramChannels()

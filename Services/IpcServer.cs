@@ -76,6 +76,7 @@ public class IpcServer
                 _httpListener = new HttpListener();
                 _httpListener.Prefixes.Add($"http://127.0.0.1:{HttpPort}/");
                 _httpListener.Start();
+                Logger.Info($"HTTP IPC listener aktif di http://127.0.0.1:{HttpPort}/", "IPC");
 
                 while (!_cts.IsCancellationRequested)
                 {
@@ -85,7 +86,7 @@ public class IpcServer
             }
             catch (Exception ex) when (!_cts.IsCancellationRequested)
             {
-                DebugWriteLine($"HTTP IPC error: {ex.Message}");
+                Logger.Warn($"HTTP IPC error: {ex.Message}", "IPC");
             }
         });
     }
@@ -125,6 +126,41 @@ public class IpcServer
 
             try
             {
+                string path = req.Url?.AbsolutePath?.ToLowerInvariant() ?? "";
+                if (path == "/error-report")
+                {
+                    var errJson = JsonDocument.Parse(body).RootElement;
+                    string errType = errJson.TryGetProperty("error_type", out var et) ? et.GetString() ?? "Unknown" : "Unknown";
+                    string errMsg = errJson.TryGetProperty("message", out var em) ? em.GetString() ?? "" : "";
+                    Logger.Warn($"Diagnostik dari ekstensi browser [{errType}]: {errMsg}", "EXT");
+
+                    byte[] reply = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
+                    resp.ContentType = "application/json";
+                    resp.ContentLength64 = reply.Length;
+                    await resp.OutputStream.WriteAsync(reply);
+                    resp.Close();
+                    return;
+                }
+
+                if (path == "/log")
+                {
+                    var logJson = JsonDocument.Parse(body).RootElement;
+                    string level = logJson.TryGetProperty("level", out var l) ? l.GetString()?.ToUpperInvariant() ?? "INFO" : "INFO";
+                    string logMsg = logJson.TryGetProperty("message", out var lm) ? lm.GetString() ?? "" : "";
+                    string comp = logJson.TryGetProperty("component", out var cp) ? cp.GetString() ?? "EXT" : "EXT";
+                    if (level == "DEBUG") Logger.Debug(logMsg, comp);
+                    else if (level == "WARN") Logger.Warn(logMsg, comp);
+                    else if (level == "ERROR") Logger.Error(logMsg, null, comp);
+                    else Logger.Info(logMsg, comp);
+
+                    byte[] reply = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
+                    resp.ContentType = "application/json";
+                    resp.ContentLength64 = reply.Length;
+                    await resp.OutputStream.WriteAsync(reply);
+                    resp.Close();
+                    return;
+                }
+
                 var json = JsonDocument.Parse(body).RootElement;
                 string? url = json.TryGetProperty("url", out var u) ? u.GetString() : null;
                 string? filename = json.TryGetProperty("filename", out var f) ? f.GetString() : null;
@@ -153,6 +189,7 @@ public class IpcServer
 
                 if (!string.IsNullOrEmpty(url))
                 {
+                    Logger.Info($"Permintaan unduhan diterima via HTTP IPC: {url} (filename={filename ?? "auto-detect"})", "IPC");
                     _ = Task.Run(() =>
                     {
                         try
@@ -226,6 +263,7 @@ public class IpcServer
 
                                 if (!string.IsNullOrEmpty(url))
                                 {
+                                    Logger.Info($"Permintaan unduhan diterima via Named Pipe IPC: {url} (filename={filename ?? "auto-detect"})", "IPC");
                                     DownloadRequested?.Invoke(this, new BrowserDownloadRequest
                                     {
                                         Url = url,
