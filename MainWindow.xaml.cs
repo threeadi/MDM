@@ -111,7 +111,10 @@ public partial class MainWindow : Window
                         dlg.SelectedCategory,
                         dlg.StartImmediately,
                         dlg.Quality,
-                        req.RayId
+                        req.RayId,
+                        req.IsDrmProtected,
+                        req.IsDecoyCanvas,
+                        req.IsHoneypotDetected
                     );
                 }
             };

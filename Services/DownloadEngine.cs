@@ -26,6 +26,272 @@ public class ProbeResult
     public string Category { get; set; } = "Umum";
     public string? ContentType { get; set; }
     public bool IsHls { get; set; }
+    public bool IsDrmProtected { get; set; }
+    public string? DrmType { get; set; }
+    public bool IsHoneypotDetected { get; set; }
+    public string? HoneypotReason { get; set; }
+    public bool IsDecoyCanvas { get; set; }
+}
+
+public static class HoneypotDetector
+{
+    public static double CalculateShannonEntropy(ReadOnlySpan<byte> data)
+    {
+        if (data.Length == 0) return 0.0;
+
+        Span<int> counts = stackalloc int[256];
+        foreach (byte b in data)
+        {
+            counts[b]++;
+        }
+
+        double entropy = 0.0;
+        double total = data.Length;
+        for (int i = 0; i < 256; i++)
+        {
+            if (counts[i] == 0) continue;
+            double p = counts[i] / total;
+            entropy -= p * Math.Log2(p);
+        }
+
+        return entropy;
+    }
+
+    public static bool HasRepetitiveFiller(ReadOnlySpan<byte> data, out double ratio)
+    {
+        ratio = 0.0;
+        if (data.Length == 0) return false;
+
+        Span<int> counts = stackalloc int[256];
+        int maxCount = 0;
+        foreach (byte b in data)
+        {
+            int c = ++counts[b];
+            if (c > maxCount) maxCount = c;
+        }
+
+        ratio = maxCount / (double)data.Length;
+        return ratio >= 0.50;
+    }
+
+    public static bool HasValidMediaContainerHeader(ReadOnlySpan<byte> data)
+    {
+        if (data.Length < 8) return false;
+
+        // MP4 / QuickTime / ISO-BMFF: box at 4..8 is ftyp, moov, mdat, free, or skip
+        if (data.Length >= 8)
+        {
+            var boxType = data.Slice(4, 4);
+            if (boxType.SequenceEqual("ftyp"u8) ||
+                boxType.SequenceEqual("moov"u8) ||
+                boxType.SequenceEqual("mdat"u8) ||
+                boxType.SequenceEqual("free"u8) ||
+                boxType.SequenceEqual("skip"u8) ||
+                boxType.SequenceEqual("wide"u8))
+            {
+                return true;
+            }
+        }
+
+        // Search within first 64 bytes for ftyp or moov (some MP4 streams have small lead-in offsets)
+        if (data.Length >= 32)
+        {
+            var lead = data.Slice(0, Math.Min(64, data.Length));
+            if (lead.IndexOf("ftyp"u8) >= 0 || lead.IndexOf("moov"u8) >= 0)
+            {
+                return true;
+            }
+        }
+
+        // WebM / Matroska (EBML: 0x1A 0x45 0xDF 0xA3)
+        if (data.Length >= 4 && data[0] == 0x1A && data[1] == 0x45 && data[2] == 0xDF && data[3] == 0xA3)
+        {
+            return true;
+        }
+
+        // MPEG-TS (Sync byte 0x47 at 0 and 188)
+        if (data.Length >= 189 && data[0] == 0x47 && data[188] == 0x47)
+        {
+            return true;
+        }
+
+        // FLV header
+        if (data.Length >= 3 && data[0] == (byte)'F' && data[1] == (byte)'L' && data[2] == (byte)'V')
+        {
+            return true;
+        }
+
+        // AVI / WAV (RIFF header)
+        if (data.Length >= 12 && data.Slice(0, 4).SequenceEqual("RIFF"u8))
+        {
+            var riffType = data.Slice(8, 4);
+            if (riffType.SequenceEqual("AVI "u8) || riffType.SequenceEqual("WAVE"u8))
+            {
+                return true;
+            }
+        }
+
+        // Ogg header
+        if (data.Length >= 4 && data.Slice(0, 4).SequenceEqual("OggS"u8))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool IsHtmlErrorPayload(ReadOnlySpan<byte> data)
+    {
+        if (data.Length < 15) return false;
+        var slice = data.Slice(0, Math.Min(256, data.Length));
+        if (slice.IndexOf("<!DOCTYPE html"u8) >= 0 ||
+            slice.IndexOf("<html"u8) >= 0 ||
+            slice.IndexOf("<HTML"u8) >= 0 ||
+            slice.IndexOf("<head"u8) >= 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool DetectCdnBotMitigationHeaders(HttpResponseMessage resp, out string? headerDetail)
+    {
+        headerDetail = null;
+        var headers = resp.Headers;
+
+        // Cloudflare: check for challenge or block
+        if (headers.TryGetValues("cf-mitigated", out var cfVals))
+        {
+            string val = string.Join(" ", cfVals);
+            if (val.Contains("challenge", StringComparison.OrdinalIgnoreCase) || val.Contains("block", StringComparison.OrdinalIgnoreCase))
+            {
+                headerDetail = "Cloudflare Challenge / Block Active";
+                return true;
+            }
+        }
+        if (headers.Contains("cf-chl-bypass"))
+        {
+            headerDetail = "Cloudflare Challenge Bypass Required";
+            return true;
+        }
+
+        // DataDome: check for block
+        if (headers.TryGetValues("X-Datadome", out var ddVals))
+        {
+            string val = string.Join(" ", ddVals);
+            if (val.Contains("block", StringComparison.OrdinalIgnoreCase) || val.Contains("captcha", StringComparison.OrdinalIgnoreCase))
+            {
+                headerDetail = "DataDome Bot Block";
+                return true;
+            }
+        }
+
+        if (headers.Contains("X-Challenge"))
+        {
+            headerDetail = "WAF Challenge Header";
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool DetectHoneypot(HttpResponseMessage? resp, ReadOnlySpan<byte> sampleBytes, out string? reason)
+    {
+        reason = null;
+
+        // 1. CDN Bot Mitigation Challenge Headers
+        if (resp != null && DetectCdnBotMitigationHeaders(resp, out var headerDetail))
+        {
+            reason = $"CDN bot mitigation terdeteksi ({headerDetail})";
+            return true;
+        }
+
+        // 2. Server returned HTML error/captcha page instead of video binary
+        if (sampleBytes.Length >= 15 && IsHtmlErrorPayload(sampleBytes))
+        {
+            reason = "Server merespons dokumen HTML (bukan berkas media), terindikasi halaman blokir / bot challenge";
+            return true;
+        }
+
+        // 3. Valid media containers (MP4, MKV, WebM, TS) naturally have zero padding in 'free' or table atoms
+        if (HasValidMediaContainerHeader(sampleBytes))
+        {
+            return false;
+        }
+
+        // 4. Raw uncontainerized stream with abnormal filler or very low entropy
+        if (sampleBytes.Length >= 64)
+        {
+            if (HasRepetitiveFiller(sampleBytes, out double ratio))
+            {
+                reason = $"Pola byte berulang/filler abnormal tanpa header media ({ratio * 100:0.#}% byte identik, indikasi dummy stream)";
+                return true;
+            }
+
+            double entropy = CalculateShannonEntropy(sampleBytes);
+            if (entropy < 4.0)
+            {
+                reason = $"Entropi data sangat rendah tanpa header media ({entropy:0.00} bit/byte) - terindikasi dummy honeypot stream";
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+public static class DrmDetector
+{
+    private static readonly byte[] PsshBox = "pssh"u8.ToArray();
+    private static readonly byte[] EncvBox = "encv"u8.ToArray();
+    private static readonly byte[] EncaBox = "enca"u8.ToArray();
+    private static readonly byte[] SinfBox = "sinf"u8.ToArray();
+
+    public static bool DetectFromBytes(ReadOnlySpan<byte> data, out string? drmType)
+    {
+        drmType = null;
+        if (data.Length < 8) return false;
+
+        if (data.IndexOf(PsshBox) >= 0)
+        {
+            drmType = "MP4 pssh (Protection System Specific Header - CENC / Widevine / PlayReady)";
+            return true;
+        }
+        if (data.IndexOf(EncvBox) >= 0)
+        {
+            drmType = "MP4 encv (Encrypted Video Track Sample)";
+            return true;
+        }
+        if (data.IndexOf(EncaBox) >= 0)
+        {
+            drmType = "MP4 enca (Encrypted Audio Track Sample)";
+            return true;
+        }
+        if (data.IndexOf(SinfBox) >= 0)
+        {
+            drmType = "MP4 sinf (Protection Scheme Information)";
+            return true;
+        }
+
+        try
+        {
+            string text = System.Text.Encoding.UTF8.GetString(data);
+            if (text.Contains("#EXT-X-KEY", StringComparison.OrdinalIgnoreCase))
+            {
+                if (text.Contains("METHOD=SAMPLE-AES", StringComparison.OrdinalIgnoreCase) ||
+                    text.Contains("edef8ba9-79d6-4ace-a3c8-27dcd51d21ed", StringComparison.OrdinalIgnoreCase) || // Widevine
+                    text.Contains("9a04f079-9840-4286-ab92-e65be0885f95", StringComparison.OrdinalIgnoreCase) || // PlayReady
+                    text.Contains("METHOD=CBCS", StringComparison.OrdinalIgnoreCase))
+                {
+                    drmType = "HLS Sample-AES / Widevine DRM Key System";
+                    return true;
+                }
+            }
+        }
+        catch { }
+
+        return false;
+    }
 }
 
 public static class CategoryHelper
@@ -150,11 +416,15 @@ public class DownloadEngine
         {
             var ytProbe = await YtDlpService.ProbeAsync(effectiveUrl, quality, ct);
             ytProbe.IsHls = true;
+            if (ytProbe.Filename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+            {
+                ytProbe.Filename = Path.ChangeExtension(ytProbe.Filename, ".mp4");
+            }
             return ytProbe;
         }
 
         using var req = new HttpRequestMessage(HttpMethod.Get, effectiveUrl);
-        req.Headers.Range = new RangeHeaderValue(0, 0);
+        req.Headers.Range = new RangeHeaderValue(0, 4095);
         if (!string.IsNullOrEmpty(referer))
         {
             req.Headers.Referrer = new Uri(referer);
@@ -200,6 +470,32 @@ public class DownloadEngine
 
         detectedFilename = SanitizeFilename(detectedFilename);
 
+        byte[] probeBuffer = ArrayPool<byte>.Shared.Rent(4096);
+        int probeBytesRead = 0;
+        try
+        {
+            using var stream = await resp.Content.ReadAsStreamAsync(ct);
+            probeBytesRead = await stream.ReadAsync(probeBuffer.AsMemory(0, 4096), ct);
+        }
+        catch { }
+
+        bool isDrm = false;
+        string? drmType = null;
+        if (probeBytesRead > 0 && DrmDetector.DetectFromBytes(probeBuffer.AsSpan(0, probeBytesRead), out drmType))
+        {
+            isDrm = true;
+            Logger.Warn($"Proteksi DRM terdeteksi pada berkas '{detectedFilename}': {drmType}", "ENGINE");
+        }
+
+        bool isHoneypot = false;
+        string? honeypotReason = null;
+        if (HoneypotDetector.DetectHoneypot(resp, probeBuffer.AsSpan(0, probeBytesRead), out honeypotReason))
+        {
+            isHoneypot = true;
+            Logger.Warn($"Honeypot / bot mitigation terdeteksi pada '{detectedFilename}': {honeypotReason}", "ENGINE");
+        }
+        ArrayPool<byte>.Shared.Return(probeBuffer);
+
         string? mediaType = resp.Content.Headers.ContentType?.MediaType;
         bool isHls = (mediaType != null && (mediaType.Contains("mpegurl") || mediaType.Contains("m3u8"))) ||
                      effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase);
@@ -211,7 +507,11 @@ public class DownloadEngine
             SupportsRange = supportsRange,
             Category = CategoryHelper.DetectCategory(detectedFilename),
             ContentType = mediaType,
-            IsHls = isHls
+            IsHls = isHls,
+            IsDrmProtected = isDrm,
+            DrmType = drmType,
+            IsHoneypotDetected = isHoneypot,
+            HoneypotReason = honeypotReason
         };
     }
 
@@ -223,7 +523,10 @@ public class DownloadEngine
         string? referer = null,
         string? category = null,
         string? quality = null,
-        string? rayId = null)
+        string? rayId = null,
+        bool isDrmProtected = false,
+        bool isDecoyCanvas = false,
+        bool isHoneypot = false)
     {
         string effectiveRayId = !string.IsNullOrWhiteSpace(rayId) ? rayId : Logger.NewRayId();
         using (Logger.WithRayId(effectiveRayId))
@@ -232,10 +535,26 @@ public class DownloadEngine
             var probe = await ProbeUrlAsync(effectiveUrl, referer, quality);
 
             string finalFilename = !string.IsNullOrWhiteSpace(filename) ? SanitizeFilename(filename) : probe.Filename;
+            if (probe.IsHls || effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase) || finalFilename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+            {
+                if (finalFilename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+                {
+                    finalFilename = Path.ChangeExtension(finalFilename, ".mp4");
+                }
+            }
             string filePath = Path.Combine(saveDir, finalFilename);
 
             int workerCount = CalculateOptimalThreads(probe.TotalBytes, probe.SupportsRange, probe.IsHls, quality);
             var segments = CalculateSegments(probe.TotalBytes, workerCount);
+
+            bool drm = probe.IsDrmProtected || isDrmProtected;
+            bool honeypot = probe.IsHoneypotDetected || isHoneypot;
+            bool decoyCanvas = isDecoyCanvas || probe.IsDecoyCanvas;
+
+            string? protectionWarning = null;
+            if (drm) protectionWarning = probe.DrmType ?? "Proteksi DRM Terdeteksi (Widevine/CENC)";
+            else if (honeypot) protectionWarning = probe.HoneypotReason ?? "Honeypot / Stream Poisoning Terdeteksi";
+            else if (decoyCanvas) protectionWarning = "Decoy Player Terdeteksi (Video dirender via Canvas / WebAssembly)";
 
             var task = new DownloadTask
             {
@@ -253,7 +572,11 @@ public class DownloadEngine
                 Referer = referer,
                 Quality = quality,
                 IsHls = probe.IsHls,
-                RayId = effectiveRayId
+                RayId = effectiveRayId,
+                IsDrmProtected = drm,
+                IsHoneypotDetected = honeypot,
+                IsDecoyCanvas = decoyCanvas,
+                ProtectionWarning = protectionWarning
             };
 
             _database.UpsertTask(task);
@@ -307,6 +630,10 @@ public class DownloadEngine
     {
         using (Logger.WithRayId(task.RayId))
         {
+            if (task.IsDrmProtected)
+            {
+                Logger.Warn($"Tugas unduhan '{task.Id}' ({task.Filename}) teridentifikasi menggunakan enkripsi DRM. Video mungkin berupa stream terenkripsi (gambar statis/macet di player biasa).", "ENGINE", task.RayId);
+            }
             Logger.Info($"Memulai unduhan tugas: {task.Id} ({task.Filename}) -> {task.FilePath}", "ENGINE", task.RayId);
             var cts = new CancellationTokenSource();
             _runningTasks[task.Id] = cts;
@@ -533,6 +860,23 @@ public class DownloadEngine
 
         writer.Flush();
 
+        // Safety check for corrupt/stub downloads:
+        // If file is in Video category or has video extension, and downloaded bytes is tiny (< 10 KB)
+        bool isVideo = task.Category == "Video" ||
+                       task.Filename.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) ||
+                       task.Filename.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase) ||
+                       task.Filename.EndsWith(".webm", StringComparison.OrdinalIgnoreCase);
+
+        if (isVideo && task.DownloadedBytes < 10240)
+        {
+            task.Status = DownloadStatus.Failed;
+            task.ErrorMessage = $"Berkas video tidak valid ({task.DownloadedBytes} bytes, kemungkinan tracking beacon atau token kedaluwarsa)";
+            Logger.Warn($"Tugas unduhan gagal validasi ukuran video: {task.Id} ({task.Filename}), hanya {task.DownloadedBytes} bytes", "ENGINE");
+            _database.UpsertTask(task);
+            TaskFailed?.Invoke(this, (task.Id, task.ErrorMessage));
+            return;
+        }
+
         Logger.Info($"Tugas unduhan selesai: {task.Id} ({task.Filename}), total={task.DownloadedBytes} bytes", "ENGINE");
         // Mark Completed
         task.Status = DownloadStatus.Completed;
@@ -540,6 +884,10 @@ public class DownloadEngine
         if (task.TotalBytes is > 0)
         {
             task.DownloadedBytes = task.TotalBytes.Value;
+        }
+        else
+        {
+            task.TotalBytes = task.DownloadedBytes;
         }
         foreach (var s in task.Segments) s.IsFinished = true;
 
@@ -574,6 +922,13 @@ public class DownloadEngine
                     EtaSeconds = eta,
                     Segments = task.Segments
                 });
+            }
+
+            if (task.Filename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase) || task.FilePath.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+            {
+                task.Filename = Path.ChangeExtension(task.Filename, ".mp4");
+                task.FilePath = Path.ChangeExtension(task.FilePath, ".mp4");
+                _database.UpsertTask(task);
             }
 
             Logger.Info($"Memulai unduhan streaming yt-dlp: '{task.Filename}' (kualitas={task.Quality ?? "best"})", "ENGINE", task.RayId);
@@ -620,6 +975,60 @@ public class DownloadEngine
                 task.CompletedAt = DateTime.Now.ToString("o");
                 task.ErrorMessage = null;
                 foreach (var s in task.Segments) s.IsFinished = true;
+
+                // Validate container format of output file and auto-decrypt steganographic decoys
+                bool isDecoyJpeg = false;
+                bool isHtmlError = false;
+                try
+                {
+                    using (var fs = File.OpenRead(task.FilePath))
+                    {
+                        byte[] sample = new byte[Math.Min(1024, (int)fs.Length)];
+                        int read = fs.Read(sample, 0, sample.Length);
+                        var sampleSpan = sample.AsSpan(0, read);
+
+                        if (read >= 3 && sampleSpan[0] == 0xFF && sampleSpan[1] == 0xD8 && sampleSpan[2] == 0xFF)
+                        {
+                            isDecoyJpeg = true;
+                        }
+                        else if (read >= 15 && HoneypotDetector.IsHtmlErrorPayload(sampleSpan))
+                        {
+                            isHtmlError = true;
+                        }
+                    }
+
+                    if (isDecoyJpeg)
+                    {
+                        Logger.Info($"Mencoba mendekripsi decoy steganografi untuk '{task.Filename}'...", "ENGINE", task.RayId);
+                        bool decrypted = await SteganographyDecrypter.TryDecryptInPlaceAsync(task.FilePath);
+                        if (decrypted)
+                        {
+                            actualLen = new FileInfo(task.FilePath).Length;
+                            task.DownloadedBytes = actualLen;
+                            task.TotalBytes = actualLen;
+                            task.IsDecoyCanvas = false;
+                            task.ProtectionWarning = null;
+                            Logger.Info($"Berhasil mendekripsi decoy steganografi untuk '{task.Filename}' (ukuran: {actualLen} B)!", "ENGINE", task.RayId);
+                        }
+                        else
+                        {
+                            task.IsDecoyCanvas = true;
+                            task.ProtectionWarning = "Decoy Steganografi Terdeteksi: Video disamarkan sebagai stream gambar JPEG oleh server";
+                            Logger.Warn($"Unduhan '{task.Filename}' terdeteksi sebagai decoy steganografi JPEG.", "ENGINE", task.RayId);
+                        }
+                    }
+                    else if (isHtmlError)
+                    {
+                        task.IsHoneypotDetected = true;
+                        task.ProtectionWarning = "File hasil unduhan berisi dokumen HTML (bukan video asli)";
+                        Logger.Warn($"Unduhan '{task.Filename}' terdeteksi sebagai HTML error payload.", "ENGINE", task.RayId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn($"Gagal memvalidasi/mendekripsi container output yt-dlp: {ex.Message}", "ENGINE", task.RayId);
+                }
+
                 _database.UpsertTask(task);
                 TaskCompleted?.Invoke(this, task.Id);
             }

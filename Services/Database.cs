@@ -62,7 +62,10 @@ public class Database
                 telegram_channel_title TEXT,
                 quality TEXT,
                 is_hls INTEGER DEFAULT 0,
-                ray_id TEXT
+                ray_id TEXT,
+                is_drm_protected INTEGER DEFAULT 0,
+                is_honeypot INTEGER DEFAULT 0,
+                is_decoy_canvas INTEGER DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS settings (
@@ -84,7 +87,7 @@ public class Database
         cmd.ExecuteNonQuery();
 
         // Safe migrations for existing databases
-        string[] columnsToAdd = ["category TEXT", "source TEXT", "telegram_channel_title TEXT", "quality TEXT", "is_hls INTEGER DEFAULT 0", "ray_id TEXT"];
+        string[] columnsToAdd = ["category TEXT", "source TEXT", "telegram_channel_title TEXT", "quality TEXT", "is_hls INTEGER DEFAULT 0", "ray_id TEXT", "is_drm_protected INTEGER DEFAULT 0", "is_honeypot INTEGER DEFAULT 0", "is_decoy_canvas INTEGER DEFAULT 0"];
         foreach (var col in columnsToAdd)
         {
             try
@@ -118,7 +121,7 @@ public class Database
         conn.Open();
 
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title, quality, is_hls, ray_id FROM downloads ORDER BY created_at DESC";
+        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title, quality, is_hls, ray_id, is_drm_protected, is_honeypot, is_decoy_canvas FROM downloads ORDER BY created_at DESC";
 
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -201,6 +204,21 @@ public class Database
                 task.RayId = reader.GetString(21);
             }
 
+            if (reader.FieldCount > 22 && !reader.IsDBNull(22))
+            {
+                task.IsDrmProtected = reader.GetInt32(22) == 1;
+            }
+
+            if (reader.FieldCount > 23 && !reader.IsDBNull(23))
+            {
+                task.IsHoneypotDetected = reader.GetInt32(23) == 1;
+            }
+
+            if (reader.FieldCount > 24 && !reader.IsDBNull(24))
+            {
+                task.IsDecoyCanvas = reader.GetInt32(24) == 1;
+            }
+
             list.Add(task);
         }
 
@@ -214,8 +232,8 @@ public class Database
 
         using var cmd = conn.CreateCommand();
         cmd.CommandText = @"
-            INSERT INTO downloads (id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title, quality, is_hls, ray_id)
-            VALUES (@id, @url, @filename, @save_dir, @file_path, @total_bytes, @downloaded_bytes, @status, @connections, @supports_range, @created_at, @completed_at, @error_message, @referer, @speed_limit_bps, @segments_json, @category, @source, @telegram_channel_title, @quality, @is_hls, @ray_id)
+            INSERT INTO downloads (id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title, quality, is_hls, ray_id, is_drm_protected, is_honeypot, is_decoy_canvas)
+            VALUES (@id, @url, @filename, @save_dir, @file_path, @total_bytes, @downloaded_bytes, @status, @connections, @supports_range, @created_at, @completed_at, @error_message, @referer, @speed_limit_bps, @segments_json, @category, @source, @telegram_channel_title, @quality, @is_hls, @ray_id, @is_drm_protected, @is_honeypot, @is_decoy_canvas)
             ON CONFLICT(id) DO UPDATE SET
                 url = excluded.url,
                 filename = excluded.filename,
@@ -236,7 +254,10 @@ public class Database
                 telegram_channel_title = excluded.telegram_channel_title,
                 quality = excluded.quality,
                 is_hls = excluded.is_hls,
-                ray_id = excluded.ray_id;
+                ray_id = excluded.ray_id,
+                is_drm_protected = excluded.is_drm_protected,
+                is_honeypot = excluded.is_honeypot,
+                is_decoy_canvas = excluded.is_decoy_canvas;
         ";
 
         cmd.Parameters.AddWithValue("@id", task.Id);
@@ -261,6 +282,9 @@ public class Database
         cmd.Parameters.AddWithValue("@quality", (object?)task.Quality ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@is_hls", task.IsHls ? 1 : 0);
         cmd.Parameters.AddWithValue("@ray_id", (object?)task.RayId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@is_drm_protected", task.IsDrmProtected ? 1 : 0);
+        cmd.Parameters.AddWithValue("@is_honeypot", task.IsHoneypotDetected ? 1 : 0);
+        cmd.Parameters.AddWithValue("@is_decoy_canvas", task.IsDecoyCanvas ? 1 : 0);
 
         cmd.ExecuteNonQuery();
         Logger.Debug($"Upsert task '{task.Id}' ({task.Filename}, status={task.Status})", "DATABASE");
@@ -272,7 +296,7 @@ public class Database
         conn.Open();
 
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title, quality, is_hls, ray_id FROM downloads WHERE id = @id";
+        cmd.CommandText = "SELECT id, url, filename, save_dir, file_path, total_bytes, downloaded_bytes, status, connections, supports_range, created_at, completed_at, error_message, referer, speed_limit_bps, segments_json, category, source, telegram_channel_title, quality, is_hls, ray_id, is_drm_protected, is_honeypot, is_decoy_canvas FROM downloads WHERE id = @id";
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -347,6 +371,21 @@ public class Database
         if (reader.FieldCount > 21 && !reader.IsDBNull(21))
         {
             task.RayId = reader.GetString(21);
+        }
+
+        if (reader.FieldCount > 22 && !reader.IsDBNull(22))
+        {
+            task.IsDrmProtected = reader.GetInt32(22) == 1;
+        }
+
+        if (reader.FieldCount > 23 && !reader.IsDBNull(23))
+        {
+            task.IsHoneypotDetected = reader.GetInt32(23) == 1;
+        }
+
+        if (reader.FieldCount > 24 && !reader.IsDBNull(24))
+        {
+            task.IsDecoyCanvas = reader.GetInt32(24) == 1;
         }
 
         return task;

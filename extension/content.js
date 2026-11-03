@@ -393,13 +393,34 @@
     // Scenario 2: Multiple distinct sniffed streams (e.g. adaptive HLS / multi-source videos)
     const validSniffed = (sniffedMedia || []).filter(m => {
       const u = (m.url || "").toLowerCase();
-      return !u.includes("videoplayback") && !u.includes(".m4s") && !u.includes(".ts?") && !u.endsWith(".ts");
+      if (u.includes("videoplayback") || u.includes(".m4s") || u.includes(".ts?") || u.endsWith(".ts")) return false;
+      // Filter out tiny beacons or tracking pixels (< 50 KB) for non-stream media files if contentLength is known
+      if (m.type !== "stream" && !u.includes(".m3u8") && typeof m.contentLength === "number" && m.contentLength > 0 && m.contentLength < 51200) {
+        return false;
+      }
+      return true;
+    });
+
+    // Prioritize streams with known large content length and active player source
+    validSniffed.sort((a, b) => {
+      const aLen = typeof a.contentLength === "number" ? a.contentLength : 0;
+      const bLen = typeof b.contentLength === "number" ? b.contentLength : 0;
+      if (aLen !== bLen) {
+        return bLen - aLen; // Larger known file size first
+      }
+      const aMatches = vSrc && a.url && (a.url === vSrc || vSrc.includes(a.url)) ? 1 : 0;
+      const bMatches = vSrc && b.url && (b.url === vSrc || vSrc.includes(b.url)) ? 1 : 0;
+      if (aMatches !== bMatches) {
+        return bMatches - aMatches;
+      }
+      return 0;
     });
 
     if (validSniffed.length > 1) {
       const items = validSniffed.map((m, idx) => {
         const streamRes = classifyResolution(0, 0, m.url);
         const formatLabel = m.format || (m.type === "stream" ? "M3U8" : "MP4");
+        const fileExt = (formatLabel.toLowerCase() === "m3u8" || formatLabel.toLowerCase() === "hls") ? "mp4" : formatLabel.toLowerCase();
         const realSize = m.sizeFormatted || (m.contentLength ? formatBytes(m.contentLength) : "") || getResourceSize(m.url);
         const metaStr = realSize ? `${formatLabel} • ${realSize}` : `${formatLabel} • ${streamRes.tag || streamRes.quality || "Stream"}`;
         return {
@@ -408,7 +429,7 @@
           badgeClass: streamRes.badgeClass,
           title: `${streamRes.label || formatLabel + " Video " + (idx + 1)}`,
           meta: metaStr,
-          filename: `${safeTitle}_stream${idx + 1}.${formatLabel.toLowerCase()}`,
+          filename: `${safeTitle}_stream${idx + 1}.${fileExt}`,
           quality: streamRes.quality,
           url: m.url,
           threads: streamRes.threads
@@ -436,6 +457,7 @@
     // Scenario 3: Single HTML5 Video Element / Generic Web Video (Twitter, TikTok, Instagram, News, etc.)
     const matched = validSniffed.find(m => m.url === vSrc) || validSniffed.find(m => vSrc && vSrc.includes(m.url)) || validSniffed[0];
     const formatLabel = matched?.format || (vSrc.includes(".webm") ? "WEBM" : (vSrc.includes(".m3u8") ? "M3U8" : "MP4"));
+    const fileExt = (formatLabel.toLowerCase() === "m3u8" || formatLabel.toLowerCase() === "hls") ? "mp4" : formatLabel.toLowerCase();
     const realSize = matched?.sizeFormatted || (matched?.contentLength ? formatBytes(matched.contentLength) : "") || getResourceSize(vSrc);
     const metaStr = realSize ? `${formatLabel} • ${realSize}` : `${formatLabel} • ${res.tag || res.quality || "Video"}`;
 
@@ -446,7 +468,7 @@
         badgeClass: res.badgeClass,
         title: `${res.label}`,
         meta: metaStr,
-        filename: `${safeTitle}_${res.quality !== 'original' ? res.quality : 'video'}.${formatLabel.toLowerCase()}`,
+        filename: `${safeTitle}_${res.quality !== 'original' ? res.quality : 'video'}.${fileExt}`,
         quality: res.quality,
         url: matched?.url || vSrc,
         threads: res.threads
@@ -679,6 +701,33 @@
     return true;
   }
 
+  // Detect if video is a dummy decoy while actual playback happens in a Canvas / WebAssembly player
+  function detectDecoyCanvas(video) {
+    if (!video) return false;
+    try {
+      const container = (typeof video.closest === "function" && video.closest(".player, [class*='player'], [id*='player'], .video-container, [data-player]")) || video.parentElement;
+      if (container && typeof container.querySelectorAll === "function") {
+        const canvases = container.querySelectorAll("canvas");
+        for (const canvas of canvases) {
+          const rect = typeof canvas.getBoundingClientRect === "function" ? canvas.getBoundingClientRect() : null;
+          const w = rect ? rect.width : (canvas.offsetWidth || 0);
+          const h = rect ? rect.height : (canvas.offsetHeight || 0);
+          if (w >= 280 && h >= 160) {
+            if (typeof window.getComputedStyle === "function") {
+              const style = window.getComputedStyle(canvas);
+              if (style.display !== "none" && style.visibility !== "hidden" && parseFloat(style.opacity || "1") > 0.1) {
+                return true;
+              }
+            } else {
+              return true;
+            }
+          }
+        }
+      }
+    } catch { }
+    return false;
+  }
+
   // Resolve Target URL for Download
   async function getDownloadTargetUrl(video = currentVideo) {
     if (!video) return (typeof window !== "undefined" ? window.location?.href : "") || "";
@@ -862,7 +911,9 @@
           url: targetUrl,
           referer: window.location.href,
           filename: `${cleanFilename(getPageVideoTitle(), "video")}.mp4`,
-          batch: true
+          batch: true,
+          is_drm_protected: Boolean(currentVideo?.__mdmHasDrm),
+          is_decoy_canvas: Boolean(currentVideo?.__mdmIsDecoyCanvas)
         };
         await safeSendMessage(payload);
       } catch (err) {
@@ -902,6 +953,10 @@
     const presets = generateRealMediaItems(video, sniffedMedia, host, rawTitle);
     const videoStreamsCount = presets.filter(p => !p.is_audio_only && p.quality !== "subtitle").length;
 
+    if (detectDecoyCanvas(video)) {
+      video.__mdmIsDecoyCanvas = true;
+    }
+
     // Display video title or filename in the floating pill button (Kotak Kuning)
     const cleanTitle = cleanFilename(rawTitle, "video");
     const displayTitle = cleanDisplayTitle(rawTitle, (presets[0]?.filename || "Unduh Video"), 35);
@@ -915,11 +970,31 @@
       }
       const countEl = singletonBtn.querySelector(".myownidm-badge-count");
       if (countEl) {
-        countEl.textContent = `(${presets.length})`;
+        if (video?.__mdmHasDrm) {
+          countEl.textContent = `[DRM] (${presets.length})`;
+          countEl.style.color = "#fbbf24";
+        } else if (video?.__mdmIsDecoyCanvas) {
+          countEl.textContent = `[CANVAS] (${presets.length})`;
+          countEl.style.color = "#f87171";
+        } else {
+          countEl.textContent = `(${presets.length})`;
+          countEl.style.color = "";
+        }
       }
       const barContent = singletonBtn.querySelector(".myownidm-bar-content");
       if (barContent) {
         barContent.setAttribute("title", fullFilename);
+      }
+    }
+
+    const headerTitle = singletonPanel.querySelector(".myownidm-sniffer-title");
+    if (headerTitle) {
+      if (video?.__mdmHasDrm) {
+        headerTitle.innerHTML = `PILIH FORMAT <span style="color:#fbbf24;font-size:10px;font-weight:700;margin-left:6px;letter-spacing:0.5px;">⚠️ TERPROTEKSI DRM</span>`;
+      } else if (video?.__mdmIsDecoyCanvas) {
+        headerTitle.innerHTML = `PILIH FORMAT <span style="color:#f87171;font-size:10px;font-weight:700;margin-left:6px;letter-spacing:0.5px;">⚠️ PEMUTAR CANVAS (DECOY VIDEO)</span>`;
+      } else {
+        headerTitle.textContent = "PILIH FORMAT UNDUHAN";
       }
     }
 
@@ -982,7 +1057,9 @@
             filename: filename,
             quality: quality,
             is_audio_only: isAudio,
-            threads: quality === "2160p" ? 32 : quality === "1080p" ? 16 : quality === "720p" ? 8 : 4
+            threads: quality === "2160p" ? 32 : quality === "1080p" ? 16 : quality === "720p" ? 8 : 4,
+            is_drm_protected: Boolean(currentVideo?.__mdmHasDrm),
+            is_decoy_canvas: Boolean(currentVideo?.__mdmIsDecoyCanvas)
           };
 
           const response = await safeSendMessage(payload);
@@ -1136,6 +1213,24 @@
       }
     }, true);
 
+    document.addEventListener("encrypted", (e) => {
+      const el = e.target;
+      if (el && el.tagName === "VIDEO") {
+        el.__mdmHasDrm = true;
+        ContentLogger.warn("Elemen video memicu event 'encrypted' (DRM EME/Widevine terdeteksi)", "EXT:DRM", {
+          initDataType: e.initDataType,
+          src: el.currentSrc || el.src
+        });
+        if (currentVideo === el && singletonBtn) {
+          const countEl = singletonBtn.querySelector(".myownidm-badge-count");
+          if (countEl && !countEl.textContent.includes("DRM")) {
+            countEl.textContent = `[DRM] ${countEl.textContent}`;
+            countEl.style.color = "#fbbf24";
+          }
+        }
+      }
+    }, true);
+
     document.addEventListener("playing", (e) => {
       const el = e.target;
       if (el && el.tagName === "VIDEO" && isEligiblePlayerVideo(el)) {
@@ -1263,6 +1358,7 @@
       ensureTopmost,
       isWatchOrPlayerPage,
       isEligiblePlayerVideo,
+      detectDecoyCanvas,
       handleBypassClick
     };
   }

@@ -17,6 +17,9 @@ public class BrowserDownloadRequest
     public bool IsAudioOnly { get; set; }
     public int Threads { get; set; } = 8;
     public string? RayId { get; set; }
+    public bool IsDrmProtected { get; set; }
+    public bool IsHoneypotDetected { get; set; }
+    public bool IsDecoyCanvas { get; set; }
 }
 
 public class IpcServer
@@ -170,6 +173,9 @@ public class IpcServer
                 string? quality = json.TryGetProperty("quality", out var q) ? q.GetString() : null;
                 bool isAudioOnly = json.TryGetProperty("is_audio_only", out var ao) && ao.GetBoolean();
                 int threads = json.TryGetProperty("threads", out var th) && th.TryGetInt32(out int t) ? t : 8;
+                bool isDrmProtected = json.TryGetProperty("is_drm_protected", out var dp) && dp.GetBoolean();
+                bool isHoneypot = json.TryGetProperty("is_honeypot", out var hp) && hp.GetBoolean();
+                bool isDecoyCanvas = json.TryGetProperty("is_decoy_canvas", out var dc) && dc.GetBoolean();
                 string? rayIdVal = json.TryGetProperty("ray_id", out var rId) ? rId.GetString() : null;
                 string assignedRayId = !string.IsNullOrWhiteSpace(rayIdVal) ? rayIdVal : Logger.NewRayId("ray_ext");
                 string? referer = null;
@@ -194,7 +200,8 @@ public class IpcServer
 
                 if (!string.IsNullOrEmpty(url))
                 {
-                    Logger.Info($"Permintaan unduhan diterima via HTTP IPC: {url} (filename={filename ?? "auto-detect"})", "IPC", assignedRayId);
+                    string protTag = (isDrmProtected ? ", DRM" : "") + (isHoneypot ? ", Honeypot" : "") + (isDecoyCanvas ? ", Canvas" : "");
+                    Logger.Info($"Permintaan unduhan diterima via HTTP IPC: {url} (filename={filename ?? "auto-detect"}{protTag})", "IPC", assignedRayId);
                     _ = Task.Run(() =>
                     {
                         try
@@ -209,7 +216,10 @@ public class IpcServer
                                 Quality = quality,
                                 IsAudioOnly = isAudioOnly,
                                 Threads = threads,
-                                RayId = assignedRayId
+                                RayId = assignedRayId,
+                                IsDrmProtected = isDrmProtected,
+                                IsHoneypotDetected = isHoneypot,
+                                IsDecoyCanvas = isDecoyCanvas
                             });
                         }
                         catch { }
@@ -273,19 +283,26 @@ public class IpcServer
                                 string? filename = json.TryGetProperty("filename", out var f) ? f.GetString() : null;
                                 string? quality = json.TryGetProperty("quality", out var q) ? q.GetString() : null;
                                 string? referer = json.TryGetProperty("referer", out var r) ? r.GetString() : null;
+                                bool isDrmProtected = json.TryGetProperty("is_drm_protected", out var dp) && dp.GetBoolean();
+                                bool isHoneypot = json.TryGetProperty("is_honeypot", out var hp) && hp.GetBoolean();
+                                bool isDecoyCanvas = json.TryGetProperty("is_decoy_canvas", out var dc) && dc.GetBoolean();
                                 string? rayIdVal = json.TryGetProperty("ray_id", out var rId) ? rId.GetString() : null;
                                 string assignedRayId = !string.IsNullOrWhiteSpace(rayIdVal) ? rayIdVal : Logger.NewRayId("ray_ipc");
 
                                 if (!string.IsNullOrEmpty(url))
                                 {
-                                    Logger.Info($"Permintaan unduhan diterima via Named Pipe IPC: {url} (filename={filename ?? "auto-detect"})", "IPC", assignedRayId);
+                                    string protTag = (isDrmProtected ? ", DRM" : "") + (isHoneypot ? ", Honeypot" : "") + (isDecoyCanvas ? ", Canvas" : "");
+                                    Logger.Info($"Permintaan unduhan diterima via Named Pipe IPC: {url} (filename={filename ?? "auto-detect"}{protTag})", "IPC", assignedRayId);
                                     DownloadRequested?.Invoke(this, new BrowserDownloadRequest
                                     {
                                         Url = url,
                                         Filename = filename,
                                         Quality = quality,
                                         Referer = referer,
-                                        RayId = assignedRayId
+                                        RayId = assignedRayId,
+                                        IsDrmProtected = isDrmProtected,
+                                        IsHoneypotDetected = isHoneypot,
+                                        IsDecoyCanvas = isDecoyCanvas
                                     });
                                 }
 

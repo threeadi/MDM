@@ -38,6 +38,10 @@ public class DownloadTask
     public bool IsHls { get; set; }
     public string? Source { get; set; }
     public string? TelegramChannelTitle { get; set; }
+    public bool IsDrmProtected { get; set; }
+    public bool IsHoneypotDetected { get; set; }
+    public bool IsDecoyCanvas { get; set; }
+    public string? ProtectionWarning { get; set; }
 
     public double Progress
     {

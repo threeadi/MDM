@@ -16,6 +16,7 @@ const {
   ensureTopmost,
   isWatchOrPlayerPage,
   isEligiblePlayerVideo,
+  detectDecoyCanvas,
   handleBypassClick
 } = content;
 
@@ -190,8 +191,20 @@ describe('generateRealMediaItems', () => {
     const items = generateRealMediaItems(null, sniffed, 'streamer.com', 'Live Show');
     expect(items.length).toBe(3); // 2 streams + 1 audio option
     expect(items[0].url).toBe('https://cdn.example.com/stream_1080p.m3u8');
+    expect(items[0].filename).toBe('Live_Show_stream1.mp4');
     expect(items[1].url).toBe('https://cdn.example.com/stream_720p.m3u8');
+    expect(items[1].filename).toBe('Live_Show_stream2.mp4');
     expect(items[2].id).toBe('audio');
+  });
+
+  it('filters out tiny tracking beacons and prioritizes streams with known content length', () => {
+    const sniffed = [
+      { url: 'https://cdn.example.com/beacon.mp4', type: 'media', format: 'MP4', contentLength: 37, sizeFormatted: '' },
+      { url: 'https://cdn.example.com/real_video.mp4', type: 'media', format: 'MP4', contentLength: 12163481, sizeFormatted: '11.6 MB' }
+    ];
+    const items = generateRealMediaItems(null, sniffed, 'video.com', 'Video Test');
+    expect(items[0].url).toBe('https://cdn.example.com/real_video.mp4');
+    expect(items[0].meta).toContain('11.6 MB');
   });
 });
 
@@ -547,6 +560,46 @@ describe('handleBypassClick', () => {
     const handled = handleBypassClick(regularEvent);
     expect(handled).toBe(false);
     expect(mockSendMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe('detectDecoyCanvas', () => {
+  it('returns false for null video', () => {
+    expect(detectDecoyCanvas(null)).toBe(false);
+  });
+
+  it('detects active canvas inside player container', () => {
+    const mockCanvas = {
+      getBoundingClientRect: () => ({ width: 854, height: 480 }),
+      offsetWidth: 854,
+      offsetHeight: 480
+    };
+    const mockContainer = {
+      querySelectorAll: vi.fn((sel) => sel === 'canvas' ? [mockCanvas] : [])
+    };
+    const mockVideo = {
+      closest: vi.fn(() => mockContainer),
+      parentElement: mockContainer
+    };
+    if (!globalThis.window) globalThis.window = {};
+    globalThis.window.getComputedStyle = vi.fn(() => ({
+      display: 'block',
+      visibility: 'visible',
+      opacity: '1'
+    }));
+
+    expect(detectDecoyCanvas(mockVideo)).toBe(true);
+  });
+
+  it('returns false when no canvas or canvas is hidden', () => {
+    const mockContainer = {
+      querySelectorAll: vi.fn(() => [])
+    };
+    const mockVideo = {
+      closest: vi.fn(() => mockContainer),
+      parentElement: mockContainer
+    };
+    expect(detectDecoyCanvas(mockVideo)).toBe(false);
   });
 });
 

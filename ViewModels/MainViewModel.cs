@@ -1066,13 +1066,17 @@ public class MainViewModel : INotifyPropertyChanged
         string? category = null,
         bool startImmediately = true,
         string? quality = null,
-        string? rayId = null)
+        string? rayId = null,
+        bool isDrmProtected = false,
+        bool isDecoyCanvas = false,
+        bool isHoneypot = false)
     {
         string effectiveRayId = !string.IsNullOrWhiteSpace(rayId) ? rayId : Logger.NewRayId();
         using (Logger.WithRayId(effectiveRayId))
         {
-            Logger.Info($"Memulai alur unduhan baru: {url} -> {saveDir}/{filename ?? "auto-detect"} (threads: {threads}, auto-start: {startImmediately})", "VIEWMODEL", effectiveRayId);
-            var task = await _engine.ProbeAndCreateTaskAsync(url, saveDir, filename, threads, referer, category, quality, effectiveRayId);
+            string protTag = (isDrmProtected ? ", DRM" : "") + (isHoneypot ? ", Honeypot" : "") + (isDecoyCanvas ? ", Canvas" : "");
+            Logger.Info($"Memulai alur unduhan baru: {url} -> {saveDir}/{filename ?? "auto-detect"} (threads: {threads}, auto-start: {startImmediately}{protTag})", "VIEWMODEL", effectiveRayId);
+            var task = await _engine.ProbeAndCreateTaskAsync(url, saveDir, filename, threads, referer, category, quality, effectiveRayId, isDrmProtected, isDecoyCanvas, isHoneypot);
             if (!startImmediately)
             {
                 task.Status = DownloadStatus.Paused;

@@ -605,6 +605,12 @@
                                                     <TextBlock Text="{Binding TelegramBadgeText}" FontSize="9" FontWeight="Medium" Foreground="#60A5FA" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Border>
+                                            <Border DockPanel.Dock="Right" Visibility="{Binding HasProtectionWarning, Converter={StaticResource BoolToVis}}" ToolTip="{Binding ProtectionBadgeTooltip}" Background="#3A1C1C" BorderBrush="#802525" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <controls:LucideIcon Kind="alert-triangle" Width="9" Height="9" Foreground="#F87171" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding ProtectionBadgeText}" FontSize="9" FontWeight="Bold" Foreground="#F87171" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
                                             <TextBlock Text="{Binding Filename}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                         </DockPanel>
                                     </DataTemplate>

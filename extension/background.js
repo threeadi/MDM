@@ -300,7 +300,7 @@ if (typeof chrome !== "undefined" && chrome.webRequest?.onResponseStarted) {
       h => h.name.toLowerCase() === "content-type"
     );
     const ct = contentTypeHeader?.value?.toLowerCase() || "";
-    if (ct.includes("javascript") || ct.includes("json") || ct.includes("css") || ct.includes("text/html")) {
+    if (ct.includes("javascript") || ct.includes("json") || ct.includes("css") || ct.includes("text/html") || ct.startsWith("image/") || ct.includes("image/")) {
       return;
     }
 
@@ -309,10 +309,6 @@ if (typeof chrome !== "undefined" && chrome.webRequest?.onResponseStarted) {
     const isStreamMime = ct.includes("mpegurl");
 
     if (isStream || isStreamMime || isFile) {
-      if (!detectedMediaByTab[details.tabId]) {
-        detectedMediaByTab[details.tabId] = [];
-      }
-
       // Parse content-length or total size from content-range if available
       let contentLength = null;
       const contentRangeHeader = details.responseHeaders?.find(
@@ -338,6 +334,15 @@ if (typeof chrome !== "undefined" && chrome.webRequest?.onResponseStarted) {
             contentLength = parsedLen;
           }
         }
+      }
+
+      // Ignore tracking pixels, beacons, or empty error stubs (< 20 KB) for non-stream files
+      if (!isStream && !isStreamMime && contentLength !== null && contentLength > 0 && contentLength < 20480) {
+        return;
+      }
+
+      if (!detectedMediaByTab[details.tabId]) {
+        detectedMediaByTab[details.tabId] = [];
       }
 
       // Determine stream/file format
@@ -459,18 +464,27 @@ function resolveSmartFilename(requestedFilename, tabTitle, quality = "") {
     return quality ? `${safeTabTitle}_${quality}.mp4` : `${safeTabTitle}.mp4`;
   }
 
-  const match = requestedFilename.match(/^(.*?)(_(?:4k|2160p|1080p|720p|480p|360p|audio|sub_[a-z0-9]+))?(\.[a-zA-Z0-9]+)?$/i);
+  let safeRequested = requestedFilename;
+  if (safeRequested && (safeRequested.toLowerCase().endsWith(".m3u8") || safeRequested.toLowerCase().endsWith(".hls"))) {
+    safeRequested = safeRequested.replace(/\.(m3u8|hls)$/i, ".mp4");
+  }
+
+  const match = safeRequested.match(/^(.*?)(_(?:4k|2160p|1080p|720p|480p|360p|audio|sub_[a-z0-9]+))?(\.[a-zA-Z0-9]+)?$/i);
   if (match) {
     const basePrefix = match[1] || "";
     const qualityTag = match[2] || (quality ? `_${quality}` : "");
-    const ext = match[3] || ".mp4";
+    let ext = match[3] || ".mp4";
+    if (ext.toLowerCase() === ".m3u8" || ext.toLowerCase() === ".hls") {
+      ext = ".mp4";
+    }
 
     if (isGenericTitle(basePrefix)) {
       return `${safeTabTitle}${qualityTag}${ext}`;
     }
+    return `${basePrefix}${qualityTag}${ext}`;
   }
 
-  return requestedFilename;
+  return safeRequested;
 }
 
 // 4. Send to Desktop App via Local HTTP Server (Port 18888) or Native Messaging Fallback
@@ -490,14 +504,22 @@ async function sendToMyOwnIdm(downloadUrl, refererUrl = "", filename = "", extra
       }
     }
 
+    let effectiveFilename = filename || "";
+    if (effectiveFilename && (effectiveFilename.toLowerCase().endsWith(".m3u8") || effectiveFilename.toLowerCase().endsWith(".hls"))) {
+      effectiveFilename = effectiveFilename.replace(/\.(m3u8|hls)$/i, ".mp4");
+    }
+
     const payload = {
       action: "download",
       ray_id: rayId,
       url: downloadUrl,
-      filename: filename || "",
+      filename: effectiveFilename,
       quality: extraMeta.quality || "",
       is_audio_only: extraMeta.is_audio_only || false,
       threads: extraMeta.threads || 16,
+      is_drm_protected: Boolean(extraMeta.is_drm_protected),
+      is_honeypot: Boolean(extraMeta.is_honeypot),
+      is_decoy_canvas: Boolean(extraMeta.is_decoy_canvas),
       headers: {
         "Cookie": cookieHeader,
         "Referer": refererUrl || "",
@@ -564,7 +586,10 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
       quality: request.quality,
       is_audio_only: request.is_audio_only,
       threads: request.threads,
-      batch: request.batch
+      batch: request.batch,
+      is_drm_protected: Boolean(request.is_drm_protected),
+      is_honeypot: Boolean(request.is_honeypot),
+      is_decoy_canvas: Boolean(request.is_decoy_canvas)
     };
     sendToMyOwnIdm(request.url, request.referer, filename, extraMeta)
       .then((success) => {

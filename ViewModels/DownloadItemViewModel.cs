@@ -187,6 +187,34 @@ public class DownloadItemViewModel : INotifyPropertyChanged
     public bool IsDownloading => Status == DownloadStatus.Downloading;
     public bool IsPaused => Status == DownloadStatus.Paused;
     public bool IsInFlight => Status != DownloadStatus.Completed && Status != DownloadStatus.Failed;
+    public bool IsDrmProtected => Task.IsDrmProtected;
+    public bool IsHoneypotDetected => Task.IsHoneypotDetected;
+    public bool IsDecoyCanvas => Task.IsDecoyCanvas;
+    public string? ProtectionWarning => Task.ProtectionWarning;
+    public bool HasProtectionWarning => IsDrmProtected || IsHoneypotDetected || IsDecoyCanvas;
+
+    public string ProtectionBadgeText
+    {
+        get
+        {
+            if (IsDrmProtected) return "DRM";
+            if (IsHoneypotDetected) return "HONEYPOT";
+            if (IsDecoyCanvas) return ProtectionWarning?.Contains("Steganografi", StringComparison.OrdinalIgnoreCase) == true ? "DECOY" : "CANVAS";
+            return string.Empty;
+        }
+    }
+
+    public string ProtectionBadgeTooltip
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(ProtectionWarning)) return ProtectionWarning;
+            if (IsDrmProtected) return "Proteksi DRM Terdeteksi (Widevine/CENC)";
+            if (IsHoneypotDetected) return "Honeypot / Stream Poisoning Terdeteksi";
+            if (IsDecoyCanvas) return "Decoy HTML5 Video / Canvas Player";
+            return string.Empty;
+        }
+    }
     public string? ErrorMessage => Task.ErrorMessage;
 
     public Brush TopAccentBrush => Status switch
@@ -293,6 +321,12 @@ public class DownloadItemViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(TotalBytes));
         OnPropertyChanged(nameof(Filename));
         OnPropertyChanged(nameof(FilePath));
+        OnPropertyChanged(nameof(IsDecoyCanvas));
+        OnPropertyChanged(nameof(IsHoneypotDetected));
+        OnPropertyChanged(nameof(IsDrmProtected));
+        OnPropertyChanged(nameof(HasProtectionWarning));
+        OnPropertyChanged(nameof(ProtectionBadgeText));
+        OnPropertyChanged(nameof(ProtectionBadgeTooltip));
         Status = DownloadStatus.Completed;
     }
 

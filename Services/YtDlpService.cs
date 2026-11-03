@@ -189,7 +189,11 @@ public static class YtDlpService
         }
 
         string safeFilename = DownloadEngine.SanitizeFilename(rawTitle);
-        if (!safeFilename.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase))
+        if (safeFilename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+        {
+            safeFilename = Path.ChangeExtension(safeFilename, ".mp4");
+        }
+        else if (!safeFilename.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase))
         {
             safeFilename += ".mp4";
         }
@@ -214,6 +218,13 @@ public static class YtDlpService
         string? ffmpegDir = FindFfmpegDir();
 
         string outputFile = task.FilePath;
+        if (outputFile.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+        {
+            outputFile = Path.ChangeExtension(outputFile, ".mp4");
+            task.FilePath = outputFile;
+            task.Filename = Path.GetFileName(outputFile);
+        }
+
         string? targetDir = Path.GetDirectoryName(outputFile);
         if (!string.IsNullOrEmpty(targetDir) && !Directory.Exists(targetDir))
         {
