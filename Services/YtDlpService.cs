@@ -7,29 +7,47 @@ namespace Mdm.Services;
 
 public static class YtDlpService
 {
+    private static readonly HashSet<string> StaticFileExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".iso", ".img",
+        ".exe", ".msi", ".dmg", ".pkg", ".deb", ".rpm", ".apk",
+        ".pdf", ".docx", ".xlsx", ".pptx", ".bin", ".torrent"
+    };
+
     private static readonly Regex VideoUrlRegex = new(
         @"(https?://)?(www\.)?(youtube\.com/watch\?|youtu\.be/|youtube\.com/shorts/|youtube\.com/embed/|tiktok\.com/@|instagram\.com/(reel|p)/|twitter\.com/\w+/status/|x\.com/\w+/status/|vimeo\.com/|facebook\.com/watch)",
         RegexOptions.Compiled | RegexOptions.IgnoreCase
     );
 
+    public static bool IsStaticDirectFile(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        try
+        {
+            string clean = url.Split('?')[0].Split('#')[0];
+            string ext = Path.GetExtension(clean);
+            return !string.IsNullOrEmpty(ext) && StaticFileExtensions.Contains(ext);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static bool IsStreamManifestUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        return url.Contains(".m3u8", StringComparison.OrdinalIgnoreCase) ||
+               url.Contains(".mpd", StringComparison.OrdinalIgnoreCase) ||
+               url.Contains("/hls/", StringComparison.OrdinalIgnoreCase) ||
+               url.Contains("/dash/", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static bool IsVideoPlatformUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url)) return false;
-        if (url.Contains("youtube.com", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("youtu.be", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("googlevideo.com", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("tiktok.com", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("instagram.com/reel/", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("instagram.com/p/", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("x.com/", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("twitter.com/", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("vimeo.com/", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("mediadelivery.net", StringComparison.OrdinalIgnoreCase) ||
-            url.Contains("b-cdn.net", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
+        if (IsStaticDirectFile(url)) return false;
+        if (IsStreamManifestUrl(url)) return true;
         return VideoUrlRegex.IsMatch(url);
     }
 
@@ -152,6 +170,8 @@ public static class YtDlpService
         psi.EnvironmentVariables["PYTHONUNBUFFERED"] = "1";
         psi.ArgumentList.Add("--no-warnings");
         psi.ArgumentList.Add("--no-playlist");
+        psi.ArgumentList.Add("--impersonate");
+        psi.ArgumentList.Add("chrome");
 
         if (!string.IsNullOrWhiteSpace(quality))
         {
@@ -246,6 +266,8 @@ public static class YtDlpService
 
         psi.ArgumentList.Add("--no-warnings");
         psi.ArgumentList.Add("--no-playlist");
+        psi.ArgumentList.Add("--impersonate");
+        psi.ArgumentList.Add("chrome");
         psi.ArgumentList.Add("--newline");
         psi.ArgumentList.Add("-c"); // Resume partially downloaded files
         psi.ArgumentList.Add("--downloader-args");
@@ -519,6 +541,21 @@ public static class YtDlpService
             {
                 errSummary = string.Join(" | ", stderrLines);
             }
+
+            // Automatic failover for CDN URLs that expired / returned 410 or 403:
+            // If the task has a referer from a supported video platform (e.g. pornhub.com, etc.),
+            // retry downloading using the referer webpage URL with yt-dlp's dedicated extractor!
+            if ((errSummary.Contains("410") || errSummary.Contains("403") || errSummary.Contains("HTTP Error")) &&
+                !string.IsNullOrWhiteSpace(task.Referer) &&
+                !IsStaticDirectFile(task.Referer) &&
+                !string.Equals(task.Url, task.Referer, StringComparison.OrdinalIgnoreCase))
+            {
+                Logger.Warn($"URL stream direct gagal ({errSummary}). Mencoba failover otomatis menggunakan URL halaman referer: '{task.Referer}'...", "YTDLP");
+                task.Url = task.Referer;
+                await DownloadAsync(task, limiter, onProgress, ct);
+                return;
+            }
+
             throw new InvalidOperationException($"yt-dlp failed (exit code {process.ExitCode}): {errSummary}");
         }
 

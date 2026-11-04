@@ -12,6 +12,9 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+publish/
+SetupOutput/
+
 
 ## Visual Studio cache & user files
 .vs/

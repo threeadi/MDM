@@ -707,6 +707,16 @@
   function detectDecoyCanvas(video) {
     if (!video) return false;
     try {
+      // If the HTML5 video element itself is actively loaded and visible with genuine video dimensions,
+      // it is a real video player (not a canvas-rendered decoy).
+      const hasRealDimensions = (video.videoWidth > 0 && video.videoHeight > 0) || (video.duration > 0);
+      if (hasRealDimensions && typeof window !== "undefined" && typeof window.getComputedStyle === "function") {
+        const vStyle = window.getComputedStyle(video);
+        if (vStyle.display !== "none" && vStyle.visibility !== "hidden" && parseFloat(vStyle.opacity || "1") > 0.2) {
+          return false;
+        }
+      }
+
       const container = (typeof video.closest === "function" && video.closest(".player, [class*='player'], [id*='player'], .video-container, [data-player]")) || video.parentElement;
       if (container && typeof container.querySelectorAll === "function") {
         const canvases = container.querySelectorAll("canvas");

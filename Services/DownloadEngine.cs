@@ -412,15 +412,23 @@ public class DownloadEngine
     {
         string effectiveUrl = GetEffectiveUrl(url, referer);
 
-        if (YtDlpService.IsVideoPlatformUrl(effectiveUrl) || effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase))
+        // 1. Fast-Path: Known stream manifests (.m3u8, .mpd) or explicit platform video regex
+        if (YtDlpService.IsStreamManifestUrl(effectiveUrl) || YtDlpService.IsVideoPlatformUrl(effectiveUrl))
         {
-            var ytProbe = await YtDlpService.ProbeAsync(effectiveUrl, quality, ct);
-            ytProbe.IsHls = true;
-            if (ytProbe.Filename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                ytProbe.Filename = Path.ChangeExtension(ytProbe.Filename, ".mp4");
+                var ytProbe = await YtDlpService.ProbeAsync(effectiveUrl, quality, ct);
+                ytProbe.IsHls = true;
+                if (ytProbe.Filename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+                {
+                    ytProbe.Filename = Path.ChangeExtension(ytProbe.Filename, ".mp4");
+                }
+                return ytProbe;
             }
-            return ytProbe;
+            catch (Exception ex)
+            {
+                Logger.Debug($"yt-dlp fast probe gagal, mencoba fallback HTTP Range probe: {ex.Message}", "ENGINE");
+            }
         }
 
         using var req = new HttpRequestMessage(HttpMethod.Get, effectiveUrl);
@@ -431,6 +439,42 @@ public class DownloadEngine
         }
 
         using var resp = await HttpClient.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+
+        string? mediaType = resp.Content.Headers.ContentType?.MediaType?.ToLowerInvariant();
+
+        // 2. Content-Type Driven Routing:
+        // A) Stream playlist manifest (Content-Type: application/vnd.apple.mpegurl, application/x-mpegurl, application/dash+xml)
+        if (mediaType != null && (mediaType.Contains("mpegurl") || mediaType.Contains("m3u8") || mediaType.Contains("dash+xml")))
+        {
+            var ytProbe = await YtDlpService.ProbeAsync(effectiveUrl, quality, ct);
+            ytProbe.IsHls = true;
+            if (ytProbe.Filename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+            {
+                ytProbe.Filename = Path.ChangeExtension(ytProbe.Filename, ".mp4");
+            }
+            return ytProbe;
+        }
+
+        // B) HTML webpage (text/html): user submitted a video webpage URL from ANY site on the internet
+        if ((mediaType == "text/html" || mediaType == "application/xhtml+xml") && !YtDlpService.IsStaticDirectFile(effectiveUrl))
+        {
+            try
+            {
+                Logger.Info($"URL terdeteksi sebagai halaman web ('{mediaType}'). Mencoba ekstraksi stream via yt-dlp...", "ENGINE");
+                var ytProbe = await YtDlpService.ProbeAsync(effectiveUrl, quality, ct);
+                ytProbe.IsHls = true;
+                if (ytProbe.Filename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+                {
+                    ytProbe.Filename = Path.ChangeExtension(ytProbe.Filename, ".mp4");
+                }
+                return ytProbe;
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug($"yt-dlp tidak menemukan stream video pada halaman web: {ex.Message}", "ENGINE");
+                // Continue to normal HTML honeypot warning handling below
+            }
+        }
 
         long? totalBytes = null;
         bool supportsRange = resp.StatusCode == System.Net.HttpStatusCode.PartialContent;
@@ -496,7 +540,7 @@ public class DownloadEngine
         }
         ArrayPool<byte>.Shared.Return(probeBuffer);
 
-        string? mediaType = resp.Content.Headers.ContentType?.MediaType;
+        mediaType = resp.Content.Headers.ContentType?.MediaType;
         bool isHls = (mediaType != null && (mediaType.Contains("mpegurl") || mediaType.Contains("m3u8"))) ||
                      effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase);
 
@@ -692,7 +736,11 @@ public class DownloadEngine
             return;
         }
 
-        bool isStream = YtDlpService.IsVideoPlatformUrl(effectiveUrl) || task.IsHls || effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase);
+        bool isStream = task.IsHls ||
+                        YtDlpService.IsStreamManifestUrl(effectiveUrl) ||
+                        YtDlpService.IsVideoPlatformUrl(effectiveUrl) ||
+                        effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase) ||
+                        effectiveUrl.Contains(".mpd", StringComparison.OrdinalIgnoreCase);
         if (isStream)
         {
             await ExecuteYtDlpDownloadAsync(task, ct);
