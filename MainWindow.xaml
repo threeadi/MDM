@@ -93,10 +93,7 @@
                 <!-- Brand / Logo (MDM Cloud Logo) -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Image Source="pack://application:,,,/Mdm;component/Assets/app.png" Width="24" Height="24" RenderOptions.BitmapScalingMode="HighQuality" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="MDM" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <Border Background="#1C2028" BorderBrush="#262B35" BorderThickness="1" CornerRadius="4" Padding="6,1.5" VerticalAlignment="Center">
-                        <TextBlock Text="v4.2 PRO" FontSize="9" FontWeight="Medium" Foreground="#8B949E"/>
-                    </Border>
+                    <TextBlock Text="MDM" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Center Quick Search (Clean Dark Matte) -->

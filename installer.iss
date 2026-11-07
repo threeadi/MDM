@@ -1,10 +1,9 @@
 ; =====================================================================
-; Inno Setup Script for MDM (My Download Manager) v4.2 PRO
+; Inno Setup Script for MDM (My Download Manager)
 ; =====================================================================
 
 #define MyAppName "MDM"
 #define MyAppFullName "My Download Manager"
-#define MyAppVersion "4.2.0"
 #define MyAppPublisher "MDM Core Team"
 #define MyAppURL "https://github.com/myownidm/mdm"
 #define MyAppExeName "Mdm.exe"
@@ -13,8 +12,7 @@
 ; App Identity
 AppId={{E57D5C14-2C62-4C78-9B2F-6A8109F21840}
 AppName={#MyAppName}
-AppVersion={#MyAppVersion}
-AppVerName={#MyAppName} v{#MyAppVersion} PRO
+AppVerName={#MyAppName}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
@@ -27,7 +25,7 @@ AllowNoIcons=yes
 
 ; Output Configuration
 OutputDir=SetupOutput
-OutputBaseFilename=MDM_v4.2_Setup
+OutputBaseFilename=MDM_Setup
 SetupIconFile=Assets\app.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -41,7 +39,6 @@ DisableWelcomePage=no
 DisableDirPage=no
 DisableProgramGroupPage=no
 UninstallDisplayIcon={app}\{#MyAppExeName}
-VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppFullName} Installer
 VersionInfoProductName={#MyAppFullName}

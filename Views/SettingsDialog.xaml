@@ -58,9 +58,6 @@
                                Margin="0,0,8,0" 
                                VerticalAlignment="Center"/>
                         <TextBlock Text="MDM" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <Border Background="#1C2028" BorderBrush="#262B35" BorderThickness="1" CornerRadius="4" Padding="6,1.5" Margin="0,0,8,0" VerticalAlignment="Center">
-                            <TextBlock Text="v4.2 PRO" FontSize="9.5" FontWeight="Medium" Foreground="#8B949E"/>
-                        </Border>
                         <TextBlock Text="—" FontSize="12" Foreground="#64748B" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Text="{services:Loc settings.title}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
@@ -140,10 +137,7 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Right: Single Clean Badge (Build 2026.11 PRO) -->
-                    <Border Grid.Column="1" Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
-                        <TextBlock Text="Build 2026.11 PRO" FontSize="11" FontWeight="Medium" Foreground="#CBD5E1"/>
-                    </Border>
+
                 </Grid>
             </Border>
 
