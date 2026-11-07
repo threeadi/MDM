@@ -268,10 +268,18 @@ public static class YtDlpService
         psi.ArgumentList.Add("--no-playlist");
         psi.ArgumentList.Add("--impersonate");
         psi.ArgumentList.Add("chrome");
+        psi.ArgumentList.Add("--socket-timeout");
+        psi.ArgumentList.Add("15");
+        psi.ArgumentList.Add("--retries");
+        psi.ArgumentList.Add("3");
+        psi.ArgumentList.Add("--fragment-retries");
+        psi.ArgumentList.Add("3");
+        psi.ArgumentList.Add("-N");
+        psi.ArgumentList.Add("4");
         psi.ArgumentList.Add("--newline");
         psi.ArgumentList.Add("-c"); // Resume partially downloaded files
         psi.ArgumentList.Add("--downloader-args");
-        psi.ArgumentList.Add("ffmpeg_i:-extension_picky false");
+        psi.ArgumentList.Add("ffmpeg_i:-extension_picky false -live_start_index 0 -m3u8_hold_counters 2");
         psi.ArgumentList.Add("-f");
         psi.ArgumentList.Add(format);
         psi.ArgumentList.Add("--merge-output-format");
@@ -485,23 +493,23 @@ public static class YtDlpService
                         long delta = diskBytes - lastBytes;
                         bytesSinceSpeedCalc += delta;
                         lastBytes = diskBytes;
+                    }
 
-                        if (lastReportInstant.ElapsedMilliseconds >= 300)
+                    if (lastReportInstant.ElapsedMilliseconds >= 300)
+                    {
+                        double elapsed = lastReportInstant.Elapsed.TotalSeconds;
+                        speedBps = elapsed > 0 ? (long)(bytesSinceSpeedCalc / elapsed) : 0;
+                        bytesSinceSpeedCalc = 0;
+                        lastReportInstant.Restart();
+
+                        long? eta = null;
+                        if (task.TotalBytes is > 0 && speedBps > 0)
                         {
-                            double elapsed = lastReportInstant.Elapsed.TotalSeconds;
-                            speedBps = elapsed > 0 ? (long)(bytesSinceSpeedCalc / elapsed) : 0;
-                            bytesSinceSpeedCalc = 0;
-                            lastReportInstant.Restart();
-
-                            long? eta = null;
-                            if (task.TotalBytes is > 0 && speedBps > 0)
-                            {
-                                long remaining = Math.Max(0, task.TotalBytes.Value - diskBytes);
-                                eta = remaining / speedBps;
-                            }
-
-                            onProgress(diskBytes, task.TotalBytes, speedBps, eta);
+                            long remaining = Math.Max(0, task.TotalBytes.Value - diskBytes);
+                            eta = remaining / speedBps;
                         }
+
+                        onProgress(diskBytes, task.TotalBytes, speedBps, eta);
                     }
                 }
                 catch { }

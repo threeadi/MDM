@@ -246,7 +246,7 @@ public partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(filename)) return true;
 
         string targetPath = Path.Combine(saveDir, filename);
-        if (File.Exists(targetPath))
+        if (File.Exists(targetPath) || File.Exists(targetPath + ".part"))
         {
             var dupDlg = new DuplicateDownloadDialog(targetPath)
             {
