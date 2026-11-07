@@ -336,8 +336,21 @@ if (typeof chrome !== "undefined" && chrome.webRequest?.onResponseStarted) {
         }
       }
 
-      // Ignore tracking pixels, beacons, or empty error stubs (< 20 KB) for non-stream files
-      if (!isStream && !isStreamMime && contentLength !== null && contentLength > 0 && contentLength < 20480) {
+      // Ignore hover previews, thumbnail teasers, storyboards, or tiny beacons (< 250 KB)
+      const lowerUrl = url.toLowerCase();
+      const isPreviewUrl = lowerUrl.includes("preview.webm") ||
+                           lowerUrl.includes("-preview") ||
+                           lowerUrl.includes("_preview") ||
+                           lowerUrl.includes("/preview/") ||
+                           lowerUrl.includes("/thumbs/") ||
+                           lowerUrl.includes("/thumbnail/") ||
+                           lowerUrl.includes("/thumbnails/") ||
+                           lowerUrl.includes("storyboard") ||
+                           lowerUrl.includes("hover_preview");
+      if (isPreviewUrl && (!contentLength || contentLength < 15 * 1024 * 1024)) {
+        return;
+      }
+      if (!isStream && !isStreamMime && contentLength !== null && contentLength > 0 && contentLength < 256000) {
         return;
       }
 

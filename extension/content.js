@@ -394,25 +394,61 @@
     const validSniffed = (sniffedMedia || []).filter(m => {
       const u = (m.url || "").toLowerCase();
       if (u.includes("videoplayback") || u.includes(".m4s") || u.includes(".ts?") || u.endsWith(".ts")) return false;
-      // Filter out tiny beacons or tracking pixels (< 50 KB) for non-stream media files if contentLength is known
-      if (m.type !== "stream" && !u.includes(".m3u8") && typeof m.contentLength === "number" && m.contentLength > 0 && m.contentLength < 51200) {
+
+      // Filter out hover previews, thumbnail clips, and storyboards
+      const isPreview = u.includes("preview.webm") ||
+                        u.includes("-preview") ||
+                        u.includes("_preview") ||
+                        u.includes("/preview/") ||
+                        u.includes("/thumbs/") ||
+                        u.includes("/thumbnail/") ||
+                        u.includes("/thumbnails/") ||
+                        u.includes("storyboard") ||
+                        u.includes("hover_preview");
+      if (isPreview && (typeof m.contentLength !== "number" || m.contentLength < 15 * 1024 * 1024)) {
         return false;
+      }
+
+      // Filter out tiny beacons, tracking pixels, or stub responses (< 250 KB) for non-stream media files
+      if (m.type !== "stream" && !u.includes(".m3u8") && !u.includes(".mpd")) {
+        if (typeof m.contentLength === "number" && m.contentLength > 0 && m.contentLength < 256000) {
+          return false;
+        }
       }
       return true;
     });
 
-    // Prioritize streams with known large content length and active player source
+    // Prioritize active player source, full streams (HLS/DASH), higher resolution, and larger file sizes
     validSniffed.sort((a, b) => {
-      const aLen = typeof a.contentLength === "number" ? a.contentLength : 0;
-      const bLen = typeof b.contentLength === "number" ? b.contentLength : 0;
-      if (aLen !== bLen) {
-        return bLen - aLen; // Larger known file size first
-      }
+      // 1. Matches active player source (vSrc) -> Highest Priority
       const aMatches = vSrc && a.url && (a.url === vSrc || vSrc.includes(a.url)) ? 1 : 0;
       const bMatches = vSrc && b.url && (b.url === vSrc || vSrc.includes(b.url)) ? 1 : 0;
-      if (aMatches !== bMatches) {
-        return bMatches - aMatches;
-      }
+      if (aMatches !== bMatches) return bMatches - aMatches;
+
+      // 2. Streams (M3U8 / DASH) and full player streams have priority over raw static files
+      const aIsStream = a.type === "stream" || (a.url && (a.url.includes(".m3u8") || a.url.includes(".mpd"))) ? 1 : 0;
+      const bIsStream = b.type === "stream" || (b.url && (b.url.includes(".m3u8") || b.url.includes(".mpd"))) ? 1 : 0;
+      if (aIsStream !== bIsStream) return bIsStream - aIsStream;
+
+      // 3. Higher resolution tag in URL/format (1080p > 720p > 480p)
+      const getResRank = (url = "") => {
+        const u = url.toLowerCase();
+        if (u.includes("2160p") || u.includes("4k")) return 5;
+        if (u.includes("1440p") || u.includes("2k")) return 4;
+        if (u.includes("1080p") || u.includes("fhd")) return 3;
+        if (u.includes("720p") || u.includes("hd")) return 2;
+        if (u.includes("480p") || u.includes("sd")) return 1;
+        return 0;
+      };
+      const aRes = getResRank(a.url);
+      const bRes = getResRank(b.url);
+      if (aRes !== bRes) return bRes - aRes;
+
+      // 4. Known large content length (larger file first)
+      const aLen = typeof a.contentLength === "number" ? a.contentLength : 0;
+      const bLen = typeof b.contentLength === "number" ? b.contentLength : 0;
+      if (aLen !== bLen) return bLen - aLen;
+
       return 0;
     });
 
@@ -778,11 +814,13 @@
         if (resp?.media && resp.media.length > 0) {
           const nonScript = resp.media.filter(m => {
             const u = m.url.toLowerCase();
-            return !u.includes(".js") && !u.includes(".json") && !u.includes(".css") && !u.includes(".html") && !u.includes(".map");
+            if (u.includes(".js") || u.includes(".json") || u.includes(".css") || u.includes(".html") || u.includes(".map")) return false;
+            if (u.includes("preview.webm") || u.includes("-preview") || u.includes("_preview") || u.includes("/thumbs/")) return false;
+            return true;
           });
           const stream = nonScript.find(m => m.type === "stream" || m.url.includes(".m3u8") || m.url.includes("/pl/"));
           if (stream) return stream.url;
-          const valid = nonScript.filter(m => !m.url.includes("googlevideo.com") && !m.url.includes(".m4s"));
+          const valid = nonScript.filter(m => !m.url.includes("googlevideo.com") && !m.url.includes(".m4s") && (typeof m.contentLength !== "number" || m.contentLength > 256000));
           if (valid.length > 0) return valid[valid.length - 1].url;
         }
       } catch {
