@@ -15,7 +15,7 @@ public static class YtDlpService
     };
 
     private static readonly Regex VideoUrlRegex = new(
-        @"(https?://)?(www\.)?(youtube\.com/watch\?|youtu\.be/|youtube\.com/shorts/|youtube\.com/embed/|tiktok\.com/@|instagram\.com/(reel|p)/|twitter\.com/\w+/status/|x\.com/\w+/status/|vimeo\.com/|facebook\.com/watch)",
+        @"(https?://)?(www\.)?(youtube\.com/watch\?|youtu\.be/|youtube\.com/shorts/|youtube(?:-nocookie)?\.com/embed/|tiktok\.com/@|instagram\.com/(reel|p)/|twitter\.com/\w+/status/|x\.com/\w+/status/|vimeo\.com/|facebook\.com/watch)",
         RegexOptions.Compiled | RegexOptions.IgnoreCase
     );
 
@@ -49,6 +49,17 @@ public static class YtDlpService
         if (IsStaticDirectFile(url)) return false;
         if (IsStreamManifestUrl(url)) return true;
         return VideoUrlRegex.IsMatch(url);
+    }
+
+    internal static bool IsYouTubeAudio(string url, string? quality)
+    {
+        if (!string.Equals(quality, "audio", StringComparison.OrdinalIgnoreCase) ||
+            !Uri.TryCreate(url, UriKind.Absolute, out var uri)) return false;
+
+        string host = uri.IdnHost.ToLowerInvariant();
+        return host is "youtube.com" or "youtu.be" or "youtube-nocookie.com" ||
+               host.EndsWith(".youtube.com", StringComparison.Ordinal) ||
+               host.EndsWith(".youtube-nocookie.com", StringComparison.Ordinal);
     }
 
     public static string BuildFormatSelector(string? quality, string filename)
@@ -209,7 +220,12 @@ public static class YtDlpService
         }
 
         string safeFilename = DownloadEngine.SanitizeFilename(rawTitle);
-        if (safeFilename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+        bool mp3 = IsYouTubeAudio(url, quality);
+        if (mp3)
+        {
+            safeFilename += ".mp3";
+        }
+        else if (safeFilename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
         {
             safeFilename = Path.ChangeExtension(safeFilename, ".mp4");
         }
@@ -223,8 +239,8 @@ public static class YtDlpService
             Filename = safeFilename,
             TotalBytes = totalBytes,
             SupportsRange = true,
-            Category = "Video",
-            ContentType = "video/mp4"
+            Category = mp3 ? "Musik" : "Video",
+            ContentType = mp3 ? "audio/mpeg" : "video/mp4"
         };
     }
 
@@ -238,7 +254,14 @@ public static class YtDlpService
         string? ffmpegDir = FindFfmpegDir();
 
         string outputFile = task.FilePath;
-        if (outputFile.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+        bool mp3 = IsYouTubeAudio(task.Url, task.Quality);
+        if (mp3)
+        {
+            outputFile = Path.ChangeExtension(outputFile, ".mp3");
+            task.FilePath = outputFile;
+            task.Filename = Path.GetFileName(outputFile);
+        }
+        else if (outputFile.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
         {
             outputFile = Path.ChangeExtension(outputFile, ".mp4");
             task.FilePath = outputFile;
@@ -282,14 +305,25 @@ public static class YtDlpService
         psi.ArgumentList.Add("ffmpeg_i:-extension_picky false -live_start_index 0 -m3u8_hold_counters 2");
         psi.ArgumentList.Add("-f");
         psi.ArgumentList.Add(format);
-        psi.ArgumentList.Add("--merge-output-format");
-        psi.ArgumentList.Add("mp4");
+        if (mp3)
+        {
+            psi.ArgumentList.Add("--extract-audio");
+            psi.ArgumentList.Add("--audio-format");
+            psi.ArgumentList.Add("mp3");
+        }
+        else
+        {
+            psi.ArgumentList.Add("--merge-output-format");
+            psi.ArgumentList.Add("mp4");
+        }
         psi.ArgumentList.Add("--progress-delta");
         psi.ArgumentList.Add("0.2");
         psi.ArgumentList.Add("--progress-template");
         psi.ArgumentList.Add("IDM_PROGRESS:%(info.format_id)s:%(progress.downloaded_bytes)s:%(progress.total_bytes,progress.total_bytes_estimate)s");
         psi.ArgumentList.Add("-o");
-        psi.ArgumentList.Add(outputFile);
+        psi.ArgumentList.Add(mp3
+            ? Path.ChangeExtension(outputFile.Replace("%", "%%"), "%(ext)s")
+            : outputFile);
 
         if (!string.IsNullOrEmpty(ffmpegDir))
         {
@@ -570,6 +604,7 @@ public static class YtDlpService
         // Output file resolution: check if merged to .mp4, .mkv, or .webm
         if (!File.Exists(outputFile))
         {
+            if (mp3) throw new IOException($"yt-dlp tidak menghasilkan file MP3: {outputFile}");
             string stem = Path.GetFileNameWithoutExtension(outputFile);
             string candidateMp4 = Path.Combine(targetDir ?? "", stem + ".mp4");
             string candidateMkv = Path.Combine(targetDir ?? "", stem + ".mkv");

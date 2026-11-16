@@ -278,7 +278,7 @@
 
   function generateRealMediaItems(video = null, sniffedMedia = [], host = "", rawTitle = "") {
     const safeTitle = cleanFilename(rawTitle, "video");
-    const isYouTube = host.includes("youtube.com") || host.includes("youtu.be");
+    const isYouTube = host.includes("youtube.com") || host.includes("youtu.be") || host.includes("youtube-nocookie.com");
 
     const vHeight = video?.videoHeight || 0;
     const vWidth = video?.videoWidth || 0;
@@ -359,11 +359,11 @@
       // Audio Only
       items.push({
         id: "audio",
-        badge: "M4A",
+        badge: "MP3",
         badgeClass: "myownidm-badge-audio",
         title: "Audio Only",
-        meta: "M4A • Audio",
-        filename: `${safeTitle}_audio.m4a`,
+        meta: "MP3 • Audio",
+        filename: `${safeTitle}_audio.mp3`,
         quality: "audio",
         is_audio_only: true,
         threads: 4

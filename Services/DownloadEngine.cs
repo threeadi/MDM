@@ -413,7 +413,7 @@ public class DownloadEngine
         string effectiveUrl = GetEffectiveUrl(url, referer);
 
         // 1. Fast-Path: Known stream manifests (.m3u8, .mpd) or explicit platform video regex
-        if (YtDlpService.IsStreamManifestUrl(effectiveUrl) || YtDlpService.IsVideoPlatformUrl(effectiveUrl))
+        if (YtDlpService.IsYouTubeAudio(effectiveUrl, quality) || YtDlpService.IsStreamManifestUrl(effectiveUrl) || YtDlpService.IsVideoPlatformUrl(effectiveUrl))
         {
             try
             {
@@ -579,7 +579,12 @@ public class DownloadEngine
             var probe = await ProbeUrlAsync(effectiveUrl, referer, quality);
 
             string finalFilename = !string.IsNullOrWhiteSpace(filename) ? SanitizeFilename(filename) : probe.Filename;
-            if (probe.IsHls || effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase) || finalFilename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
+            if (YtDlpService.IsYouTubeAudio(effectiveUrl, quality))
+            {
+                finalFilename = Path.ChangeExtension(finalFilename, ".mp3");
+                probe.IsHls = true;
+            }
+            else if (probe.IsHls || effectiveUrl.Contains(".m3u8", StringComparison.OrdinalIgnoreCase) || finalFilename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
             {
                 if (finalFilename.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase))
                 {
