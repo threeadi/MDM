@@ -25,7 +25,23 @@ public class MainViewModel : INotifyPropertyChanged
     private DownloadItemViewModel? _selectedTask;
     private string _globalSpeedText = "0.0 KB/s";
 
-    private readonly ObservableCollection<DownloadItemViewModel> _allTasks = [];
+    private sealed class DownloadCollection : ObservableCollection<DownloadItemViewModel>
+    {
+        public void RemoveTasks(HashSet<string> deleted)
+        {
+            if (deleted.Count == 0) return;
+            var remaining = Items.Where(item => !deleted.Contains(item.Id)).ToArray();
+            Items.Clear();
+            foreach (var item in remaining) Items.Add(item);
+            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+            OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(
+                System.Collections.Specialized.NotifyCollectionChangedAction.Reset));
+        }
+    }
+
+    private readonly DownloadCollection _allTasks = [];
+    private bool _clearingCompleted;
 
     public ICollectionView FilteredTasks { get; }
     public ObservableCollection<DownloadItemViewModel> AllTasks => _allTasks;
@@ -706,16 +722,26 @@ public class MainViewModel : INotifyPropertyChanged
             }
         });
 
-        ClearCompletedCommand = new RelayCommand(() =>
+        ClearCompletedCommand = new RelayCommand(async () =>
         {
-            Logger.Info("Membersihkan semua tugas unduhan yang telah selesai", "VIEWMODEL");
-            var completed = _allTasks.Where(t => t.Status == DownloadStatus.Completed).ToList();
-            foreach (var t in completed)
+            if (_clearingCompleted) return;
+            var ids = _allTasks.Where(t => t.Status == DownloadStatus.Completed).Select(t => t.Id).ToArray();
+            if (ids.Length == 0) return;
+            _clearingCompleted = true;
+            try
             {
-                _database.DeleteTask(t.Id);
-                _allTasks.Remove(t);
+                var deleted = await Task.Run(() => _database.DeleteCompletedTasks(ids));
+                _allTasks.RemoveTasks(deleted);
+                UpdateCounts();
             }
-            UpdateCounts();
+            catch (Exception ex)
+            {
+                Logger.Warn($"Gagal membersihkan unduhan selesai: {ex.Message}", "VIEWMODEL");
+            }
+            finally
+            {
+                _clearingCompleted = false;
+            }
         });
 
         DeleteCommand = new RelayCommand(param =>

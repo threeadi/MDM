@@ -457,6 +457,24 @@ public class Database
         Logger.Debug($"Simpan setting '{key}' = '{value}'", "DATABASE");
     }
 
+    public HashSet<string> DeleteCompletedTasks(string[] ids)
+    {
+        using var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            DELETE FROM downloads
+            WHERE status = @status AND id IN (SELECT value FROM json_each(@ids))
+            RETURNING id
+            """;
+        cmd.Parameters.AddWithValue("@status", DownloadStatus.Completed.ToString());
+        cmd.Parameters.AddWithValue("@ids", JsonSerializer.Serialize(ids));
+        using var reader = cmd.ExecuteReader();
+        var deleted = new HashSet<string>();
+        while (reader.Read()) deleted.Add(reader.GetString(0));
+        return deleted;
+    }
+
     public void DeleteTask(string id)
     {
         using var conn = new SqliteConnection(_connectionString);
