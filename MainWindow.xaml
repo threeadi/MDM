@@ -539,6 +539,47 @@
                         <!-- Context Menu -->
                         <DataGrid.ContextMenu>
                             <ContextMenu Background="{StaticResource SurfaceLowBrush}" BorderBrush="{StaticResource BorderBrush}">
+                                <ContextMenu.Template>
+                                    <ControlTemplate TargetType="ContextMenu">
+                                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="1" CornerRadius="5" Padding="4">
+                                            <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="True">
+                                                <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                            </ScrollViewer>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ContextMenu.Template>
+                                <ContextMenu.Resources>
+                                    <ControlTemplate x:Key="DownloadMenuDivider" TargetType="Separator">
+                                        <Border Height="1" Margin="6,3" Background="{StaticResource BorderBrush}"/>
+                                    </ControlTemplate>
+                                    <Style TargetType="MenuItem">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="MenuItem">
+                                                    <Border x:Name="Row" CornerRadius="3" Background="Transparent" Padding="8,5">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="22"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <ContentPresenter ContentSource="Icon" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                                            <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsHighlighted" Value="True">
+                                                            <Setter TargetName="Row" Property="Background" Value="{StaticResource SurfaceHoverBrush}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter TargetName="Row" Property="Opacity" Value="0.5"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ContextMenu.Resources>
                                 <MenuItem Header="{services:Loc table.contextOpenFile}" Command="{Binding OpenFileCommand}" Foreground="{StaticResource TextPrimaryBrush}">
                                     <MenuItem.Icon>
                                         <controls:LucideIcon Kind="folder-open" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}"/>
@@ -549,7 +590,7 @@
                                         <controls:LucideIcon Kind="folder" Width="13" Height="13" Foreground="{StaticResource TextSecondaryBrush}"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <Separator Background="{StaticResource BorderBrush}"/>
+                                <Separator Template="{StaticResource DownloadMenuDivider}"/>
                                 <MenuItem Header="{services:Loc table.contextResume}" Command="{Binding ResumeCommand}" Foreground="{StaticResource AccentCyanBrush}">
                                     <MenuItem.Icon>
                                         <controls:LucideIcon Kind="play" Width="12" Height="12" Foreground="#34D399"/>
@@ -565,19 +606,19 @@
                                         <controls:LucideIcon Kind="refresh-cw" Width="12" Height="12" Foreground="{StaticResource AccentCyanBrush}"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <Separator Background="{StaticResource BorderBrush}"/>
+                                <Separator Template="{StaticResource DownloadMenuDivider}"/>
                                 <MenuItem Header="{services:Loc table.contextProperties}" Click="ContextMenu_Properties_Click" Foreground="{StaticResource TextSecondaryBrush}">
                                     <MenuItem.Icon>
                                         <controls:LucideIcon Kind="hash" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <Separator Background="{StaticResource BorderBrush}"/>
+                                <Separator Template="{StaticResource DownloadMenuDivider}"/>
                                 <MenuItem Header="Pilih Semua (Ctrl+A)" Click="ContextMenu_SelectAll_Click" Foreground="{StaticResource TextPrimaryBrush}">
                                     <MenuItem.Icon>
                                         <controls:LucideIcon Kind="check-check" Width="12" Height="12" Foreground="{StaticResource TextSecondaryBrush}"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <Separator Background="{StaticResource BorderBrush}"/>
+                                <Separator Template="{StaticResource DownloadMenuDivider}"/>
                                 <MenuItem Header="{services:Loc common.delete}" Command="{Binding DeleteCommand}" Foreground="{StaticResource AccentRoseBrush}">
                                     <MenuItem.Icon>
                                         <controls:LucideIcon Kind="delete_outline" Width="12" Height="12" Foreground="{StaticResource AccentRoseBrush}"/>
