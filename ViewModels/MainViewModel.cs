@@ -210,6 +210,46 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand OpenFolderCommand { get; }
     public ICommand SwitchToDownloadsCommand { get; }
     public ICommand SwitchToTelegramCommand { get; }
+    public ICommand ToggleTelegramGrabberCommand { get; }
+
+    private bool _isTelegramGrabberEnabled = true;
+    public bool IsTelegramGrabberEnabled
+    {
+        get => _isTelegramGrabberEnabled;
+        set
+        {
+            if (SetField(ref _isTelegramGrabberEnabled, value))
+            {
+                _database?.SetSetting("telegram_grabber_enabled", value ? "1" : "0");
+                OnPropertyChanged(nameof(TelegramGrabberStatusBadgeText));
+                if (!value)
+                {
+                    if (IsTelegramView)
+                    {
+                        ActiveView = "downloads";
+                    }
+                    _autoFetchCts?.Cancel();
+                    _batchQueueCts?.Cancel();
+                }
+                else if (_engine != null &&
+                         !_engine.TelegramService.AuthStatus.IsAuthenticated &&
+                         File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MDM", "telegram", "mdm_telegram.session")))
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _engine.TelegramService.CheckAndRestoreAuthAsync();
+                            Application.Current?.Dispatcher.Invoke(() => UpdateTelegramCounts());
+                        }
+                        catch { }
+                    });
+                }
+            }
+        }
+    }
+
+    public string TelegramGrabberStatusBadgeText => IsTelegramGrabberEnabled ? "ON" : "OFF";
 
     // Telegram Workspace & Vault State
     public ObservableCollection<TelegramChannelInfo> TelegramChannels { get; } = [];
@@ -593,6 +633,7 @@ public class MainViewModel : INotifyPropertyChanged
             OpenFolderCommand = new RelayCommand(() => { });
             SwitchToDownloadsCommand = new RelayCommand(() => { });
             SwitchToTelegramCommand = new RelayCommand(() => { });
+            ToggleTelegramGrabberCommand = new RelayCommand(() => { });
 
             ClearTelegramSearchCommand = new RelayCommand(() => TelegramSearchQuery = string.Empty);
             ScanTelegramCommand = new RelayCommand(_ => { });
@@ -619,6 +660,7 @@ public class MainViewModel : INotifyPropertyChanged
         _database = new Database();
         _engine = new DownloadEngine(_database);
         _ipcServer = new IpcServer();
+        _isTelegramGrabberEnabled = _database.GetSetting("telegram_grabber_enabled", "1") == "1";
 
         // Listen for Telegram auth changes
         _engine.TelegramService.OnAuthStatusChanged += _ =>
@@ -630,16 +672,19 @@ public class MainViewModel : INotifyPropertyChanged
             catch { }
         };
 
-        // Restore Telegram session in background
-        _ = Task.Run(async () =>
+        // Restore Telegram session in background only if Telegram Grabber is enabled
+        if (_isTelegramGrabberEnabled)
         {
-            try
+            _ = Task.Run(async () =>
             {
-                await _engine.TelegramService.CheckAndRestoreAuthAsync();
-                Application.Current?.Dispatcher.Invoke(() => UpdateTelegramCounts());
-            }
-            catch { }
-        });
+                try
+                {
+                    await _engine.TelegramService.CheckAndRestoreAuthAsync();
+                    Application.Current?.Dispatcher.Invoke(() => UpdateTelegramCounts());
+                }
+                catch { }
+            });
+        }
 
         // Apply saved rate limits
         if (_database.GetSetting("global_limit_enabled") == "1" &&
@@ -658,8 +703,10 @@ public class MainViewModel : INotifyPropertyChanged
         });
 
         SwitchToDownloadsCommand = new RelayCommand(() => ActiveView = "downloads");
+        ToggleTelegramGrabberCommand = new RelayCommand(() => IsTelegramGrabberEnabled = !IsTelegramGrabberEnabled);
         SwitchToTelegramCommand = new RelayCommand(() =>
         {
+            if (!IsTelegramGrabberEnabled) return;
             ActiveView = "telegram";
             UpdateTelegramCounts();
             if (!_engine.TelegramService.AuthStatus.IsAuthenticated && File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MDM", "telegram", "mdm_telegram.session")))

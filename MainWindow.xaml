@@ -201,7 +201,9 @@
                     </Button>
 
                     <!-- Telegram Grabber -->
-                    <Button Style="{StaticResource FlatActionButton}" Height="28" Padding="10,4" Margin="0,0,5,0" Command="{Binding SwitchToTelegramCommand}">
+                    <Button Style="{StaticResource FlatActionButton}" Height="28" Padding="10,4" Margin="0,0,5,0"
+                            Command="{Binding SwitchToTelegramCommand}"
+                            Visibility="{Binding IsTelegramGrabberEnabled, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <controls:LucideIcon Kind="send" Width="12" Height="12" Foreground="#3B82F6" Margin="0,0,6,0" VerticalAlignment="Center"/>
                             <TextBlock Text="{services:Loc toolbar.telegramGrabber}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -387,21 +389,48 @@
                         </Border>
 
                         <!-- Telegram Grabber -->
-                        <RadioButton GroupName="CatGroup" 
-                                     Command="{Binding SwitchToTelegramCommand}" 
-                                     IsChecked="{Binding IsTelegramView, Mode=OneWay}" 
-                                     Style="{StaticResource CategoryRadioStyle}" 
-                                     Margin="0,1">
-                            <Grid>
+                        <Grid Margin="0,1">
+                            <RadioButton GroupName="CatGroup"
+                                         Command="{Binding SwitchToTelegramCommand}"
+                                         IsChecked="{Binding IsTelegramView, Mode=OneWay}"
+                                         Style="{StaticResource CategoryRadioStyle}"
+                                         Padding="10,6,52,6">
+                                <RadioButton.Resources>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsTelegramGrabberEnabled}" Value="False">
+                                                <Setter Property="Opacity" Value="0.45"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </RadioButton.Resources>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                                     <controls:LucideIcon Kind="send" Style="{StaticResource SidebarCategoryIconStyle}"/>
                                     <TextBlock Text="Telegram Grabber" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <Border Background="#1A2740" BorderBrush="#254A80" BorderThickness="1" CornerRadius="4" Padding="5,1" HorizontalAlignment="Right">
-                                    <TextBlock Text="MTProto" Foreground="#60A5FA" FontSize="9" FontWeight="Medium"/>
-                                </Border>
-                            </Grid>
-                        </RadioButton>
+                            </RadioButton>
+                            <Button Command="{Binding ToggleTelegramGrabberCommand}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,8,0"
+                                    Cursor="Hand"
+                                    ToolTip="Nyalakan / Matikan Telegram Grabber">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="TogglePill" CornerRadius="4" Padding="6,2" BorderThickness="1" Background="#0F2E22" BorderBrush="#10B981">
+                                            <TextBlock x:Name="ToggleText" Text="{Binding TelegramGrabberStatusBadgeText}" Foreground="#34D399" FontSize="9" FontWeight="Bold"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsTelegramGrabberEnabled}" Value="False">
+                                                <Setter TargetName="TogglePill" Property="Background" Value="#1E2330"/>
+                                                <Setter TargetName="TogglePill" Property="BorderBrush" Value="#334155"/>
+                                                <Setter TargetName="ToggleText" Property="Foreground" Value="#94A3B8"/>
+                                            </DataTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -664,18 +693,21 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Progress Bar + Percent -->
+                            <!-- Progress Bar + Percent + Inline ETA -->
                             <DataGridTemplateColumn Header="{services:Loc table.colProgress}" Width="185" SortMemberPath="Progress" CanUserSort="True" IsReadOnly="True">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Grid VerticalAlignment="Center">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="48"/>
-                                            </Grid.ColumnDefinitions>
-                                             <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Style="{StaticResource SharpProgressBar}" Foreground="{Binding StatusBrush}" Tag="{Binding IsDownloading}" Height="6"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding ProgressText}" Foreground="{StaticResource TextMutedBrush}" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        </Grid>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="48"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Style="{StaticResource SharpProgressBar}" Foreground="{Binding StatusBrush}" Tag="{Binding IsDownloading}" Height="6"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding ProgressText}" Foreground="{StaticResource TextMutedBrush}" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding EtaSummaryText}" Visibility="{Binding HasEta, Converter={StaticResource BoolToVis}}" Foreground="{StaticResource TextMutedBrush}" FontSize="10" Margin="0,2,0,0"/>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -689,11 +721,11 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- ETA -->
-                            <DataGridTemplateColumn Header="{services:Loc table.colEta}" Width="85" SortMemberPath="EtaSeconds" CanUserSort="True" IsReadOnly="True">
+                            <!-- Downloaded At -->
+                            <DataGridTemplateColumn Header="{services:Loc table.colDownloadedAt}" Width="120" SortMemberPath="DownloadedAtDate" CanUserSort="True" IsReadOnly="True">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding EtaFormatted}" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding DownloadedAtFormatted}" Foreground="{StaticResource TextMutedBrush}" FontSize="11" VerticalAlignment="Center"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

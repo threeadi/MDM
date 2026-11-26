@@ -172,6 +172,7 @@ public partial class SettingsDialog : Window
         BrowserBraveCheckBox.IsChecked = _database.GetSetting("browser_brave", "1") == "1";
 
         // --- 6. TELEGRAM ---
+        TelegramGrabberEnabledCheckBox.IsChecked = _database.GetSetting("telegram_grabber_enabled", "1") == "1";
         string defaultTgDir = Path.Combine(defaultDir, "Telegram");
         TelegramDirTextBox.Text = _database.GetSetting("telegram_download_dir", defaultTgDir) ?? defaultTgDir;
         TelegramSubfolderCheckBox.IsChecked = _database.GetSetting("telegram_subfolder", "1") == "1";
@@ -921,6 +922,7 @@ public partial class SettingsDialog : Window
         _database.SetSetting("browser_brave", BrowserBraveCheckBox.IsChecked == true ? "1" : "0");
 
         // 6. TELEGRAM
+        _database.SetSetting("telegram_grabber_enabled", TelegramGrabberEnabledCheckBox.IsChecked == true ? "1" : "0");
         _database.SetSetting("telegram_download_dir", TelegramDirTextBox.Text.Trim());
         _database.SetSetting("telegram_subfolder", TelegramSubfolderCheckBox.IsChecked == true ? "1" : "0");
         string customId = TgApiIdTextBox.Text.Trim();

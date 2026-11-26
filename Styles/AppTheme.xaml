@@ -1147,4 +1147,61 @@
         </Setter>
     </Style>
 
+    <!-- Dark Context Menu & MenuItem Styles (Used by System Tray & Popups) -->
+    <ControlTemplate x:Key="DarkMenuSeparatorTemplate" TargetType="Separator">
+        <Border Height="1" Margin="8,4" Background="{StaticResource BorderBrush}"/>
+    </ControlTemplate>
+
+    <Style x:Key="DarkMenuItemStyle" TargetType="MenuItem">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="Row" CornerRadius="4" Background="Transparent" Padding="10,6" Margin="2,1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="22"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter ContentSource="Icon" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Row" Property="Background" Value="{StaticResource SurfaceHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Row" Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DarkContextMenuStyle" TargetType="ContextMenu">
+        <Setter Property="Background" Value="{StaticResource SurfaceLowBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="HasDropShadow" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6"
+                            Padding="4"
+                            MinWidth="185">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="True">
+                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

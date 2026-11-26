@@ -685,6 +685,16 @@
                     <!-- TAB 6: TELEGRAM - STITCH 1:1                             -->
                     <!-- ======================================================== -->
                     <StackPanel x:Name="PanelTelegram" Visibility="Collapsed">
+                        <!-- Master Toggle Telegram Grabber -->
+                        <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
+                            <CheckBox x:Name="TelegramGrabberEnabledCheckBox" Style="{StaticResource DarkCheckBox}" IsChecked="True">
+                                <StackPanel Margin="8,0,0,0">
+                                    <TextBlock Text="{services:Loc settings.tgGrabberEnabled}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="{services:Loc settings.tgGrabberEnabledDesc}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </Border>
+
                         <Border Background="{StaticResource SurfaceCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,16">
                             <StackPanel>
                                 <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,14">

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
 using Mdm.Models;
@@ -37,6 +37,35 @@ public class DownloadItemViewModel : INotifyPropertyChanged
         }
     }
     public string CreatedAt => Task.CreatedAt;
+
+    public DateTime DownloadedAtDate
+    {
+        get
+        {
+            string? raw = !string.IsNullOrWhiteSpace(Task.CompletedAt) ? Task.CompletedAt : Task.CreatedAt;
+            if (DateTime.TryParse(raw, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var dt))
+            {
+                return dt.ToLocalTime();
+            }
+            if (DateTime.TryParse(raw, out dt))
+            {
+                return dt.ToLocalTime();
+            }
+            return DateTime.MinValue;
+        }
+    }
+
+    public string DownloadedAtFormatted
+    {
+        get
+        {
+            var dt = DownloadedAtDate;
+            return dt == DateTime.MinValue
+                ? "--"
+                : dt.ToString("dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
     public long TotalBytes => Task.TotalBytes ?? 0;
 
     public string LucideCategoryIcon
@@ -152,14 +181,34 @@ public class DownloadItemViewModel : INotifyPropertyChanged
     public string EtaFormatted
     {
         get => _etaFormatted;
-        set => SetField(ref _etaFormatted, value);
+        set
+        {
+            if (SetField(ref _etaFormatted, value))
+            {
+                OnPropertyChanged(nameof(EtaSummaryText));
+                OnPropertyChanged(nameof(HasEta));
+            }
+        }
     }
 
     public long? EtaSeconds
     {
         get => _etaSeconds;
-        set => SetField(ref _etaSeconds, value);
+        set
+        {
+            if (SetField(ref _etaSeconds, value))
+            {
+                OnPropertyChanged(nameof(HasEta));
+                OnPropertyChanged(nameof(EtaSummaryText));
+            }
+        }
     }
+
+    public bool HasEta => Status == DownloadStatus.Downloading && EtaSeconds is > 0 and <= 86400 * 7;
+
+    public string EtaSummaryText => HasEta
+        ? $"{I18n.Tr("table.etaPrefix", "Sisa: ")}{EtaFormatted}"
+        : string.Empty;
 
     public DownloadStatus Status
     {
@@ -177,6 +226,8 @@ public class DownloadItemViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(IsDownloading));
                 OnPropertyChanged(nameof(IsPaused));
                 OnPropertyChanged(nameof(IsInFlight));
+                OnPropertyChanged(nameof(HasEta));
+                OnPropertyChanged(nameof(EtaSummaryText));
                 OnPropertyChanged(nameof(ErrorMessage));
             }
         }
@@ -237,6 +288,8 @@ public class DownloadItemViewModel : INotifyPropertyChanged
     {
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(SizeFormatted));
+        OnPropertyChanged(nameof(EtaSummaryText));
+        OnPropertyChanged(nameof(DownloadedAtFormatted));
     }
 
     public Brush StatusBrush => Status switch
@@ -327,6 +380,8 @@ public class DownloadItemViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(HasProtectionWarning));
         OnPropertyChanged(nameof(ProtectionBadgeText));
         OnPropertyChanged(nameof(ProtectionBadgeTooltip));
+        OnPropertyChanged(nameof(DownloadedAtDate));
+        OnPropertyChanged(nameof(DownloadedAtFormatted));
         Status = DownloadStatus.Completed;
     }
 

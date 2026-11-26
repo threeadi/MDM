@@ -162,33 +162,54 @@ public class TrayIconService : IDisposable
 
     private void BuildContextMenu()
     {
+        var menuStyle = _window.TryFindResource("DarkContextMenuStyle") as Style;
+        var itemStyle = _window.TryFindResource("DarkMenuItemStyle") as Style;
+        var sepTemplate = _window.TryFindResource("DarkMenuSeparatorTemplate") as ControlTemplate;
+
         _contextMenu = new ContextMenu
         {
+            Style = menuStyle,
             Background = (System.Windows.Media.Brush)_window.FindResource("SurfaceLowBrush"),
             BorderBrush = (System.Windows.Media.Brush)_window.FindResource("BorderBrush")
         };
 
-        var openItem = new MenuItem { Header = "Buka MDM", FontWeight = FontWeights.Bold, Foreground = (System.Windows.Media.Brush)_window.FindResource("TextPrimaryBrush") };
-        openItem.Click += (_, _) => OnOpenRequested?.Invoke();
+        MenuItem CreateItem(string header, string iconKind, System.Windows.Media.Brush foreground, Action onClick, bool bold = false)
+        {
+            var item = new MenuItem
+            {
+                Header = header,
+                Style = itemStyle,
+                Foreground = foreground,
+                FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal,
+                Icon = new Mdm.Controls.LucideIcon
+                {
+                    Kind = iconKind,
+                    Width = 13,
+                    Height = 13,
+                    Foreground = foreground,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            };
+            item.Click += (_, _) => onClick();
+            return item;
+        }
 
-        var addItem = new MenuItem { Header = "Tambah Unduhan Baru...", Foreground = (System.Windows.Media.Brush)_window.FindResource("AccentCyanBrush") };
-        addItem.Click += (_, _) => OnAddDownloadRequested?.Invoke();
+        Separator CreateSeparator() => sepTemplate != null
+            ? new Separator { Template = sepTemplate }
+            : new Separator { Background = (System.Windows.Media.Brush)_window.FindResource("BorderBrush") };
 
-        var resumeAllItem = new MenuItem { Header = "Lanjutkan Semua", Foreground = (System.Windows.Media.Brush)_window.FindResource("AccentEmeraldBrush") };
-        resumeAllItem.Click += (_, _) => OnResumeAllRequested?.Invoke();
-
-        var pauseAllItem = new MenuItem { Header = "Jeda Semua", Foreground = (System.Windows.Media.Brush)_window.FindResource("AccentAmberBrush") };
-        pauseAllItem.Click += (_, _) => OnPauseAllRequested?.Invoke();
-
-        var exitItem = new MenuItem { Header = "Keluar", Foreground = (System.Windows.Media.Brush)_window.FindResource("AccentRoseBrush") };
-        exitItem.Click += (_, _) => OnExitRequested?.Invoke();
+        var openItem = CreateItem("Buka MDM", "external-link", (System.Windows.Media.Brush)_window.FindResource("TextPrimaryBrush"), () => OnOpenRequested?.Invoke(), bold: true);
+        var addItem = CreateItem("Tambah Unduhan Baru...", "plus", (System.Windows.Media.Brush)_window.FindResource("AccentCyanBrush"), () => OnAddDownloadRequested?.Invoke());
+        var resumeAllItem = CreateItem("Lanjutkan Semua", "play", (System.Windows.Media.Brush)_window.FindResource("AccentEmeraldBrush"), () => OnResumeAllRequested?.Invoke());
+        var pauseAllItem = CreateItem("Jeda Semua", "pause", (System.Windows.Media.Brush)_window.FindResource("AccentAmberBrush"), () => OnPauseAllRequested?.Invoke());
+        var exitItem = CreateItem("Keluar", "x", (System.Windows.Media.Brush)_window.FindResource("AccentRoseBrush"), () => OnExitRequested?.Invoke());
 
         _contextMenu.Items.Add(openItem);
         _contextMenu.Items.Add(addItem);
-        _contextMenu.Items.Add(new Separator { Background = (System.Windows.Media.Brush)_window.FindResource("BorderBrush") });
+        _contextMenu.Items.Add(CreateSeparator());
         _contextMenu.Items.Add(resumeAllItem);
         _contextMenu.Items.Add(pauseAllItem);
-        _contextMenu.Items.Add(new Separator { Background = (System.Windows.Media.Brush)_window.FindResource("BorderBrush") });
+        _contextMenu.Items.Add(CreateSeparator());
         _contextMenu.Items.Add(exitItem);
     }
 

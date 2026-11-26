@@ -132,20 +132,23 @@ public partial class MainWindow : Window
                 }
             };
 
-            // Restore Telegram auth session if session file exists
+            // Restore Telegram auth session if session file exists and Grabber is enabled
             var vm = ViewModel;
-            _ = Task.Run(async () =>
+            if (vm.IsTelegramGrabberEnabled)
             {
-                try
+                _ = Task.Run(async () =>
                 {
-                    await vm.Engine.TelegramService.CheckAndRestoreAuthAsync();
-                    Dispatcher.Invoke(() => vm.UpdateTelegramCounts());
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warn($"Gagal restore Telegram session di MainWindow: {ex.Message}", "MAINWINDOW");
-                }
-            });
+                    try
+                    {
+                        await vm.Engine.TelegramService.CheckAndRestoreAuthAsync();
+                        Dispatcher.Invoke(() => vm.UpdateTelegramCounts());
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warn($"Gagal restore Telegram session di MainWindow: {ex.Message}", "MAINWINDOW");
+                    }
+                });
+            }
         };
 
         Closing += MainWindow_Closing;
@@ -280,6 +283,8 @@ public partial class MainWindow : Window
 
         if (dlg.ShowDialog() == true)
         {
+            ViewModel.IsTelegramGrabberEnabled = ViewModel.Database.GetSetting("telegram_grabber_enabled", "1") == "1";
+
             // Update global rate limit if configured
             if (ViewModel.Database.GetSetting("global_limit_enabled") == "1" &&
                 long.TryParse(ViewModel.Database.GetSetting("global_limit_kbps"), out long kbps))
@@ -326,9 +331,31 @@ public partial class MainWindow : Window
         dlg.ShowDialog();
     }
 
+    private static T? FindVisualParent<T>(DependencyObject? child) where T : DependencyObject
+    {
+        while (child != null)
+        {
+            if (child is T target) return target;
+            child = child is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D
+                ? System.Windows.Media.VisualTreeHelper.GetParent(child)
+                : LogicalTreeHelper.GetParent(child);
+        }
+        return null;
+    }
+
     private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (ViewModel.SelectedTask is not { } task) return;
+        var dep = e.OriginalSource as DependencyObject;
+        if (FindVisualParent<System.Windows.Controls.Primitives.DataGridColumnHeader>(dep) != null)
+        {
+            return;
+        }
+
+        var row = FindVisualParent<DataGridRow>(dep);
+        if (row == null || row.Item is not DownloadItemViewModel task)
+        {
+            return;
+        }
 
         if (task.Status == DownloadStatus.Completed && File.Exists(task.FilePath))
         {
